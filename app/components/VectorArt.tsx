@@ -146,6 +146,9 @@ export default function VectorArt({ variant = "layout", className, ...rest }: Pr
               <stop offset="0%" stopColor="#EEF3FF" />
               <stop offset="100%" stopColor="#E6EEFF" />
             </linearGradient>
+            <clipPath id="thumbR">
+              <rect x="0" y="0" width="80" height="80" rx="12" />
+            </clipPath>
           </defs>
           <rect width="400" height="240" rx="12" fill="url(#gd)" />
           {/* Top bar */}
@@ -169,6 +172,16 @@ export default function VectorArt({ variant = "layout", className, ...rest }: Pr
             <rect x="328" y="168" width="12" height="32" rx="3" />
             <rect x="346" y="156" width="12" height="44" rx="3" />
           </g>
+          {/* Embedded thumbnails (moved last to appear on top) */}
+          <g transform="translate(284,132)">
+            <rect x="0" y="0" width="100" height="92" rx="12" fill="#FFFFFF" stroke="#E3EAFF" />
+            <g transform="translate(10,6)">
+              <g clipPath="url(#thumbR)">
+                <image href="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=160&auto=format&fit=crop" width="80" height="80" />
+              </g>
+              <rect x="0" y="0" width="80" height="80" rx="12" fill="none" stroke="#E5ECFF" />
+            </g>
+          </g>
         </svg>
       );
     case "builder":
@@ -189,6 +202,9 @@ export default function VectorArt({ variant = "layout", className, ...rest }: Pr
             <filter id="ds2" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="1" stdDeviation="1.2" floodColor="#A6B8FF" floodOpacity="0.35" />
             </filter>
+            <clipPath id="pillR">
+              <rect x="0" y="0" width="64" height="64" rx="12" />
+            </clipPath>
           </defs>
 
           {/* Background */}
@@ -227,6 +243,14 @@ export default function VectorArt({ variant = "layout", className, ...rest }: Pr
             <rect x="126" y="78" width="120" height="10" rx="5" fill="#B9CBFF" />
             <rect x="126" y="94" width="80" height="8" rx="4" fill="#D6E2FF" />
 
+            {/* Small embedded images inside the canvas */}
+            <g transform="translate(336,64)">
+              <g clipPath="url(#pillR)">
+                <image href="https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=160&auto=format&fit=crop" width="64" height="64" />
+              </g>
+              <rect x="0" y="0" width="64" height="64" rx="12" fill="none" stroke="#E5ECFF" />
+            </g>
+
             {/* Two column block */}
             <rect x="116" y="122" width="120" height="70" rx="10" fill="#F6F9FF" />
             <rect x="248" y="122" width="120" height="70" rx="10" fill="#F6F9FF" />
@@ -234,6 +258,13 @@ export default function VectorArt({ variant = "layout", className, ...rest }: Pr
             <rect x="126" y="132" width="96" height="12" rx="6" fill="#C9D8FF" />
             <rect x="126" y="150" width="84" height="8" rx="4" fill="#E0E8FF" />
             <rect x="126" y="164" width="72" height="8" rx="4" fill="#E0E8FF" />
+            {/* Left column small image */}
+            <g transform="translate(174,140)">
+              <g clipPath="url(#pillR)">
+                <image href="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=160&auto=format&fit=crop" width="64" height="64" />
+              </g>
+              <rect x="0" y="0" width="64" height="64" rx="12" fill="none" stroke="#E5ECFF" />
+            </g>
             {/* Right column content */}
             <rect x="258" y="132" width="96" height="12" rx="6" fill="#C9D8FF" />
             <rect x="258" y="150" width="84" height="8" rx="4" fill="#E0E8FF" />
