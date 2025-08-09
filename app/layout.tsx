@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import FooterLinks from "./components/FooterLinks";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
@@ -73,16 +74,7 @@ export default function RootLayout({
                 </div>
               </div>
             </div>
-            <div className="mt-8 text-sm flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-3 text-neutral-700">
-              <a href="#overview" className="hover:text-neutral-900">Overview</a>
-              <a href="#features" className="hover:text-neutral-900">Features</a>
-              <Link href="/showcase" className="hover:text-neutral-900">Showcase</Link>
-              <a href="#tools" className="hover:text-neutral-900">Tools</a>
-              <Link href="/blog" className="hover:text-neutral-900">News</Link>
-              <Link href="/contact" className="hover:text-neutral-900">Contact</Link>
-              <a href="#privacy" className="hover:text-neutral-900">Privacy</a>
-              <a href="#terms" className="hover:text-neutral-900">Terms</a>
-            </div>
+            <FooterLinks />
             <div className="mt-8 border-t border-neutral-200 pt-6 text-xs text-neutral-500">© {new Date().getFullYear()} hinn.io</div>
           </div>
         </footer>

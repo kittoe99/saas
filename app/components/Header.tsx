@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const router = useRouter();
   const featuresMenuRef = useRef<HTMLDivElement | null>(null);
   const toolsMenuRef = useRef<HTMLDivElement | null>(null);
   const featuresCloseTimerRef = useRef<number | null>(null);
@@ -187,12 +189,13 @@ export default function Header() {
               )}
             </div>
             {/* News */}
-            <Link
-              href="/blog"
+            <button
+              type="button"
+              onClick={() => router.push("/blog")}
               className="px-2 py-2 rounded-md hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
             >
               News
-            </Link>
+            </button>
             {/* Contact */}
             <Link
               href="/contact"
@@ -297,13 +300,13 @@ export default function Header() {
                 </div>
               </details>
               {/* News */}
-              <Link
-                href="/blog"
+              <button
+                type="button"
+                onClick={() => { setOpen(false); router.push("/blog"); }}
                 className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
-                onClick={() => setOpen(false)}
               >
                 News
-              </Link>
+              </button>
               {/* Contact */}
               <Link
                 href="/contact"
