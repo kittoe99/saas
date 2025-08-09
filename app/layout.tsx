@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 
-const geistSans = Geist({
+const interSans = Inter({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -26,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-neutral-900`}
+        className={`${interSans.variable} ${geistMono.variable} font-sans antialiased bg-white text-neutral-900`}
       >
         <Header />
         <main className="max-w-6xl mx-auto px-3 sm:px-4">{children}</main>
@@ -73,10 +74,10 @@ export default function RootLayout({
             <div className="mt-8 text-sm flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-3 text-neutral-700">
               <a href="#overview" className="hover:text-neutral-900">Overview</a>
               <a href="#features" className="hover:text-neutral-900">Features</a>
-              <a href="#showcase" className="hover:text-neutral-900">Showcase</a>
+              <a href="/showcase" className="hover:text-neutral-900">Showcase</a>
               <a href="#tools" className="hover:text-neutral-900">Tools</a>
               <a href="#news" className="hover:text-neutral-900">News</a>
-              <a href="#contact" className="hover:text-neutral-900">Contact</a>
+              <a href="/contact" className="hover:text-neutral-900">Contact</a>
               <a href="#privacy" className="hover:text-neutral-900">Privacy</a>
               <a href="#terms" className="hover:text-neutral-900">Terms</a>
             </div>

@@ -26,13 +26,10 @@ export default function ContactForm() {
             <option value="" disabled hidden>
               Select a subject
             </option>
-            <option value="general">General inquiry</option>
-            <option value="pricing">Pricing & plans</option>
-            <option value="ai-website-builder">Ai Website Builder</option>
-            <option value="ai-agents">Ai Agents</option>
-            <option value="sales-automation">Sales & Automation</option>
-            <option value="payment-processing">Payment Processing</option>
-            <option value="custom-ai">Custom Ai solution</option>
+            <option value="account">Account</option>
+            <option value="billing">Billing</option>
+            <option value="technical-issues">Technical Issues</option>
+            <option value="sales">Sales</option>
             <option value="other">Other</option>
           </select>
         </div>

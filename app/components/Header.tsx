@@ -130,7 +130,7 @@ export default function Header() {
             </div>
             {/* Showcase */}
             <a
-              href="#showcase"
+              href="/showcase"
               className="px-2 py-2 rounded-md hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
             >
               Showcase
@@ -195,7 +195,7 @@ export default function Header() {
             </a>
             {/* Contact */}
             <a
-              href="#contact"
+              href="/contact"
               className="px-2 py-2 rounded-md hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
             >
               Contact
@@ -279,7 +279,7 @@ export default function Header() {
               </details>
               {/* Showcase */}
               <a
-                href="#showcase"
+                href="/showcase"
                 className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
@@ -306,7 +306,7 @@ export default function Header() {
               </a>
               {/* Contact */}
               <a
-                href="#contact"
+                href="/contact"
                 className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
