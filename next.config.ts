@@ -6,14 +6,6 @@ const nextConfig: NextConfig = {
     // You can still run `npm run lint` locally to check.
     ignoreDuringBuilds: true,
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-    ],
-  },
 };
 
 export default nextConfig;

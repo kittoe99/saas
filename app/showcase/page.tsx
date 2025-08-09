@@ -3,46 +3,16 @@ export const metadata = {
   description: "A selection of recent website builds and concept projects by hinn.io.",
 };
 
-import Image from "next/image";
+import VectorArt from "../components/VectorArt";
 import Link from "next/link";
 
 const samples = [
-  {
-    title: "Aurora Fitness",
-    href: "#",
-    img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1600&auto=format&fit=crop",
-    category: "Wellness",
-  },
-  {
-    title: "Summit Outdoors",
-    href: "#",
-    img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop",
-    category: "Outdoors",
-  },
-  {
-    title: "Bluegrain Coffee Co.",
-    href: "#",
-    img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1600&auto=format&fit=crop",
-    category: "Hospitality",
-  },
-  {
-    title: "Northstar Consulting",
-    href: "#",
-    img: "https://images.unsplash.com/photo-1485217988980-11786ced9454?q=80&w=1600&auto=format&fit=crop",
-    category: "Professional Services",
-  },
-  {
-    title: "Crescent Studio",
-    href: "#",
-    img: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600&auto=format&fit=crop",
-    category: "Creative",
-  },
-  {
-    title: "Evergreen Nonprofit",
-    href: "#",
-    img: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1600&auto=format&fit=crop",
-    category: "Nonprofit",
-  },
+  { title: "Aurora Fitness", href: "#", category: "Wellness" },
+  { title: "Summit Outdoors", href: "#", category: "Outdoors" },
+  { title: "Bluegrain Coffee Co.", href: "#", category: "Hospitality" },
+  { title: "Northstar Consulting", href: "#", category: "Professional Services" },
+  { title: "Crescent Studio", href: "#", category: "Creative" },
+  { title: "Evergreen Nonprofit", href: "#", category: "Nonprofit" },
 ] as const;
 
 export default function ShowcasePage() {
@@ -56,10 +26,14 @@ export default function ShowcasePage() {
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {samples.map((s) => (
+          {samples.map((s, idx) => (
             <a key={s.title} href={s.href} className="group rounded-xl border border-neutral-200 bg-white overflow-hidden">
               <div className="relative h-48 sm:h-56 md:h-60 bg-neutral-100">
-                <Image src={s.img} alt={s.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                <VectorArt
+                  variant={(["layout", "team", "components", "sales", "ai", "card"] as const)[idx % 6]}
+                  className="absolute inset-0 h-full w-full"
+                  aria-label={s.title}
+                />
               </div>
               <div className="p-4">
                 <div className="text-xs uppercase tracking-wide text-neutral-500">{s.category}</div>

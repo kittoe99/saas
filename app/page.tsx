@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import VectorArt from "./components/VectorArt";
 import { useEffect, useState } from "react";
 
 const SECTION_IDS = ["create", "design", "features", "testimonial", "faq"] as const;
@@ -61,14 +61,12 @@ export default function Home() {
             <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Priority support</span></li>
           </ul>
         </div>
-        {/* Hero image */}
-        <div className="relative h-[300px] sm:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-white">
-          <Image
-            src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format&fit=crop"
-            alt="Website design preview"
-            fill
-            className="object-cover"
-            priority
+        {/* Hero vector */}
+        <div className="group relative h-[300px] sm:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-white to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
+          <VectorArt
+            variant="dashboard"
+            className="absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
+            aria-label="Website design preview"
           />
         </div>
       </section>
@@ -113,8 +111,12 @@ export default function Home() {
           <p className="mt-2 text-neutral-600 max-w-2xl">We handle structure, visuals, and monthly content updates so you can focus on your business. Everything is responsive and easy to evolve.</p>
         </header>
         <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-start">
-          <div className="relative h-52 sm:h-64 md:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-white">
-            <Image src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1600&auto=format&fit=crop" alt="Drag-and-drop site building" fill className="object-cover" />
+          <div className="group relative h-52 sm:h-64 md:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-white to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
+            <VectorArt
+              variant="builder"
+              className="absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
+              aria-label="Drag-and-drop site building"
+            />
           </div>
           <div>
             <h3 className="text-lg sm:text-xl md:text-2xl font-semibold tracking-tight">Highly engaging sites without programming skills</h3>
@@ -142,7 +144,7 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
           <div className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format&fit=crop" alt="Clean, modern layouts preview" fill className="object-cover" />
+              <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Clean, modern layouts preview" />
             </div>
             <div className="text-sm font-medium text-neutral-500">Design</div>
             <h3 className="mt-2 text-lg font-semibold">Clean, modern layouts</h3>
@@ -150,7 +152,7 @@ export default function Home() {
           </div>
           <div className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1600&auto=format&fit=crop" alt="Monthly content improvements preview" fill className="object-cover" />
+              <VectorArt variant="team" className="absolute inset-0 h-full w-full" aria-label="Monthly content improvements preview" />
             </div>
             <div className="text-sm font-medium text-neutral-500">Content</div>
             <h3 className="mt-2 text-lg font-semibold">Monthly improvements</h3>
@@ -158,7 +160,7 @@ export default function Home() {
           </div>
           <div className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=1600&auto=format&fit=crop" alt="Reusable components preview" fill className="object-cover" />
+              <VectorArt variant="components" className="absolute inset-0 h-full w-full" aria-label="Reusable components preview" />
             </div>
             <div className="text-sm font-medium text-neutral-500">Components</div>
             <h3 className="mt-2 text-lg font-semibold">Reusable sections</h3>
@@ -177,7 +179,7 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6">
           <div id="features-website" className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format&fit=crop" alt="Website feature preview" fill className="object-cover" />
+              <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Website feature preview" />
             </div>
             <div className="text-sm font-medium text-neutral-500">Website</div>
             <h3 className="mt-2 text-lg font-semibold">Design, hosting, and updates</h3>
@@ -185,7 +187,7 @@ export default function Home() {
           </div>
           <div id="features-sales" className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1600&auto=format&fit=crop" alt="Sales & automation preview" fill className="object-cover" />
+              <VectorArt variant="sales" className="absolute inset-0 h-full w-full" aria-label="Sales & automation preview" />
             </div>
             <div className="text-sm font-medium text-neutral-500">Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
             <h3 className="mt-2 text-lg font-semibold">Funnels, forms, workflows</h3>
@@ -193,7 +195,7 @@ export default function Home() {
           </div>
           <div id="features-ai" className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1555949963-aa79dcee981d?q=80&w=1600&auto=format&fit=crop" alt="AI features preview" fill className="object-cover" />
+              <VectorArt variant="ai" className="absolute inset-0 h-full w-full" aria-label="AI features preview" />
             </div>
             <div className="text-sm font-medium text-neutral-500">Artificial Intelligence <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
             <h3 className="mt-2 text-lg font-semibold">Content, insights, assistance</h3>
@@ -201,7 +203,7 @@ export default function Home() {
           </div>
           <div id="features-payments" className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=1600&auto=format&fit=crop" alt="Payments preview" fill className="object-cover" />
+              <VectorArt variant="payments" className="absolute inset-0 h-full w-full" aria-label="Payments preview" />
             </div>
             <div className="text-sm font-medium text-neutral-500">Payments <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
             <h3 className="mt-2 text-lg font-semibold">Subscriptions & one‑time</h3>
@@ -219,7 +221,7 @@ export default function Home() {
         <div className="rounded-xl border border-neutral-200 bg-white p-6">
           <div className="flex items-start gap-4">
             <div className="relative h-12 w-12 rounded-full overflow-hidden border border-neutral-200 bg-neutral-100 shrink-0">
-              <Image src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&w=400&auto=format&fit=crop" alt="Client avatar" fill className="object-cover" />
+              <VectorArt variant="avatar" className="absolute inset-0 h-full w-full" aria-label="Client avatar" />
             </div>
             <div>
               <p className="text-neutral-700">“They delivered a beautiful site and keep it updated every month. It’s hands‑off for us and always looks great.”</p>
