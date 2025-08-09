@@ -48,7 +48,7 @@ export default function RootLayout({
             </div>
             <div className="md:flex md:items-end md:justify-between gap-8">
               <div className="md:max-w-md">
-                <div className="rounded-md border border-neutral-200 p-4">
+                <div className="rounded-md border border-neutral-200 bg-white p-4">
                   <div className="text-lg font-medium">Stay in the loop</div>
                   <p className="mt-1 text-sm text-neutral-600">Occasional updates on new features and tips. No spam.</p>
                   <div className="mt-4 flex flex-col sm:flex-row gap-3">
