@@ -147,7 +147,7 @@ export default function BlogPage() {
               <h4 className="text-base sm:text-lg font-semibold text-neutral-900">Have a project in mind?</h4>
               <p className="mt-1 text-sm text-neutral-700">Tell us about it and we’ll get back with a plan.</p>
             </div>
-            <a href="/contact" className="px-3 py-2 rounded-md bg-[#1a73e8] text-white text-sm">Contact us</a>
+            <Link href="/contact" className="px-3 py-2 rounded-md bg-[#1a73e8] text-white text-sm">Contact us</Link>
           </div>
         </div>
       </section>
