@@ -265,7 +265,7 @@ export default function Header() {
               {/* Overview */}
               <a
                 href="#overview"
-                className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
                 Overview
@@ -283,7 +283,7 @@ export default function Header() {
               {/* Showcase */}
               <Link
                 href="/showcase"
-                className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
                 Showcase
@@ -300,17 +300,17 @@ export default function Header() {
                 </div>
               </details>
               {/* News */}
-              <button
-                type="button"
-                onClick={() => { setOpen(false); router.push("/blog"); }}
-                className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+              <Link
+                href="/blog"
+                className="block px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                onClick={() => setOpen(false)}
               >
                 News
-              </button>
+              </Link>
               {/* Contact */}
               <Link
                 href="/contact"
-                className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
                 Contact
