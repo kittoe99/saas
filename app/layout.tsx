@@ -76,10 +76,10 @@ export default function RootLayout({
             <div className="mt-8 text-sm flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-3 text-neutral-700">
               <a href="#overview" className="hover:text-neutral-900">Overview</a>
               <a href="#features" className="hover:text-neutral-900">Features</a>
-              <a href="/showcase" className="hover:text-neutral-900">Showcase</a>
+              <Link href="/showcase" className="hover:text-neutral-900">Showcase</Link>
               <a href="#tools" className="hover:text-neutral-900">Tools</a>
               <Link href="/blog" className="hover:text-neutral-900">News</Link>
-              <a href="/contact" className="hover:text-neutral-900">Contact</a>
+              <Link href="/contact" className="hover:text-neutral-900">Contact</Link>
               <a href="#privacy" className="hover:text-neutral-900">Privacy</a>
               <a href="#terms" className="hover:text-neutral-900">Terms</a>
             </div>

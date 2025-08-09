@@ -129,12 +129,12 @@ export default function Header() {
               )}
             </div>
             {/* Showcase */}
-            <a
+            <Link
               href="/showcase"
               className="px-2 py-2 rounded-md hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
             >
               Showcase
-            </a>
+            </Link>
             {/* Tools (megamenu) */}
             <div
               className="relative"
@@ -194,12 +194,12 @@ export default function Header() {
               News
             </Link>
             {/* Contact */}
-            <a
+            <Link
               href="/contact"
               className="px-2 py-2 rounded-md hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
             >
               Contact
-            </a>
+            </Link>
           </nav>
 
           {/* Actions */}
@@ -278,13 +278,13 @@ export default function Header() {
                 </div>
               </details>
               {/* Showcase */}
-              <a
+              <Link
                 href="/showcase"
                 className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
                 Showcase
-              </a>
+              </Link>
               {/* Tools - collapsible group */}
               <details>
                 <summary className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 cursor-pointer select-none">Tools</summary>
@@ -305,13 +305,13 @@ export default function Header() {
                 News
               </Link>
               {/* Contact */}
-              <a
+              <Link
                 href="/contact"
                 className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
                 Contact
-              </a>
+              </Link>
               <div className="p-3.5 flex flex-col gap-2 bg-neutral-50">
                 <a
                   href="#get-started"

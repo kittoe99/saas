@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type Message = {
@@ -158,18 +159,18 @@ export default function ChatWidget() {
           <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-t border-neutral-200 bg-neutral-50">
             <div className="text-xs uppercase tracking-wide text-neutral-500">Resources</div>
             <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-              <a href="/showcase" className="group rounded-md border border-neutral-200 bg-white px-3 py-2 hover:border-neutral-300">
+              <Link href="/showcase" className="group rounded-md border border-neutral-200 bg-white px-3 py-2 hover:border-neutral-300">
                 <div className="font-medium">Showcase</div>
                 <div className="text-xs text-neutral-600">See examples</div>
-              </a>
+              </Link>
               <a href="#features" className="group rounded-md border border-neutral-200 bg-white px-3 py-2 hover:border-neutral-300">
                 <div className="font-medium">Features</div>
                 <div className="text-xs text-neutral-600">What’s included</div>
               </a>
-              <a href="/contact" className="group rounded-md border border-neutral-200 bg-white px-3 py-2 hover:border-neutral-300">
+              <Link href="/contact" className="group rounded-md border border-neutral-200 bg-white px-3 py-2 hover:border-neutral-300">
                 <div className="font-medium">Contact</div>
                 <div className="text-xs text-neutral-600">Get in touch</div>
-              </a>
+              </Link>
               <a href="#overview" className="group rounded-md border border-neutral-200 bg-white px-3 py-2 hover:border-neutral-300">
                 <div className="font-medium">Overview</div>
                 <div className="text-xs text-neutral-600">Home</div>

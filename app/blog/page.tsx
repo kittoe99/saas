@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function BlogPage() {
   const posts = [
     {
@@ -71,8 +73,8 @@ export default function BlogPage() {
               and see how we keep your site fast, secure, and always improving.
             </p>
             <div className="mt-4 flex gap-3 text-sm">
-              <a href="/contact" className="px-3 py-2 rounded-md bg-[#1a73e8] text-white">Start a project</a>
-              <a href="/showcase" className="px-3 py-2 rounded-md border border-neutral-300 text-neutral-700 hover:bg-neutral-50">See showcase</a>
+              <Link href="/contact" className="px-3 py-2 rounded-md bg-[#1a73e8] text-white">Start a project</Link>
+              <Link href="/showcase" className="px-3 py-2 rounded-md border border-neutral-300 text-neutral-700 hover:bg-neutral-50">See showcase</Link>
             </div>
           </div>
         </div>
@@ -130,7 +132,7 @@ export default function BlogPage() {
               <h3 className="mt-2 text-base sm:text-lg font-semibold text-neutral-900">{p.title}</h3>
               <p className="mt-2 text-sm text-neutral-700">{p.excerpt}</p>
               <div className="mt-3">
-                <a href={`/blog/${p.slug}`} className="text-sm text-[#1a73e8] hover:underline">Read more</a>
+                <Link href={`/blog/${p.slug}`} className="text-sm text-[#1a73e8] hover:underline">Read more</Link>
               </div>
             </article>
           ))}
