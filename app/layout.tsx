@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
@@ -77,7 +78,7 @@ export default function RootLayout({
               <a href="#features" className="hover:text-neutral-900">Features</a>
               <a href="/showcase" className="hover:text-neutral-900">Showcase</a>
               <a href="#tools" className="hover:text-neutral-900">Tools</a>
-              <a href="/blog" className="hover:text-neutral-900">News</a>
+              <Link href="/blog" className="hover:text-neutral-900">News</Link>
               <a href="/contact" className="hover:text-neutral-900">Contact</a>
               <a href="#privacy" className="hover:text-neutral-900">Privacy</a>
               <a href="#terms" className="hover:text-neutral-900">Terms</a>

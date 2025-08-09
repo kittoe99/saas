@@ -2,9 +2,10 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+const SECTION_IDS = ["create", "design", "features", "testimonial", "faq"] as const;
+
 export default function Home() {
-  const sectionIds = ["create", "design", "features", "testimonial", "faq"] as const;
-  type SectionId = typeof sectionIds[number];
+  type SectionId = typeof SECTION_IDS[number];
   const [activeId, setActiveId] = useState<SectionId>("create");
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export default function Home() {
         }
         if (topEntry && topEntry.isIntersecting) {
           const id = topEntry.target.getAttribute("id") as SectionId | null;
-          if (id && sectionIds.includes(id)) setActiveId(id);
+          if (id && (SECTION_IDS as readonly string[]).includes(id)) setActiveId(id);
         }
       },
       {
@@ -30,7 +31,7 @@ export default function Home() {
       }
     );
 
-    const elements = sectionIds
+    const elements = SECTION_IDS
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
     elements.forEach((el) => observer.observe(el));
@@ -79,7 +80,7 @@ export default function Home() {
             role="tablist"
             aria-label="Section tabs"
           >
-              {sectionIds.map((id) => {
+              {SECTION_IDS.map((id) => {
                 const label = id.charAt(0).toUpperCase() + id.slice(1);
                 const isActive = activeId === id;
                 return (
