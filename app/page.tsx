@@ -45,7 +45,7 @@ export default function Home() {
           <p className="mt-4 text-neutral-600 text-base md:text-lg">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
           <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-3">
             <a href="#get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-[#1a73e8] text-white">Start monthly plan</a>
-            <a href="#contact" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white gap-2">
+            <a href="#features" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white gap-2">
               <span>See what’s included</span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

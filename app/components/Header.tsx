@@ -161,31 +161,26 @@ export default function Header() {
               {toolsOpen && (
                 <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-[min(90vw,44rem)]" onMouseEnter={cancelToolsClose} onMouseLeave={scheduleToolsClose}>
                   <div className="rounded-xl border border-neutral-200 bg-white shadow-xl p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {/* Column 1 */}
-                    <a href="#tools-builder" className="rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
-                      <div className="text-sm font-medium">Website Builder</div>
-                      <div className="mt-1 text-xs text-neutral-600">Create and launch fast with our guided setup.</div>
+                    {/* Columnized tool links */}
+                    <a href="#tools-ai-website-builder" className="relative rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                      <div className="text-sm font-medium">Ai Website Builder <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
+                      <div className="mt-1 text-xs text-neutral-600">Generate and launch sites with AI assistance.</div>
                     </a>
-                    <a href="#tools-analytics" className="rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
-                      <div className="text-sm font-medium">Analytics</div>
-                      <div className="mt-1 text-xs text-neutral-600">Real‑time traffic and conversion insights.</div>
+                    <a href="#tools-ai-agents" className="relative rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                      <div className="text-sm font-medium">Ai Agents <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
+                      <div className="mt-1 text-xs text-neutral-600">Automate support and operations with agents.</div>
                     </a>
-                    <a href="#tools-seo" className="rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
-                      <div className="text-sm font-medium">SEO</div>
-                      <div className="mt-1 text-xs text-neutral-600">Built‑in best practices to rank higher.</div>
+                    <a href="#tools-sales" className="relative rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                      <div className="text-sm font-medium">Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
+                      <div className="mt-1 text-xs text-neutral-600">Funnels, workflows, and lead capture.</div>
                     </a>
-                    {/* Column 2 */}
-                    <a href="#tools-integrations" className="rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
-                      <div className="text-sm font-medium">Integrations</div>
-                      <div className="mt-1 text-xs text-neutral-600">Connect to the tools you already use.</div>
+                    <a href="#tools-payments" className="relative rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                      <div className="text-sm font-medium">Payment Processing <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
+                      <div className="mt-1 text-xs text-neutral-600">Subscriptions and one‑time payments.</div>
                     </a>
-                    <a href="#tools-templates" className="rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
-                      <div className="text-sm font-medium">Templates</div>
-                      <div className="mt-1 text-xs text-neutral-600">Professionally designed starting points.</div>
-                    </a>
-                    <a href="#tools-cms" className="rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
-                      <div className="text-sm font-medium">CMS</div>
-                      <div className="mt-1 text-xs text-neutral-600">Edit content easily without code.</div>
+                    <a href="#tools-custom-ai" className="relative rounded-lg p-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                      <div className="text-sm font-medium">Custom Ai solution <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
+                      <div className="mt-1 text-xs text-neutral-600">Tailored AI workflows for your business.</div>
                     </a>
                   </div>
                 </div>
@@ -294,12 +289,11 @@ export default function Header() {
               <details>
                 <summary className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 cursor-pointer select-none">Tools</summary>
                 <div className="pb-3">
-                  <a href="#tools-builder" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Website Builder</a>
-                  <a href="#tools-analytics" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Analytics</a>
-                  <a href="#tools-seo" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>SEO</a>
-                  <a href="#tools-integrations" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Integrations</a>
-                  <a href="#tools-templates" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Templates</a>
-                  <a href="#tools-cms" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>CMS</a>
+                  <a href="#tools-ai-website-builder" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Ai Website Builder <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
+                  <a href="#tools-ai-agents" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Ai Agents <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
+                  <a href="#tools-sales" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
+                  <a href="#tools-payments" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Payment Processing <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
+                  <a href="#tools-custom-ai" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Custom Ai solution <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
                 </div>
               </details>
               {/* News */}
