@@ -208,7 +208,7 @@ export default function Header() {
           {/* Actions */}
           <div className="hidden md:flex items-center gap-2 lg:gap-3">
             <a
-              href="#get-started"
+              href="/signup"
               className="px-3 lg:px-4 py-2 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white inline-flex items-center gap-2 text-sm lg:text-base"
             >
               <span>Get Started Today</span>
@@ -224,8 +224,8 @@ export default function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </a>
-            <a href="#signin" className="px-3 lg:px-4 py-2 rounded-md bg-[#1a73e8] text-white text-sm lg:text-base">
-              Sign in
+            <a href="/login" className="px-3 lg:px-4 py-2 rounded-md bg-[#1a73e8] text-white text-sm lg:text-base">
+              Login
             </a>
           </div>
 
@@ -317,7 +317,7 @@ export default function Header() {
               </Link>
               <div className="p-3.5 flex flex-col gap-2 bg-neutral-50">
                 <a
-                  href="#get-started"
+                  href="/signup"
                   className="w-full px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white inline-flex items-center justify-center gap-2 text-base"
                   onClick={() => setOpen(false)}
                 >
@@ -335,11 +335,11 @@ export default function Header() {
                   </svg>
                 </a>
                 <a
-                  href="#signin"
+                  href="/login"
                   className="w-full px-4 py-2.5 rounded-md bg-[#1a73e8] text-white text-base text-center"
                   onClick={() => setOpen(false)}
                 >
-                  Sign in
+                  Login
                 </a>
               </div>
               </nav>
