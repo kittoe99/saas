@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const sectionIds = ["create", "design", "secure", "testimonial", "faq"] as const;
+  const sectionIds = ["create", "design", "features", "testimonial", "faq"] as const;
   type SectionId = typeof sectionIds[number];
   const [activeId, setActiveId] = useState<SectionId>("create");
 
@@ -166,37 +166,45 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Secure */}
-      <section id="secure" className="scroll-mt-24 mt-20 md:mt-28">
+      {/* Features */}
+      <section id="features" className="scroll-mt-24 mt-20 md:mt-28">
         <header className="mb-6 md:mb-8 text-center">
-          <div className="text-xs uppercase tracking-wider text-neutral-500">Secure</div>
-          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">Secure and reliable by default</h2>
-          <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">Managed hosting, SSL, and automated backups keep your site fast and protected—without extra work.</p>
+          <div className="text-xs uppercase tracking-wider text-neutral-500">Features</div>
+          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">Everything you need to grow</h2>
+          <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">From your website to sales automation and payments—built in, simple to use, and ready to scale.</p>
         </header>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
-          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6">
+          <div id="features-website" className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1600&auto=format&fit=crop" alt="Managed hosting preview" fill className="object-cover" />
+              <Image src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format&fit=crop" alt="Website feature preview" fill className="object-cover" />
             </div>
-            <div className="text-sm font-medium text-neutral-500">Hosting</div>
-            <h3 className="mt-2 text-lg font-semibold">Managed hosting</h3>
-            <p className="mt-2 text-sm text-neutral-600">Fast, reliable hosting so your site loads quickly everywhere.</p>
+            <div className="text-sm font-medium text-neutral-500">Website</div>
+            <h3 className="mt-2 text-lg font-semibold">Design, hosting, and updates</h3>
+            <p className="mt-2 text-sm text-neutral-600">Launch fast with professional design and monthly updates included.</p>
           </div>
-          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+          <div id="features-sales" className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1555949963-aa79dcee981d?q=80&w=1600&auto=format&fit=crop" alt="SSL security preview" fill className="object-cover" />
+              <Image src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1600&auto=format&fit=crop" alt="Sales & automation preview" fill className="object-cover" />
             </div>
-            <div className="text-sm font-medium text-neutral-500">Security</div>
-            <h3 className="mt-2 text-lg font-semibold">SSL included</h3>
-            <p className="mt-2 text-sm text-neutral-600">Your site ships with SSL so traffic is encrypted and trusted.</p>
+            <div className="text-sm font-medium text-neutral-500">Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
+            <h3 className="mt-2 text-lg font-semibold">Funnels, forms, workflows</h3>
+            <p className="mt-2 text-sm text-neutral-600">Capture leads and automate follow‑ups without extra tools.</p>
           </div>
-          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+          <div id="features-ai" className="p-5 rounded-xl border border-neutral-200 bg-white">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <Image src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=1600&auto=format&fit=crop" alt="Automated backups preview" fill className="object-cover" />
+              <Image src="https://images.unsplash.com/photo-1555949963-aa79dcee981d?q=80&w=1600&auto=format&fit=crop" alt="AI features preview" fill className="object-cover" />
             </div>
-            <div className="text-sm font-medium text-neutral-500">Backups</div>
-            <h3 className="mt-2 text-lg font-semibold">Regular backups</h3>
-            <p className="mt-2 text-sm text-neutral-600">Scheduled backups keep content safe and easy to restore.</p>
+            <div className="text-sm font-medium text-neutral-500">Artificial Intelligence <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
+            <h3 className="mt-2 text-lg font-semibold">Content, insights, assistance</h3>
+            <p className="mt-2 text-sm text-neutral-600">Speed up content, find insights, and get helpful suggestions.</p>
+          </div>
+          <div id="features-payments" className="p-5 rounded-xl border border-neutral-200 bg-white">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+              <Image src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=1600&auto=format&fit=crop" alt="Payments preview" fill className="object-cover" />
+            </div>
+            <div className="text-sm font-medium text-neutral-500">Payments <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
+            <h3 className="mt-2 text-lg font-semibold">Subscriptions & one‑time</h3>
+            <p className="mt-2 text-sm text-neutral-600">Sell plans or services with simple, integrated checkout.</p>
           </div>
         </div>
       </section>
