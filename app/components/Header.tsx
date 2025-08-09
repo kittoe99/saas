@@ -188,7 +188,7 @@ export default function Header() {
             </div>
             {/* News */}
             <a
-              href="#news"
+              href="/blog"
               className="px-2 py-2 rounded-md hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
             >
               News
@@ -298,7 +298,7 @@ export default function Header() {
               </details>
               {/* News */}
               <a
-                href="#news"
+                href="/blog"
                 className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
