@@ -36,7 +36,7 @@ export default function Home() {
       .filter((el): el is HTMLElement => el !== null);
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="py-10 md:py-16">
       {/* Hero */}
