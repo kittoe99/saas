@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
+import ChatWidget from "./components/ChatWidget";
 
 const interSans = Inter({
   variable: "--font-geist-sans",
@@ -84,6 +85,8 @@ export default function RootLayout({
             <div className="mt-8 border-t border-neutral-200 pt-6 text-xs text-neutral-500">© {new Date().getFullYear()} hinn.io</div>
           </div>
         </footer>
+        {/* Floating Support/Chat button */}
+        <ChatWidget />
       </body>
     </html>
   );
