@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 
 const POSTS: Record<string, {
   title: string;
   date: string;
   category: string;
   hero?: string;
-  content: React.ReactNode;
+  content: ReactNode;
 }> = {
   "welcome-to-hinn-blog": {
     title: "Welcome to the hinn.io Blog",
