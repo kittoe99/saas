@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Inter, Geist_Mono } from "next/font/google";
