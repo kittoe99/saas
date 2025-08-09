@@ -1,103 +1,234 @@
+"use client";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const sectionIds = ["create", "design", "secure", "testimonial", "faq"] as const;
+  type SectionId = typeof sectionIds[number];
+  const [activeId, setActiveId] = useState<SectionId>("create");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Pick the most visible entry
+        let topEntry: IntersectionObserverEntry | null = null;
+        for (const e of entries) {
+          if (!topEntry || e.intersectionRatio > topEntry.intersectionRatio) {
+            topEntry = e;
+          }
+        }
+        if (topEntry && topEntry.isIntersecting) {
+          const id = topEntry.target.getAttribute("id") as SectionId | null;
+          if (id && sectionIds.includes(id)) setActiveId(id);
+        }
+      },
+      {
+        // Activate when a section enters the middle band of the viewport
+        root: null,
+        rootMargin: "-25% 0px -65% 0px",
+        threshold: [0.15, 0.4, 0.8],
+      }
+    );
+
+    const elements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div className="py-10 md:py-16">
+      {/* Hero */}
+      <section className="grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-neutral-200 bg-neutral-50">
+        <div>
+          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">Pay‑by‑month, all‑inclusive website design</h1>
+          <p className="mt-4 text-neutral-600 text-base md:text-lg">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
+          <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-3">
+            <a href="#get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-[#1a73e8] text-white">Start monthly plan</a>
+            <a href="#contact" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white gap-2">
+              <span>See what’s included</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+          <div className="mt-2 text-xs text-neutral-500">No long‑term contracts. Cancel anytime.</div>
+          <ul className="mt-6 text-sm text-neutral-700 grid sm:grid-cols-2 gap-y-2 gap-x-6">
+            <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Design + build included</span></li>
+            <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Managed hosting & SSL</span></li>
+            <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Content updates every month</span></li>
+            <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Priority support</span></li>
+          </ul>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        {/* Hero image */}
+        <div className="relative h-[300px] sm:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-white">
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format&fit=crop"
+            alt="Website design preview"
+            fill
+            className="object-cover"
+            priority
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+      </section>
+      {/* Centered tabs that scroll to sections (sticky + active highlighting) */}
+      <div className="sticky top-16 md:top-20 z-30 mt-14">
+        <div className="flex justify-center">
+          <div
+            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full border border-neutral-200 bg-white px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-sm whitespace-nowrap snap-x snap-mandatory"
+            role="tablist"
+            aria-label="Section tabs"
+          >
+              {sectionIds.map((id) => {
+                const label = id.charAt(0).toUpperCase() + id.slice(1);
+                const isActive = activeId === id;
+                return (
+                  <a
+                    key={id}
+                    href={`#${id}`}
+                    className={
+                      (isActive
+                        ? "border border-[#1a73e8] text-[#1a73e8] bg-white font-medium"
+                        : "text-neutral-800 hover:text-[#1a73e8] hover:bg-neutral-50") +
+                      " px-3 sm:px-4 py-1.5 rounded-full focus:outline-none snap-start"
+                    }
+                    aria-current={isActive ? "true" : undefined}
+                    role="tab"
+                    onClick={() => setActiveId(id)}
+                  >
+                    {label}
+                  </a>
+                );
+              })}
+          </div>
+        </div>
+      </div>
+
+      {/* Create */}
+      <section id="create" className="scroll-mt-24 mt-16 md:mt-24">
+        <header className="mb-8 md:mb-10">
+          <div className="text-xs uppercase tracking-wider text-neutral-500">Create</div>
+          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">Launch a professional site without code</h2>
+          <p className="mt-2 text-neutral-600 max-w-2xl">We handle structure, visuals, and monthly content updates so you can focus on your business. Everything is responsive and easy to evolve.</p>
+        </header>
+        <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-start">
+          <div className="relative h-52 sm:h-64 md:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-white">
+            <Image src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1600&auto=format&fit=crop" alt="Drag-and-drop site building" fill className="object-cover" />
+          </div>
+          <div>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold tracking-tight">Highly engaging sites without programming skills</h3>
+            <p className="mt-3 text-neutral-600">Easily create and edit your site with simple content updates each month. Everything looks great and scales perfectly on any device, plus it’s simple to move or resize elements.</p>
+            <ul className="mt-4 text-sm text-neutral-700 space-y-2">
+              <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Monthly content updates included</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Responsive layouts for all devices</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>No code required</span></li>
+            </ul>
+            <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-3 xl:items-center">
+              <div className="w-full"><a href="#get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-[#1a73e8] text-white">Start monthly plan</a></div>
+              <div className="w-full"><a href="#work" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white gap-2"><span>View recent work</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></a></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Design */}
+      <section id="design" className="scroll-mt-24 mt-20 md:mt-28">
+        <header className="mb-6 md:mb-8 text-center">
+          <div className="text-xs uppercase tracking-wider text-neutral-500">Design</div>
+          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">Thoughtful, consistent design system</h2>
+          <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">Clean layouts, reusable components, and clear hierarchy ensure a polished experience across every page.</p>
+        </header>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
+          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+              <Image src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format&fit=crop" alt="Clean, modern layouts preview" fill className="object-cover" />
+            </div>
+            <div className="text-sm font-medium text-neutral-500">Design</div>
+            <h3 className="mt-2 text-lg font-semibold">Clean, modern layouts</h3>
+            <p className="mt-2 text-sm text-neutral-600">Professional design tailored to your brand with clear hierarchy and polished details.</p>
+          </div>
+          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+              <Image src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1600&auto=format&fit=crop" alt="Monthly content improvements preview" fill className="object-cover" />
+            </div>
+            <div className="text-sm font-medium text-neutral-500">Content</div>
+            <h3 className="mt-2 text-lg font-semibold">Monthly improvements</h3>
+            <p className="mt-2 text-sm text-neutral-600">We handle ongoing tweaks and updates so the site stays fresh and accurate.</p>
+          </div>
+          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+              <Image src="https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=1600&auto=format&fit=crop" alt="Reusable components preview" fill className="object-cover" />
+            </div>
+            <div className="text-sm font-medium text-neutral-500">Components</div>
+            <h3 className="mt-2 text-lg font-semibold">Reusable sections</h3>
+            <p className="mt-2 text-sm text-neutral-600">Thoughtful building blocks that make pages consistent and easy to extend.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Secure */}
+      <section id="secure" className="scroll-mt-24 mt-20 md:mt-28">
+        <header className="mb-6 md:mb-8 text-center">
+          <div className="text-xs uppercase tracking-wider text-neutral-500">Secure</div>
+          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">Secure and reliable by default</h2>
+          <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">Managed hosting, SSL, and automated backups keep your site fast and protected—without extra work.</p>
+        </header>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
+          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+              <Image src="https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1600&auto=format&fit=crop" alt="Managed hosting preview" fill className="object-cover" />
+            </div>
+            <div className="text-sm font-medium text-neutral-500">Hosting</div>
+            <h3 className="mt-2 text-lg font-semibold">Managed hosting</h3>
+            <p className="mt-2 text-sm text-neutral-600">Fast, reliable hosting so your site loads quickly everywhere.</p>
+          </div>
+          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+              <Image src="https://images.unsplash.com/photo-1555949963-aa79dcee981d?q=80&w=1600&auto=format&fit=crop" alt="SSL security preview" fill className="object-cover" />
+            </div>
+            <div className="text-sm font-medium text-neutral-500">Security</div>
+            <h3 className="mt-2 text-lg font-semibold">SSL included</h3>
+            <p className="mt-2 text-sm text-neutral-600">Your site ships with SSL so traffic is encrypted and trusted.</p>
+          </div>
+          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+              <Image src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=1600&auto=format&fit=crop" alt="Automated backups preview" fill className="object-cover" />
+            </div>
+            <div className="text-sm font-medium text-neutral-500">Backups</div>
+            <h3 className="mt-2 text-lg font-semibold">Regular backups</h3>
+            <p className="mt-2 text-sm text-neutral-600">Scheduled backups keep content safe and easy to restore.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonial */}
+      <section id="testimonial" className="scroll-mt-24 mt-20 md:mt-28">
+        <header className="mb-6 md:mb-8 text-center">
+          <div className="text-xs uppercase tracking-wider text-neutral-500">Testimonial</div>
+          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">What our clients say</h2>
+        </header>
+        <div className="rounded-xl border border-neutral-200 bg-white p-6">
+          <div className="flex items-start gap-4">
+            <div className="relative h-12 w-12 rounded-full overflow-hidden border border-neutral-200 bg-neutral-100 shrink-0">
+              <Image src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&w=400&auto=format&fit=crop" alt="Client avatar" fill className="object-cover" />
+            </div>
+            <div>
+              <p className="text-neutral-700">“They delivered a beautiful site and keep it updated every month. It’s hands‑off for us and always looks great.”</p>
+              <div className="mt-3 text-sm text-neutral-500">— Happy Client, Founder</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="scroll-mt-24 mt-20 md:mt-28">
+        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">FAQ</h2>
+        <dl className="mt-4 space-y-4">
+          <div className="rounded-md border border-neutral-200 bg-white p-4"><dt className="font-medium">What’s included in the monthly plan?</dt><dd className="mt-1 text-sm text-neutral-600">Design, hosting, SSL, and monthly content updates with support.</dd></div>
+          <div className="rounded-md border border-neutral-200 bg-white p-4"><dt className="font-medium">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-neutral-600">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
+          <div className="rounded-md border border-neutral-200 bg-white p-4"><dt className="font-medium">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-neutral-600">We’ll align the site with your brand and adjust layouts to fit your content.</dd></div>
+        </dl>
+      </section>
     </div>
   );
 }
