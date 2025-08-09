@@ -3,8 +3,23 @@ export const metadata = {
   description: "A selection of recent website builds and concept projects by hinn.io.",
 };
 
-import VectorArt from "../components/VectorArt";
 import Link from "next/link";
+
+// Sample showcase images (no people-focused shots). You can replace these with your own.
+const categoryImages: Record<string, string> = {
+  Wellness:
+    "https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1600&auto=format&fit=crop",
+  Outdoors:
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop",
+  Hospitality:
+    "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=1600&auto=format&fit=crop",
+  "Professional Services":
+    "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600&auto=format&fit=crop",
+  Creative:
+    "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1600&auto=format&fit=crop",
+  Nonprofit:
+    "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1600&auto=format&fit=crop",
+};
 
 const samples = [
   { title: "Aurora Fitness", href: "#", category: "Wellness" },
@@ -27,13 +42,22 @@ export default function ShowcasePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {samples.map((s, idx) => (
-            <a key={s.title} href={s.href} className="group rounded-xl border border-neutral-200 bg-white overflow-hidden">
-              <div className="relative h-48 sm:h-56 md:h-60 bg-neutral-100">
-                <VectorArt
-                  variant={(["layout", "team", "components", "sales", "ai", "card"] as const)[idx % 6]}
-                  className="absolute inset-0 h-full w-full"
-                  aria-label={s.title}
+            <a
+              key={s.title}
+              href={s.href}
+              className="group rounded-xl border border-neutral-200 bg-white overflow-hidden transition-shadow duration-300 hover:shadow-lg"
+            >
+              <div className="relative h-48 sm:h-56 md:h-60 bg-neutral-200">
+                <img
+                  src={categoryImages[s.category]}
+                  alt={s.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
                 />
+                {/* persistent black overlay with subtle hover intensification */}
+                <div className="absolute inset-0 bg-black/30 transition-opacity duration-300 group-hover:opacity-40" />
               </div>
               <div className="p-4">
                 <div className="text-xs uppercase tracking-wide text-neutral-500">{s.category}</div>

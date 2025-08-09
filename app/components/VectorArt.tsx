@@ -10,7 +10,13 @@ export type VectorVariant =
   | "avatar"
   | "card"
   | "dashboard"
-  | "builder";
+  | "builder"
+  | "wellness"
+  | "outdoors"
+  | "hospitality"
+  | "services"
+  | "creative"
+  | "nonprofit";
 
 interface Props extends React.SVGProps<SVGSVGElement> {
   variant?: VectorVariant;
@@ -19,6 +25,119 @@ interface Props extends React.SVGProps<SVGSVGElement> {
 
 export default function VectorArt({ variant = "layout", className, ...rest }: Props) {
   switch (variant) {
+    case "wellness":
+      return (
+        <svg viewBox="0 0 400 240" className={className} {...rest}>
+          <defs>
+            <linearGradient id="gw" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#E8FFF6" />
+              <stop offset="100%" stopColor="#F4FFFA" />
+            </linearGradient>
+          </defs>
+          <rect width="400" height="240" rx="12" fill="url(#gw)" />
+          {/* human figure in yoga pose */}
+          <g fill="#7AD1B8">
+            <circle cx="200" cy="88" r="16" />
+            <rect x="188" y="104" width="24" height="56" rx="12" />
+          </g>
+          <g fill="#BEEEDD">
+            <rect x="156" y="156" width="88" height="12" rx="6" />
+            <rect x="128" y="172" width="144" height="10" rx="5" />
+          </g>
+          <g fill="#94E0C9">
+            <rect x="176" y="132" width="16" height="32" rx="8" />
+            <rect x="208" y="132" width="16" height="32" rx="8" />
+          </g>
+        </svg>
+      );
+    case "outdoors":
+      return (
+        <svg viewBox="0 0 400 240" className={className} {...rest}>
+          <rect width="400" height="240" rx="12" fill="#F3F9FF" />
+          {/* mountains */}
+          <g fill="#D3E6FF">
+            <path d="M40 180 L100 100 L160 180 Z" />
+            <path d="M140 180 L200 90 L260 180 Z" />
+            <path d="M240 180 L300 110 L360 180 Z" />
+          </g>
+          {/* hiker silhouette */}
+          <g fill="#8DB7FF">
+            <circle cx="210" cy="116" r="10" />
+            <rect x="204" y="128" width="12" height="28" rx="6" />
+            <rect x="198" y="156" width="24" height="8" rx="4" />
+          </g>
+          <rect x="24" y="188" width="352" height="12" rx="6" fill="#E6F1FF" />
+        </svg>
+      );
+    case "hospitality":
+      return (
+        <svg viewBox="0 0 400 240" className={className} {...rest}>
+          <rect width="400" height="240" rx="12" fill="#FFF7F0" />
+          {/* counter and barista */}
+          <rect x="40" y="160" width="320" height="20" rx="6" fill="#FFE3CC" />
+          <g>
+            <circle cx="280" cy="120" r="12" fill="#FFC8A4" />
+            <rect x="270" y="132" width="20" height="24" rx="6" fill="#FFD9BF" />
+          </g>
+          <g fill="#FFD2B3">
+            <rect x="64" y="96" width="56" height="36" rx="8" />
+            <rect x="132" y="96" width="56" height="36" rx="8" />
+            <rect x="200" y="96" width="56" height="36" rx="8" />
+          </g>
+          <rect x="48" y="182" width="304" height="10" rx="5" fill="#FFEDE0" />
+        </svg>
+      );
+    case "services":
+      return (
+        <svg viewBox="0 0 400 240" className={className} {...rest}>
+          <rect width="400" height="240" rx="12" fill="#F6F8FF" />
+          {/* consultant avatar */}
+          <circle cx="92" cy="92" r="18" fill="#C9D8FF" />
+          <rect x="74" y="112" width="36" height="22" rx="8" fill="#E3EBFF" />
+          {/* chat bubbles */}
+          <rect x="128" y="80" width="172" height="20" rx="10" fill="#EAF0FF" />
+          <rect x="128" y="108" width="148" height="16" rx="8" fill="#EAF0FF" />
+          {/* checklist */}
+          <g fill="#DDE7FF">
+            <rect x="128" y="140" width="196" height="10" rx="5" />
+            <rect x="128" y="158" width="180" height="10" rx="5" />
+            <rect x="128" y="176" width="160" height="10" rx="5" />
+          </g>
+        </svg>
+      );
+    case "creative":
+      return (
+        <svg viewBox="0 0 400 240" className={className} {...rest}>
+          <defs>
+            <linearGradient id="gcx" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#FFE8F6" />
+              <stop offset="100%" stopColor="#E9F0FF" />
+            </linearGradient>
+          </defs>
+          <rect width="400" height="240" rx="12" fill="url(#gcx)" />
+          {/* palette */}
+          <ellipse cx="130" cy="120" rx="42" ry="32" fill="#FFFFFF" opacity="0.9" />
+          <circle cx="116" cy="116" r="5" fill="#FF7AA2" />
+          <circle cx="130" cy="106" r="5" fill="#7AD1B8" />
+          <circle cx="146" cy="120" r="5" fill="#7AA8FF" />
+          {/* pen tool */}
+          <rect x="200" y="88" width="120" height="80" rx="10" fill="#F6F9FF" />
+          <path d="M220 120 L260 160" stroke="#1a73e8" strokeWidth="3" />
+          <circle cx="260" cy="160" r="6" fill="#1a73e8" />
+        </svg>
+      );
+    case "nonprofit":
+      return (
+        <svg viewBox="0 0 400 240" className={className} {...rest}>
+          <rect width="400" height="240" rx="12" fill="#F2FFF8" />
+          {/* hands/heart */}
+          <path d="M140 132 C150 116, 170 116, 180 132 C190 116, 210 116, 220 132 C220 150, 200 164, 180 176 C160 164, 140 150, 140 132 Z" fill="#FF7AA2" opacity="0.85" />
+          <g fill="#BEEEDD">
+            <rect x="88" y="180" width="224" height="12" rx="6" />
+            <rect x="72" y="196" width="256" height="8" rx="4" />
+          </g>
+        </svg>
+      );
     case "dashboard":
       return (
         <svg viewBox="0 0 400 240" className={className} {...rest}>
@@ -55,29 +174,88 @@ export default function VectorArt({ variant = "layout", className, ...rest }: Pr
     case "builder":
       return (
         <svg viewBox="0 0 400 240" className={className} {...rest}>
-          <rect width="400" height="240" rx="12" fill="#F6F8FF" />
-          {/* Canvas */}
-          <rect x="20" y="20" width="360" height="200" rx="12" fill="#EBF1FF" />
-          {/* Grid */}
-          <g opacity="0.5" stroke="#E1E9FF" strokeWidth="1">
-            <path d="M40 40 H360" />
-            <path d="M40 70 H360" />
-            <path d="M40 100 H360" />
-            <path d="M40 130 H360" />
-            <path d="M40 160 H360" />
-            <path d="M40 190 H360" />
+          <defs>
+            <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#F7FAFF" />
+              <stop offset="100%" stopColor="#EEF3FF" />
+            </linearGradient>
+            <linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="100%" stopColor="#F2F6FF" />
+            </linearGradient>
+            <filter id="ds1" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#9FB6FF" floodOpacity="0.25" />
+            </filter>
+            <filter id="ds2" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1" stdDeviation="1.2" floodColor="#A6B8FF" floodOpacity="0.35" />
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="400" height="240" rx="12" fill="url(#bgGrad)" />
+
+          {/* Window chrome */}
+          <g>
+            <rect x="16" y="16" width="368" height="16" rx="6" fill="#E6EEFF" />
+            <circle cx="28" cy="24" r="3" fill="#FF6B6B" />
+            <circle cx="40" cy="24" r="3" fill="#FFCF6B" />
+            <circle cx="52" cy="24" r="3" fill="#52D273" />
           </g>
-          {/* Blocks */}
-          <rect x="44" y="52" width="112" height="56" rx="8" fill="#DDE7FF" />
-          <rect x="168" y="52" width="184" height="24" rx="6" fill="#C9D8FF" />
-          <rect x="168" y="84" width="184" height="24" rx="6" fill="#E7ECFF" />
-          <rect x="44" y="120" width="308" height="28" rx="8" fill="#EAF0FF" />
-          <rect x="44" y="156" width="148" height="44" rx="10" fill="#D9E4FF" />
-          <rect x="200" y="156" width="152" height="44" rx="10" fill="#F0F4FF" />
-          {/* Drag handles */}
+
+          {/* Sidebar */}
+          <g filter="url(#ds1)">
+            <rect x="16" y="36" width="80" height="188" rx="10" fill="url(#panelGrad)" />
+            <rect x="24" y="46" width="64" height="10" rx="5" fill="#C9D8FF" />
+            <rect x="24" y="64" width="48" height="8" rx="4" fill="#DDE7FF" />
+            <rect x="24" y="78" width="56" height="8" rx="4" fill="#DDE7FF" />
+            <rect x="24" y="92" width="36" height="8" rx="4" fill="#DDE7FF" />
+            <rect x="24" y="120" width="64" height="14" rx="7" fill="#EAF0FF" />
+            <rect x="24" y="142" width="64" height="14" rx="7" fill="#EAF0FF" />
+            <rect x="24" y="164" width="64" height="14" rx="7" fill="#EAF0FF" />
+          </g>
+
+          {/* Canvas area */}
+          <g filter="url(#ds2)">
+            <rect x="104" y="36" width="280" height="188" rx="12" fill="url(#panelGrad)" />
+            {/* Top toolbar */}
+            <rect x="116" y="48" width="100" height="10" rx="5" fill="#C9D8FF" />
+            <rect x="222" y="48" width="56" height="10" rx="5" fill="#E0E8FF" />
+            <rect x="282" y="48" width="24" height="10" rx="5" fill="#E0E8FF" />
+
+            {/* Hero banner block */}
+            <rect x="116" y="68" width="252" height="46" rx="10" fill="#EEF4FF" />
+            <rect x="126" y="78" width="120" height="10" rx="5" fill="#B9CBFF" />
+            <rect x="126" y="94" width="80" height="8" rx="4" fill="#D6E2FF" />
+
+            {/* Two column block */}
+            <rect x="116" y="122" width="120" height="70" rx="10" fill="#F6F9FF" />
+            <rect x="248" y="122" width="120" height="70" rx="10" fill="#F6F9FF" />
+            {/* Left column content */}
+            <rect x="126" y="132" width="96" height="12" rx="6" fill="#C9D8FF" />
+            <rect x="126" y="150" width="84" height="8" rx="4" fill="#E0E8FF" />
+            <rect x="126" y="164" width="72" height="8" rx="4" fill="#E0E8FF" />
+            {/* Right column content */}
+            <rect x="258" y="132" width="96" height="12" rx="6" fill="#C9D8FF" />
+            <rect x="258" y="150" width="84" height="8" rx="4" fill="#E0E8FF" />
+            <rect x="258" y="164" width="72" height="8" rx="4" fill="#E0E8FF" />
+
+            {/* CTA row */}
+            <rect x="116" y="198" width="76" height="14" rx="7" fill="#1a73e8" opacity="0.9" />
+            <rect x="196" y="198" width="72" height="14" rx="7" fill="#DCE6FF" />
+          </g>
+
+          {/* Drag handles (left of hero block) */}
           <g fill="#AFC6FF">
-            <rect x="50" y="62" width="4" height="36" rx="2" />
-            <rect x="56" y="62" width="4" height="36" rx="2" />
+            <rect x="110" y="72" width="3" height="36" rx="1.5" />
+            <rect x="114" y="72" width="3" height="36" rx="1.5" />
+          </g>
+
+          {/* Floating widget overlay (to suggest drag n drop) */}
+          <g filter="url(#ds1)">
+            <rect x="214" y="86" width="84" height="32" rx="8" fill="#FFFFFF" />
+            <rect x="222" y="94" width="52" height="8" rx="4" fill="#C9D8FF" />
+            <rect x="222" y="106" width="36" height="6" rx="3" fill="#E0E8FF" />
+            <rect x="278" y="94" width="12" height="12" rx="3" fill="#1a73e8" opacity="0.9" />
           </g>
         </svg>
       );

@@ -240,6 +240,7 @@ export default function Home() {
           <div className="rounded-md border border-neutral-200 bg-white p-4"><dt className="font-medium">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-neutral-600">We’ll align the site with your brand and adjust layouts to fit your content.</dd></div>
         </dl>
       </section>
+
     </div>
   );
 }
