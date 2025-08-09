@@ -106,7 +106,7 @@ export default function ChatWidget() {
           aria-label="Support chatbot"
         >
           <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-neutral-200 bg-neutral-50">
-            <div className="text-xs sm:text-sm font-medium">Help & resources</div>
+            <div className="text-sm sm:text-sm font-medium">Help & resources</div>
             <button
               aria-label="Close"
               className="p-1 rounded-md hover:bg-neutral-100"
@@ -123,8 +123,8 @@ export default function ChatWidget() {
                 <div
                   className={
                     m.role === "user"
-                      ? "max-w-[80%] rounded-lg bg-[#1a73e8] text-white px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm"
-                      : "max-w-[80%] rounded-lg bg-neutral-100 text-neutral-900 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm"
+                      ? "max-w-[80%] rounded-lg bg-[#1a73e8] text-white px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-sm"
+                      : "max-w-[80%] rounded-lg bg-neutral-100 text-neutral-900 px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-sm"
                   }
                 >
                   {m.content}
@@ -135,10 +135,10 @@ export default function ChatWidget() {
 
           {/* Quick suggestions */}
           <div className="px-3 sm:px-4 pb-2 flex flex-wrap gap-2">
-            <button onClick={() => quickAsk("What are your pricing options?")} className="text-xs px-2 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50">Pricing</button>
-            <button onClick={() => quickAsk("Show me examples of your work")} className="text-xs px-2 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50">Showcase</button>
-            <button onClick={() => quickAsk("I have a technical issue")} className="text-xs px-2 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50">Tech issue</button>
-            <button onClick={() => quickAsk("Tell me about AI features")} className="text-xs px-2 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50">AI features</button>
+            <button onClick={() => quickAsk("What are your pricing options?")} className="text-sm sm:text-xs px-2 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50">Pricing</button>
+            <button onClick={() => quickAsk("Show me examples of your work")} className="text-sm sm:text-xs px-2 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50">Showcase</button>
+            <button onClick={() => quickAsk("I have a technical issue")} className="text-sm sm:text-xs px-2 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50">Tech issue</button>
+            <button onClick={() => quickAsk("Tell me about AI features")} className="text-sm sm:text-xs px-2 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50">AI features</button>
           </div>
 
           {/* Input */}
@@ -148,9 +148,9 @@ export default function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type a message..."
-                className="flex-1 min-w-0 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md border border-neutral-200 bg-white outline-none text-xs sm:text-sm"
+                className="flex-1 min-w-0 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md border border-neutral-200 bg-white outline-none text-sm sm:text-sm"
               />
-              <button type="submit" className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md bg-[#1a73e8] text-white text-xs sm:text-sm">Send</button>
+              <button type="submit" className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md bg-[#1a73e8] text-white text-sm sm:text-sm">Send</button>
             </div>
           </form>
 
