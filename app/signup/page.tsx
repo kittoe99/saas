@@ -10,6 +10,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [existingUser, setExistingUser] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -23,6 +25,7 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
     setSuccess(null);
+    setExistingUser(false);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -38,9 +41,31 @@ export default function SignupPage() {
         window.location.replace("/");
       }
     } catch (e: any) {
-      setError(e?.message || "Failed to create account");
+      const msg = e?.message || "Failed to create account";
+      setError(msg);
+      if (/already|registered|exists/i.test(msg)) {
+        setExistingUser(true);
+      }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function sendPasswordReset() {
+    if (!email) return;
+    try {
+      setResetLoading(true);
+      setError(null);
+      setSuccess(null);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      });
+      if (error) throw error;
+      setSuccess("Password reset email sent. Please check your inbox.");
+    } catch (e: any) {
+      setError(e?.message || "Failed to send reset email");
+    } finally {
+      setResetLoading(false);
     }
   }
 
@@ -76,6 +101,15 @@ export default function SignupPage() {
         )}
         {success && (
           <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">{success}</div>
+        )}
+        {existingUser && email && (
+          <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
+            It looks like you already have an account with {email}. {" "}
+            <Link href="/login" className="underline">Login instead</Link> or {" "}
+            <button onClick={sendPasswordReset} disabled={resetLoading} className="underline">
+              {resetLoading ? "Sending reset..." : "reset your password"}
+            </button>.
+          </div>
         )}
 
         <button

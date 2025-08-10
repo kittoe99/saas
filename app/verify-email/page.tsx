@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function VerifyEmailPage() {
@@ -11,6 +11,7 @@ export default function VerifyEmailPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState<number>(0); // seconds remaining
 
   async function resend() {
     if (!email) return;
@@ -21,12 +22,21 @@ export default function VerifyEmailPage() {
       const { error } = await supabase.auth.resend({ type: "signup", email });
       if (error) throw error;
       setMessage("Verification email sent. Please check your inbox.");
+      setCooldown(60);
     } catch (e: any) {
       setError(e?.message || "Failed to resend verification email");
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => {
+      setCooldown((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4 pt-6">
@@ -53,10 +63,10 @@ export default function VerifyEmailPage() {
           </div>
           <button
             onClick={resend}
-            disabled={!email || loading}
+            disabled={!email || loading || cooldown > 0}
             className="mt-1 inline-flex items-center justify-center rounded-md bg-[#1a73e8] text-white px-4 py-2 text-sm disabled:opacity-60"
           >
-            {loading ? "Sending..." : "Resend email"}
+            {loading ? "Sending..." : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend email"}
           </button>
           <div className="pt-2 flex items-center gap-2">
             <Link href="/login" className="text-sm text-[#1a73e8] hover:underline">Back to sign in</Link>

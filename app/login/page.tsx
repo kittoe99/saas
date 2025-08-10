@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [unverified, setUnverified] = useState(false);
 
   // Compute a safe redirect URL back to this app
   const redirectTo = useMemo(() => {
@@ -45,6 +47,7 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     setSuccess(null);
+    setUnverified(false);
     try {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -67,7 +70,9 @@ export default function LoginPage() {
         }
       }
     } catch (e: any) {
-      setError(e?.message || "Authentication failed");
+      const msg = e?.message || "Authentication failed";
+      setError(msg);
+      if (/confirm|verify/i.test(msg)) setUnverified(true);
     } finally {
       setLoading(false);
     }
@@ -91,6 +96,11 @@ export default function LoginPage() {
         {error && (
           <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
             {error}
+          </div>
+        )}
+        {mode === "signin" && unverified && email && (
+          <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
+            Your email isn’t verified. <Link href={`/verify-email?email=${encodeURIComponent(email)}`} className="underline">Resend verification email</Link>.
           </div>
         )}
         {success && (
