@@ -144,7 +144,7 @@ function StepCheckout({
   const canContinueBilling = Boolean(
     billing.fullName && billing.address1 && billing.postalCode
   );
-  const canPay = canContinueBilling; // same minimal requirements for mock
+  const canPay = canContinueBilling; // mock only
 
   return (
     <div>
@@ -245,7 +245,7 @@ function StepCheckout({
         </div>
       </div>
 
-      {/* Card details */}
+      {/* Card details (mock, Stripe-like UI) */}
       {showCard && (
       <div className="mt-5 rounded-xl border border-neutral-200 p-4">
         <div className="text-sm font-medium text-neutral-700">Payment method (mock)</div>

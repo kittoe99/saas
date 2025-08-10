@@ -3,8 +3,10 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -29,7 +31,8 @@ export default function SignupPage() {
       });
       if (error) throw error;
       if (data.user && !data.session) {
-        setSuccess("Check your email to confirm your account.");
+        // Email confirmation required — send user to verification screen
+        router.replace(`/verify-email?email=${encodeURIComponent(email)}`);
       } else {
         setSuccess("Account created. Redirecting...");
         window.location.replace("/");
