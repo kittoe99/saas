@@ -58,6 +58,14 @@ export default function ShowcasePage() {
                 />
                 {/* persistent black overlay with subtle hover intensification */}
                 <div className="absolute inset-0 bg-black/30 transition-opacity duration-300 group-hover:opacity-40" />
+                {/* site logo overlay bottom-right */}
+                <img
+                  src="/logo.svg"
+                  alt="hinn.io"
+                  className="absolute bottom-2 right-2 h-7 w-7 rounded-md bg-white/85 p-1 shadow-sm ring-1 ring-black/5"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
               <div className="p-4">
                 <div className="text-xs uppercase tracking-wide text-neutral-500">{s.category}</div>
