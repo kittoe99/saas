@@ -2,10 +2,18 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center px-4 pt-6"><div className="text-sm text-neutral-600">Loading...</div></div>}>
+      <VerifyEmailInner />
+    </Suspense>
+  );
+}
+
+function VerifyEmailInner() {
   const search = useSearchParams();
   const email = search.get("email");
   const [loading, setLoading] = useState(false);
