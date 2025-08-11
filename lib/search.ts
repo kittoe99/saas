@@ -17,11 +17,14 @@ export async function webSearch(query: string, maxResults?: number, opts?: { sit
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
+      api_key: apiKey,
       query: finalQuery,
       search_depth: "advanced",
       // If caller doesn't specify, use a reasonable high default
       max_results: typeof maxResults === "number" ? Math.max(1, Math.floor(maxResults)) : 10,
-      include_answer: false,
+      include_answer: true,
+      include_raw_content: true,
+      include_domains: opts?.siteDomain ? [opts.siteDomain] : undefined,
       include_images: false,
     }),
     // 30s timeout via AbortController could be added if needed
@@ -37,6 +40,6 @@ export async function webSearch(query: string, maxResults?: number, opts?: { sit
   return results.map((r) => ({
     title: r.title || "",
     url: r.url || "",
-    content: r.content || r.snippet || "",
+    content: r.raw_content || r.content || r.snippet || "",
   }));
 }

@@ -5,11 +5,35 @@ import { getDeepseek, DSMessage } from "@/lib/deepseek";
 export const runtime = "nodejs";
 
 function buildPrompt(query: string, sources: Array<{ title: string; url: string; content: string }>) {
-  const header = `You are a helpful research assistant. Answer the user query using the sources below. Cite sources inline as [n] and provide a references list at the end.`;
+  const header = [
+    "You are an onboarding copy expert and factual research assistant.",
+    "Write concise, neutral, marketing-light output suitable for a product onboarding screen.",
+    "Strict rules:",
+    "- Base all claims ONLY on the provided sources; do not invent details.",
+    "- Prefer specifics (industries, offerings, audience, locations).",
+    "- No preambles like 'Based on the sources'; no disclaimers; no repeated content.",
+    "- Include what the organization does, who it serves, and key services/offerings when known.",
+    "- If something is unclear in sources, omit it (do not speculate).",
+    "- Cite sources inline as [n] where appropriate and end with a 'References' list.",
+  ].join("\n");
+
   const sourceBlocks = sources
     .map((s, i) => `Source [${i + 1}] ${s.title}\nURL: ${s.url}\nContent: ${s.content}`)
     .join("\n\n");
-  const user = `Query: ${query}\n\nSources:\n${sourceBlocks}`;
+
+  const user = [
+    `Task: ${query}`,
+    "\nSources:",
+    sourceBlocks,
+    "\nOutput format:",
+    "- First, a 2–4 sentence paragraph summary (no heading).",
+    "- Then, 4–7 single-line bullets (start each with '- '). Use short category headings and bold them, e.g., '**Services**:'",
+    "  Recommended headings: Services, Service areas, Pricing, Specializations, Process, Certifications, Contact.",
+    "  Suggested bullets: What they do; Who they serve; Key offerings/services; Locations (if any); Contact (if any); Differentiators (if any).",
+    "  Keep each bullet concise (max ~20 words). Place citations [n] at the end of the bullet if used.",
+    "- Then a 'References' section with [n] -> URL lines.",
+  ].join("\n");
+
   return { header, user };
 }
 
@@ -17,7 +41,18 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
     const query: string = body.query;
-    const siteDomain: string | undefined = typeof body.site === "string" && body.site.trim() ? String(body.site).trim() : undefined;
+    const siteRaw: string | undefined = typeof body.site === "string" && body.site.trim() ? String(body.site).trim() : undefined;
+    // Allow either domain or full URL; normalize to hostname without www.
+    let siteDomain: string | undefined = siteRaw;
+    if (siteRaw) {
+      try {
+        const u = new URL(/^https?:\/\//i.test(siteRaw) ? siteRaw : `https://${siteRaw}`);
+        siteDomain = u.hostname.replace(/^www\./, "");
+      } catch {
+        // keep as-is if not parseable; Tavily will still accept site:foo.com in the query
+        siteDomain = siteRaw;
+      }
+    }
     const model: string | undefined = typeof body.model === "string" ? body.model : undefined;
     const reasoning: boolean = Boolean(body.reasoning);
 
