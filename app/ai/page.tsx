@@ -49,6 +49,9 @@ export default function AITestPage() {
   const [sending, setSending] = useState(false);
   const [reasoningEnabled, setReasoningEnabled] = useState(true);
   const [model, setModel] = useState<string>("deepseek-chat");
+  // Animated reasoning phases while streaming (safe high-level visualization)
+  const [phaseIndex, setPhaseIndex] = useState(0);
+  const phases = ["Analyzing", "Planning", "Drafting", "Refining"] as const;
 
   const providerHint = useMemo(() => {
     return "Uses server-configured search (Tavily by default).";
@@ -70,6 +73,13 @@ export default function AITestPage() {
   useEffect(() => {
     scrollToBottom(true);
   }, [messages, sending]);
+
+  // Cycle reasoning phase while sending + reasoning enabled
+  useEffect(() => {
+    if (!sending || !reasoningEnabled) return;
+    const t = setInterval(() => setPhaseIndex((p) => (p + 1) % phases.length), 900);
+    return () => clearInterval(t);
+  }, [sending, reasoningEnabled]);
 
   // Typewriter reveal
   const typewriterReveal = (full: string, update: (partial: string) => void, done: () => void) => {
@@ -107,9 +117,34 @@ export default function AITestPage() {
           ) : (
             messages.map((m, idx) => (
               <div key={idx} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[95%] sm:max-w-[85%] rounded-2xl px-3.5 py-2.5 shadow-sm animate-fadeInUp ${m.role === "user" ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white" : "bg-gray-50 text-gray-900 dark:bg-neutral-800 dark:text-gray-100"}`}>
+                <div className={`${m.role === "assistant" ? "max-w-[98%] sm:max-w-[85%]" : "max-w-[95%] sm:max-w-[85%]"} rounded-2xl px-3.5 py-2.5 shadow-sm animate-fadeInUp ${m.role === "user" ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white" : "bg-gray-50 text-gray-900 dark:bg-neutral-800 dark:text-gray-100"}`}>
                   {m.role === "assistant" ? (
                     <div className="text-[15px] leading-relaxed">
+                      {/* Reasoning panel (no raw chain-of-thought). Shows safe high-level progress while streaming */}
+                      {sending && (reasoningEnabled || model === "deepseek-reasoner") && idx === messages.length - 1 && (
+                        <div className="mb-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/50 p-2.5">
+                          <div className="flex items-center gap-2 text-xs font-medium">
+                            {/* brain icon */}
+                            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M8 3a3 3 0 0 0-3 3v1a3 3 0 0 0 0 6v1a3 3 0 0 0 3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                              <path d="M16 3a3 3 0 0 1 3 3v1a3 3 0 0 1 0 6v1a3 3 0 0 1-3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            <span>Reasoning</span>
+                            <span className="spinner ml-1" aria-hidden="true" />
+                            {/* live token estimate based on current streamed text */}
+                            <span className="opacity-70">· ~{
+                              Math.max(1, Math.round(((m.content || "").length || 0) / 4))
+                            } tokens</span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                            {phases.map((p, i) => (
+                              <span key={p} className={`px-1.5 py-0.5 rounded border ${i === phaseIndex ? "bg-black text-white border-black" : "bg-transparent border-neutral-300 dark:border-neutral-700"}`}>
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       {/* Search meta panel */}
                       {m.searchInfo && (
                         <div className="mb-3">
@@ -168,7 +203,7 @@ export default function AITestPage() {
           )}
           {sending && (
             <div className="flex justify-start">
-              <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl px-3.5 py-2.5 shadow-sm bg-gray-50 text-gray-900 dark:bg-neutral-800 dark:text-gray-100 animate-fadeInUp">
+              <div className="max-w-[95%] sm:max-w-[70%] rounded-2xl px-3.5 py-2.5 shadow-sm bg-gray-50 text-gray-900 dark:bg-neutral-800 dark:text-gray-100 animate-fadeInUp">
                 <div className="flex items-center gap-2 text-sm">
                   <span className="spinner" aria-hidden="true" />
                   <span>{searchEnabled ? "Searching web..." : "Generating..."}</span>
