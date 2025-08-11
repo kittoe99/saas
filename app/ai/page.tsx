@@ -414,7 +414,6 @@ export default function AITestPage() {
                   setSending(false);
                 }
               }}
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white disabled:opacity-50 shadow-sm"
             >
               {sending ? "Sending..." : "Send"}
             </button>
