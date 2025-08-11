@@ -74,6 +74,24 @@ export default function AITestPage() {
     scrollToBottom(true);
   }, [messages, sending]);
 
+  // Small animated reveal for progressive UI chunks
+  function StepBlock({ show, children }: { show: boolean; children: React.ReactNode }) {
+    return (
+      <div
+        className={`transition-all duration-300 ${show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+        style={{ maxHeight: show ? undefined : 0, overflow: show ? undefined : "hidden" }}
+        aria-hidden={!show}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  // Auto-scroll the optional site field into view when Search is enabled
+  const siteRef = useRef<HTMLDivElement | null>(null);
+  // Do not auto-scroll when Search UI elements appear
+  // Intentionally no effect here to avoid moving the viewport when toggling Search
+
   // Cycle reasoning phase while sending + reasoning enabled
   useEffect(() => {
     if (!sending || !reasoningEnabled) return;
@@ -219,7 +237,7 @@ export default function AITestPage() {
             <button
               type="button"
               onClick={() => setSearchEnabled((v) => !v)}
-              className={`px-3 py-1.5 text-sm rounded-full border shadow-sm transition-colors flex items-center gap-1.5 ${searchEnabled ? "bg-black text-white border-black" : "bg-white hover:bg-gray-50 border-neutral-200 dark:border-neutral-700"}`}
+              className={`px-3 py-1.5 text-sm rounded-full border shadow-sm transition-colors flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8] ${searchEnabled ? "bg-[#1a73e8] text-white border-[#1a73e8] hover:bg-[#1664c4]" : "bg-white hover:bg-[#1a73e8]/5 border-neutral-200 dark:border-neutral-700 text-[#1a73e8]"}`}
               title="Enable web search for the next message"
             >
               {/* search icon */}
@@ -233,7 +251,7 @@ export default function AITestPage() {
             <button
               type="button"
               onClick={() => setReasoningEnabled((v) => !v)}
-              className={`px-3 py-1.5 text-sm rounded-full border shadow-sm transition-colors flex items-center gap-1.5 ${reasoningEnabled ? "bg-black text-white border-black" : "bg-white hover:bg-gray-50 border-neutral-200 dark:border-neutral-700"}`}
+              className={`px-3 py-1.5 text-sm rounded-full border shadow-sm transition-colors flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8] ${reasoningEnabled ? "bg-[#1a73e8] text-white border-[#1a73e8] hover:bg-[#1664c4]" : "bg-white hover:bg-[#1a73e8]/5 border-neutral-200 dark:border-neutral-700 text-[#1a73e8]"}`}
               title="Enable R1-style reasoning for the next message"
             >
               {/* brain icon */}
@@ -247,7 +265,7 @@ export default function AITestPage() {
             <div className="flex items-center gap-2">
               <label className="text-sm opacity-80">Model</label>
               <select
-                className="text-sm border border-neutral-200 dark:border-neutral-700 rounded p-1.5 bg-white dark:bg-neutral-900"
+                className="text-sm border border-neutral-200 dark:border-neutral-700 rounded p-1.5 bg-white dark:bg-neutral-900 outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 title="Select DeepSeek model"
@@ -257,25 +275,28 @@ export default function AITestPage() {
               </select>
             </div>
 
-            {searchEnabled && (
-              <input
-                className="flex-1 min-w-[160px] border border-neutral-200 dark:border-neutral-700 rounded p-2 text-sm bg-white dark:bg-neutral-900"
-                placeholder="Restrict to site (optional): example.com"
-                value={site}
-                onChange={(e) => setSite(e.target.value)}
-              />
-            )}
+            <StepBlock show={searchEnabled}>
+              <div ref={siteRef}>
+                <input
+                  className="flex-1 min-w-[160px] border border-neutral-200 dark:border-neutral-700 rounded p-2 text-sm bg-white dark:bg-neutral-900 outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                  placeholder="Restrict to site (optional): example.com"
+                  value={site}
+                  onChange={(e) => setSite(e.target.value)}
+                />
+              </div>
+            </StepBlock>
           </div>
 
           <div className="flex items-end gap-2">
             <textarea
-              className="flex-1 border border-neutral-200 dark:border-neutral-700 rounded p-2 min-h-[44px] max-h-[160px] bg-white dark:bg-neutral-900"
+              className="flex-1 border border-neutral-200 dark:border-neutral-700 rounded p-2 min-h-[44px] max-h-[160px] bg-white dark:bg-neutral-900 outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
               placeholder={searchEnabled ? "Ask the web..." : "Ask anything..."}
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
             <button
               disabled={sending || !input.trim()}
+              className="rounded-md bg-[#1a73e8] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1664c4] disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
               onClick={async () => {
                 const content = input.trim();
                 if (!content) return;

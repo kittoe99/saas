@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 type SiteType =
   | "Small business"
@@ -30,6 +30,8 @@ const SITE_TYPES: SiteType[] = [
 export default function OnboardingPage() {
   const [siteType, setSiteType] = useState<SiteType | null>(null);
   const [name, setName] = useState("");
+  const [nameFocused, setNameFocused] = useState(false);
+  const [nameCommitted, setNameCommitted] = useState(false);
   const [hasCurrent, setHasCurrent] = useState<"yes" | "no" | null>(null);
   const [currentUrl, setCurrentUrl] = useState("");
   const [searching, setSearching] = useState(false);
@@ -58,6 +60,116 @@ export default function OnboardingPage() {
   const [notFound, setNotFound] = useState(false);
   const [siteAdded, setSiteAdded] = useState(false);
   const [skipped, setSkipped] = useState(false);
+  // Auto-scroll refs
+  const nameRef = React.useRef<HTMLDivElement | null>(null);
+  const nameInputRef = React.useRef<HTMLInputElement | null>(null);
+  const hasRef = React.useRef<HTMLDivElement | null>(null);
+  const urlRef = React.useRef<HTMLDivElement | null>(null);
+  const actionsRef = React.useRef<HTMLDivElement | null>(null);
+  const composingRef = React.useRef(false);
+
+  // Minimal nudge scrolling: only scroll enough so the element is slightly in view
+  function scrollIntoViewWithOffset(el: HTMLElement | null, _offset = 0, margin = 16, maxNudge = 120) {
+    if (!el) return;
+    try {
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      let delta = 0;
+      if (rect.top < margin) {
+        delta = rect.top - margin;
+      } else if (rect.bottom > vh - margin) {
+        delta = rect.bottom - (vh - margin);
+      }
+      if (Math.abs(delta) < 8) return; // already good enough
+      // Cap nudge to avoid large jumps
+      if (delta > 0) delta = Math.min(delta, maxNudge);
+      else delta = Math.max(delta, -maxNudge);
+      const target = window.scrollY + delta;
+      window.scrollTo({ top: target, behavior: "smooth" });
+    } catch {}
+  }
+
+  // Scroll to name when type chosen
+  useEffect(() => {
+    if (siteType) setTimeout(() => {
+      // When a Continue button is present for this step, do not auto-scroll.
+      // We only restore focus to the input so the user can start typing immediately.
+      try { nameInputRef.current?.focus({ preventScroll: true } as any); } catch {}
+    }, 120);
+  }, [siteType]);
+
+  // If the input is intended to be focused, ensure it stays focused across re-renders
+  useEffect(() => {
+    if (!nameFocused) return;
+    if (document.activeElement !== nameInputRef.current) {
+      try { nameInputRef.current?.focus({ preventScroll: true } as any); } catch {}
+    }
+  }, [nameFocused, name]);
+  // Do NOT auto-scroll on every keystroke; next step reveals only on explicit commit (Enter/Continue)
+  // Scroll to URL or actions when hasCurrent set
+  useEffect(() => {
+    if (!hasCurrent) return;
+    const target = hasCurrent === "yes" ? urlRef.current : actionsRef.current;
+    setTimeout(() => {
+      // Avoid scroll if user is typing name to prevent focus loss
+      if (document.activeElement === nameInputRef.current) return;
+      scrollIntoViewWithOffset(target as HTMLElement);
+    }, 100);
+  }, [hasCurrent]);
+  // After site added or skipped (with yes), scroll to actions
+  useEffect(() => {
+    if (hasCurrent === "yes" && (siteAdded || skipped)) {
+      setTimeout(() => {
+        if (document.activeElement === nameInputRef.current) return;
+        scrollIntoViewWithOffset(actionsRef.current as HTMLElement);
+      }, 100);
+    }
+  }, [siteAdded, skipped, hasCurrent]);
+
+  // Animated reveal wrapper for step-by-step UX
+  function StepBlock({ show, children }: { show: boolean; children: React.ReactNode }) {
+    const [visible, setVisible] = useState(show);
+    useEffect(() => {
+      if (show) setVisible(true);
+    }, [show]);
+    return (
+      <div
+        className={`transition-all duration-300 ${show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+        style={{ maxHeight: show ? undefined : 0, overflow: show ? undefined : "hidden" }}
+        aria-hidden={!show}
+      >
+        {visible && children}
+      </div>
+    );
+  }
+  // Animated status for searching UX
+  const SEARCH_STEPS = [
+    "Searching website",
+    "Analyzing pages",
+    "Gathering info",
+    "Extracting details",
+    "Summarizing findings",
+  ];
+  const [searchStepIndex, setSearchStepIndex] = useState(0);
+  // Advance step every ~1.6s while searching, and stop at the last step (no repeats).
+  // Stable dependency array to avoid Fast Refresh error about changing size.
+  useEffect(() => {
+    if (!searching) {
+      setSearchStepIndex(0);
+      return;
+    }
+    // restart from beginning on each new search
+    setSearchStepIndex(0);
+    let i = 0;
+    const id = setInterval(() => {
+      i = Math.min(i + 1, SEARCH_STEPS.length - 1);
+      setSearchStepIndex(i);
+      if (i >= SEARCH_STEPS.length - 1) {
+        clearInterval(id);
+      }
+    }, 1600);
+    return () => clearInterval(id);
+  }, [searching]);
   const [searchedCount, setSearchedCount] = useState<number | null>(null);
   const [searchedPreview, setSearchedPreview] = useState<Array<{ index: number; title: string; url: string; snippet?: string }>>([]);
   const [showSources, setShowSources] = useState(false);
@@ -193,6 +305,29 @@ export default function OnboardingPage() {
     }
   }
 
+  // Small local component for a typewriter effect on generated text
+  function Typewriter({ text }: { text: string }) {
+    const [display, setDisplay] = useState("");
+    useEffect(() => {
+      setDisplay("");
+      if (!text) return;
+      let i = 0;
+      const step = Math.max(10, 1200 / Math.max(24, text.length));
+      const id = setInterval(() => {
+        i += 1;
+        setDisplay(text.slice(0, i));
+        if (i >= text.length) clearInterval(id);
+      }, step);
+      return () => clearInterval(id);
+    }, [text]);
+    return (
+      <div className="mt-1 text-sm text-gray-700">
+        <span className="whitespace-pre-wrap">{display}</span>
+        <span className="inline-block w-0.5 h-4 align-middle ml-0.5 bg-[#1a73e8] animate-pulse" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
       <h1 className="text-2xl font-semibold">Onboarding</h1>
@@ -208,7 +343,7 @@ export default function OnboardingPage() {
                 key={t}
                 type="button"
                 onClick={() => setSiteType(t)}
-                className={`rounded-md border px-3 py-2 text-sm text-left hover:bg-gray-50 ${siteType === t ? "border-black ring-1 ring-black" : "border-gray-300"}`}
+                className={`rounded-md border px-3 py-2 text-sm text-left transition-colors ${siteType === t ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"} focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]`}
               >
                 {t}
               </button>
@@ -220,40 +355,89 @@ export default function OnboardingPage() {
         </div>
 
         {/* 2) Name of site/business/organization */}
-        <div>
-          <label className="block text-sm font-medium">Name of site / business / organization</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Bello Moving"
-            className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-black focus:outline-none"
-          />
-        </div>
+        <StepBlock show={!!siteType}>
+          <div
+            ref={nameRef}
+            className="scroll-mt-24"
+            onMouseDown={(e) => {
+              // Clicking within the block should not cause a blur flicker
+              if (e.target instanceof HTMLElement && e.currentTarget.contains(e.target)) {
+                requestAnimationFrame(() => {
+                  try { nameInputRef.current?.focus({ preventScroll: true } as any); } catch {}
+                });
+              }
+            }}
+          >
+            <label className="block text-sm font-medium">Name of site / business / organization</label>
+            <input
+              ref={nameInputRef}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
+              onBlur={() => {
+                // Do not auto-advance on blur to avoid unwanted step change while typing
+                setNameFocused(false);
+              }}
+              onFocus={() => setNameFocused(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (composingRef.current) return; // ignore IME composition
+                  if (name.trim().length >= 2) {
+                    setNameCommitted(true);
+                  }
+                }
+              }}
+              onCompositionStart={() => { composingRef.current = true; }}
+              onCompositionEnd={() => { composingRef.current = false; }}
+              autoComplete="off"
+              placeholder="e.g. Bello Moving"
+              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+            />
+            {/* Continue control to explicitly commit */}
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-md bg-[#1a73e8] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#1664c4] disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
+                disabled={name.trim().length < 2}
+                onMouseDown={(e) => { e.preventDefault(); /* keep focus on input until click processed */ }}
+                onClick={() => {
+                  setNameCommitted(true);
+                }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </StepBlock>
 
         {/* 3) Do you have a current site? */}
-        <div>
-          <label className="block text-sm font-medium">Do you have a current website?</label>
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setHasCurrent("yes")}
-              className={`rounded-md border px-3 py-2 text-sm hover:bg-gray-50 ${hasCurrent === "yes" ? "border-black ring-1 ring-black" : "border-gray-300"}`}
-            >
-              Yes
-            </button>
-            <button
-              type="button"
-              onClick={() => setHasCurrent("no")}
-              className={`rounded-md border px-3 py-2 text-sm hover:bg-gray-50 ${hasCurrent === "no" ? "border-black ring-1 ring-black" : "border-gray-300"}`}
-            >
-              No
-            </button>
+        <StepBlock show={nameCommitted}>
+          <div ref={hasRef} className="scroll-mt-24">
+            <label className="block text-sm font-medium">Do you have a current website?</label>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setHasCurrent("yes")}
+                className={`rounded-md border px-3 py-2 text-sm transition-colors ${hasCurrent === "yes" ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"} focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]`}
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => setHasCurrent("no")}
+                className={`rounded-md border px-3 py-2 text-sm transition-colors ${hasCurrent === "no" ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"} focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]`}
+              >
+                No
+              </button>
+            </div>
           </div>
-        </div>
+        </StepBlock>
 
         {/* 4) Current URL (conditional) */}
         {hasCurrent === "yes" && (
-          <div>
+          <div ref={urlRef} className="scroll-mt-24">
             <label className="block text-sm font-medium">Current website URL</label>
             <input
               type="url"
@@ -267,13 +451,13 @@ export default function OnboardingPage() {
                 setSkipped(false);
               }}
               placeholder="https://example.com"
-              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-black focus:outline-none"
+              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
             />
             <div className="mt-3 flex items-center gap-2">
               <button
                 type="button"
                 onClick={summarizeUrl}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50"
+                className="rounded-md px-3 py-2 text-sm border border-[#1a73e8] text-[#1a73e8] bg-white transition-colors hover:border-[#1664c4] hover:text-[#1664c4] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
                 disabled={!currentUrl || searching}
               >
                 {searching ? "Adding…" : "Add Site"}
@@ -285,11 +469,13 @@ export default function OnboardingPage() {
             {searching && (
               <div className="mt-4 rounded-md border border-gray-200 p-4">
                 <div className="flex items-center gap-3">
-                  <svg className="h-5 w-5 animate-spin text-gray-600" viewBox="0 0 24 24" fill="none">
+                  <svg className="h-5 w-5 animate-spin text-[#1a73e8]" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                   </svg>
-                  <div className="font-medium">Searching the website…</div>
+                  <div className="font-medium text-[#1a73e8]" aria-live="polite">
+                    {SEARCH_STEPS[searchStepIndex]}…
+                  </div>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-3">
                   <div className="h-20 rounded-md bg-gray-100 animate-pulse" />
@@ -307,7 +493,7 @@ export default function OnboardingPage() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 text-neutral-800"
+                    className="rounded-md px-3 py-2 text-sm border border-[#1a73e8] text-[#1a73e8] bg-white transition-colors hover:border-[#1664c4] hover:text-[#1664c4] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
                     onClick={() => {
                       setNotFound(false);
                       setSummary(null);
@@ -317,7 +503,7 @@ export default function OnboardingPage() {
                   </button>
                   <button
                     type="button"
-                    className="rounded-md bg-neutral-800 px-3 py-2 text-sm text-white hover:bg-neutral-700"
+                    className="rounded-md bg-[#1a73e8] px-3 py-2 text-sm text-white transition-colors hover:bg-[#1664c4] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
                     onClick={() => {
                       setSkipped(true);
                     }}
@@ -344,7 +530,7 @@ export default function OnboardingPage() {
                     {searchedPreview.length > 0 && (
                       <button
                         type="button"
-                        className="text-xs text-gray-600 hover:text-gray-900 underline-offset-2 hover:underline"
+                        className="text-xs text-[#1a73e8] hover:text-[#1664c4] underline-offset-2 hover:underline"
                         onClick={() => setShowSources((v) => !v)}
                       >
                         {showSources ? 'Hide sources' : 'View sources'}
@@ -372,7 +558,7 @@ export default function OnboardingPage() {
                     <div className="text-sm font-medium">Summary</div>
                     {/^\s*-\s+/.test(summary.summary) ? (
                       <ul className="mt-1 list-disc pl-5 text-sm text-gray-700 space-y-1">
-                        {summary.summary.split(/\r?\n/).filter(Boolean).map((line, idx) => {
+                        {summary.summary.split(/\r?\n/).filter(Boolean).map((line: string, idx: number) => {
                           const raw = line.replace(/^\s*-\s+/, "").trim();
                           // Match **Heading**: content or Heading: content
                           const mdMatch = raw.match(/^\*\*(.+?)\*\*:\s*(.*)$/);
@@ -400,7 +586,7 @@ export default function OnboardingPage() {
                         })}
                       </ul>
                     ) : (
-                      <div className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{summary.summary}</div>
+                      <Typewriter text={summary.summary} />
                     )}
                   </div>
                 ) : null}
@@ -427,7 +613,7 @@ export default function OnboardingPage() {
                   <div>
                     <div className="text-sm font-medium">Offerings</div>
                     <ul className="mt-1 list-inside list-disc text-sm text-gray-700">
-                      {summary.services.map((s, i) => (
+                      {summary.services.map((s: string, i: number) => (
                         <li key={i}>{s}</li>
                       ))}
                     </ul>
@@ -467,7 +653,7 @@ export default function OnboardingPage() {
                 <div className="mt-2 flex gap-2">
                   <button
                     type="button"
-                    className="rounded-md bg-neutral-800 px-3 py-2 text-sm text-white hover:bg-neutral-700"
+                    className="rounded-md bg-[#1a73e8] px-3 py-2 text-sm text-white transition-colors hover:bg-[#1664c4] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
                     onClick={() => {
                       const offerings = (summary.services && summary.services.length ? `\n\nOfferings:\n- ${summary.services.join('\n- ')}` : "");
                       const desc = [summary.summary || "", summary.about || "", summary.purpose || ""].filter(Boolean).join('\n\n') + offerings;
@@ -497,7 +683,7 @@ export default function OnboardingPage() {
                   onChange={(e) => setManualDesc(e.target.value)}
                   rows={4}
                   placeholder="Short description, purpose, and key services"
-                  className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-black focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
                 />
               </div>
             )}
@@ -509,33 +695,42 @@ export default function OnboardingPage() {
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-between border-t pt-6">
-          <div className="text-xs text-gray-500">You can change these later.</div>
-          <button
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-            disabled={
-              !siteType ||
-              !name ||
-              (hasCurrent === "yes" && (!currentUrl || (!siteAdded && !skipped)))
-            }
-            onClick={() => {
-              // Placeholder submit. Persisting can be wired next.
-              const payload = {
-                siteType,
-                name,
-                hasCurrent,
-                currentUrl: hasCurrent === "yes" ? currentUrl : "",
-                description: manualDesc,
-                autoSummary: summary,
-                siteAdded,
-                skipped,
-              };
-              alert(`Saved!\n${JSON.stringify(payload, null, 2)}`);
-            }}
-          >
-            Save and continue
-          </button>
-        </div>
+        {(() => {
+          const canShowActions = !!siteType && !!name.trim() && (
+            hasCurrent === "no" || (hasCurrent === "yes" && (siteAdded || skipped))
+          );
+          return (
+            <StepBlock show={canShowActions}>
+              <div ref={actionsRef} className="flex items-center justify-between border-t pt-6 scroll-mt-24">
+                <div className="text-xs text-gray-500">You can change these later.</div>
+                <button
+                  className="rounded-md bg-[#1a73e8] px-4 py-2 text-sm font-medium text-white hover:bg-[#1664c4] disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
+                  disabled={
+                    !siteType ||
+                    !name ||
+                    (hasCurrent === "yes" && (!currentUrl || (!siteAdded && !skipped)))
+                  }
+                  onClick={() => {
+                    // Placeholder submit. Persisting can be wired next.
+                    const payload = {
+                      siteType,
+                      name,
+                      hasCurrent,
+                      currentUrl: hasCurrent === "yes" ? currentUrl : "",
+                      description: manualDesc,
+                      autoSummary: summary,
+                      siteAdded,
+                      skipped,
+                    };
+                    alert(`Saved!\n${JSON.stringify(payload, null, 2)}`);
+                  }}
+                >
+                  Save and continue
+                </button>
+              </div>
+            </StepBlock>
+          );
+        })()}
       </div>
     </div>
   );

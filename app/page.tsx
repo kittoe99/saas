@@ -40,13 +40,13 @@ export default function Home() {
   return (
     <div className="py-10 md:py-16">
       {/* Hero */}
-      <section className="grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-neutral-200 bg-neutral-50">
+      <section className="grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-neutral-200 bg-neutral-50 transition-colors duration-300 hover:border-[#1a73e8]/40">
         <div>
-          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">Pay‑by‑month, all‑inclusive website design</h1>
-          <p className="mt-4 text-neutral-600 text-base md:text-lg">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">Pay‑by‑month, all‑inclusive website design</h1>
+          <p className="mt-4 text-neutral-700 text-lg md:text-xl">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
           <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-3">
-            <a href="/get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-[#1a73e8] text-white">Start monthly plan</a>
-            <a href="#features" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white gap-2">
+            <a href="/get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-[#1a73e8] text-white transition-all duration-200 hover:bg-[#1664c4] shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]">Start monthly plan</a>
+            <a href="#features" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white gap-2 transition-all duration-200 hover:border-[#1664c4] hover:text-[#1664c4] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]">
               <span>See what’s included</span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -62,7 +62,7 @@ export default function Home() {
           </ul>
         </div>
         {/* Hero vector */}
-        <div className="group relative h-[300px] sm:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-white to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
+        <div className="group relative h-[300px] sm:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-white to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 hover:shadow-md">
           <VectorArt
             variant="dashboard"
             className="absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
@@ -74,7 +74,7 @@ export default function Home() {
       <div className="sticky top-16 md:top-20 z-30 mt-14">
         <div className="flex justify-center">
           <div
-            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full border border-neutral-200 bg-white px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-sm whitespace-nowrap snap-x snap-mandatory"
+            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full border border-neutral-200 bg-white px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-sm whitespace-nowrap snap-x snap-mandatory ring-1 ring-neutral-100/40"
             role="tablist"
             aria-label="Section tabs"
           >
@@ -87,9 +87,9 @@ export default function Home() {
                     href={`#${id}`}
                     className={
                       (isActive
-                        ? "border border-[#1a73e8] text-[#1a73e8] bg-white font-medium"
+                        ? "border border-[#1a73e8] text-[#1a73e8] bg-white font-medium shadow-sm"
                         : "text-neutral-800 hover:text-[#1a73e8] hover:bg-neutral-50") +
-                      " px-3 sm:px-4 py-1.5 rounded-full focus:outline-none snap-start"
+                      " px-3 sm:px-4 py-1.5 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8] transition-all duration-200 hover:shadow-xs snap-start"
                     }
                     aria-current={isActive ? "true" : undefined}
                     role="tab"
@@ -107,11 +107,11 @@ export default function Home() {
       <section id="create" className="scroll-mt-24 mt-16 md:mt-24">
         <header className="mb-8 md:mb-10">
           <div className="text-xs uppercase tracking-wider text-neutral-500">Create</div>
-          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">Launch a professional site without code</h2>
+          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight">Launch a professional site without code</h2>
           <p className="mt-2 text-neutral-600 max-w-2xl">We handle structure, visuals, and monthly content updates so you can focus on your business. Everything is responsive and easy to evolve.</p>
         </header>
         <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-start">
-          <div className="group relative h-52 sm:h-64 md:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-white to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
+          <div className="group relative h-52 sm:h-64 md:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-white to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 hover:shadow-md">
             <VectorArt
               variant="builder"
               className="absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
@@ -127,8 +127,8 @@ export default function Home() {
               <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>No code required</span></li>
             </ul>
             <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-3 xl:items-center">
-              <div className="w-full"><a href="/get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-[#1a73e8] text-white">Start monthly plan</a></div>
-              <div className="w-full"><a href="#work" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white gap-2"><span>View recent work</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></a></div>
+              <div className="w-full"><a href="/get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-[#1a73e8] text-white transition-all duration-200 hover:bg-[#1664c4] shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]">Start monthly plan</a></div>
+              <div className="w-full"><a href="#work" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white gap-2 transition-all duration-200 hover:border-[#1664c4] hover:text-[#1664c4] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"><span>View recent work</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></a></div>
             </div>
           </div>
         </div>
@@ -138,11 +138,11 @@ export default function Home() {
       <section id="design" className="scroll-mt-24 mt-20 md:mt-28">
         <header className="mb-6 md:mb-8 text-center">
           <div className="text-xs uppercase tracking-wider text-neutral-500">Design</div>
-          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">Thoughtful, consistent design system</h2>
+          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight">Thoughtful, consistent design system</h2>
           <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">Clean layouts, reusable components, and clear hierarchy ensure a polished experience across every page.</p>
         </header>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
-          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+          <div className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Clean, modern layouts preview" />
             </div>
@@ -150,7 +150,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Clean, modern layouts</h3>
             <p className="mt-2 text-sm text-neutral-600">Professional design tailored to your brand with clear hierarchy and polished details.</p>
           </div>
-          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+          <div className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="team" className="absolute inset-0 h-full w-full" aria-label="Monthly content improvements preview" />
             </div>
@@ -158,7 +158,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Monthly improvements</h3>
             <p className="mt-2 text-sm text-neutral-600">We handle ongoing tweaks and updates so the site stays fresh and accurate.</p>
           </div>
-          <div className="p-5 rounded-xl border border-neutral-200 bg-white">
+          <div className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="components" className="absolute inset-0 h-full w-full" aria-label="Reusable components preview" />
             </div>
@@ -173,11 +173,11 @@ export default function Home() {
       <section id="features" className="scroll-mt-24 mt-20 md:mt-28">
         <header className="mb-6 md:mb-8 text-center">
           <div className="text-xs uppercase tracking-wider text-neutral-500">Features</div>
-          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">Everything you need to grow</h2>
+          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight">Everything you need to grow</h2>
           <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">From your website to sales automation and payments—built in, simple to use, and ready to scale.</p>
         </header>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6">
-          <div id="features-website" className="p-5 rounded-xl border border-neutral-200 bg-white">
+          <div id="features-website" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Website feature preview" />
             </div>
@@ -185,7 +185,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Design, hosting, and updates</h3>
             <p className="mt-2 text-sm text-neutral-600">Launch fast with professional design and monthly updates included.</p>
           </div>
-          <div id="features-sales" className="p-5 rounded-xl border border-neutral-200 bg-white">
+          <div id="features-sales" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="sales" className="absolute inset-0 h-full w-full" aria-label="Sales & automation preview" />
             </div>
@@ -193,7 +193,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Funnels, forms, workflows</h3>
             <p className="mt-2 text-sm text-neutral-600">Capture leads and automate follow‑ups without extra tools.</p>
           </div>
-          <div id="features-ai" className="p-5 rounded-xl border border-neutral-200 bg-white">
+          <div id="features-ai" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="ai" className="absolute inset-0 h-full w-full" aria-label="AI features preview" />
             </div>
@@ -201,7 +201,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Content, insights, assistance</h3>
             <p className="mt-2 text-sm text-neutral-600">Speed up content, find insights, and get helpful suggestions.</p>
           </div>
-          <div id="features-payments" className="p-5 rounded-xl border border-neutral-200 bg-white">
+          <div id="features-payments" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="payments" className="absolute inset-0 h-full w-full" aria-label="Payments preview" />
             </div>
@@ -216,7 +216,7 @@ export default function Home() {
       <section id="testimonial" className="scroll-mt-24 mt-20 md:mt-28">
         <header className="mb-6 md:mb-8 text-center">
           <div className="text-xs uppercase tracking-wider text-neutral-500">Testimonial</div>
-          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight">What our clients say</h2>
+          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight">What our clients say</h2>
         </header>
         <div className="rounded-xl border border-neutral-200 bg-white p-6">
           <div className="flex items-start gap-4">
@@ -233,11 +233,11 @@ export default function Home() {
 
       {/* FAQ */}
       <section id="faq" className="scroll-mt-24 mt-20 md:mt-28">
-        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">FAQ</h2>
+        <h2 className="text-2xl md:text-4xl font-semibold tracking-tight">FAQ</h2>
         <dl className="mt-4 space-y-4">
-          <div className="rounded-md border border-neutral-200 bg-white p-4"><dt className="font-medium">What’s included in the monthly plan?</dt><dd className="mt-1 text-sm text-neutral-600">Design, hosting, SSL, and monthly content updates with support.</dd></div>
-          <div className="rounded-md border border-neutral-200 bg-white p-4"><dt className="font-medium">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-neutral-600">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
-          <div className="rounded-md border border-neutral-200 bg-white p-4"><dt className="font-medium">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-neutral-600">We’ll align the site with your brand and adjust layouts to fit your content.</dd></div>
+          <div className="rounded-md border border-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-neutral-50"><dt className="font-medium">What’s included in the monthly plan?</dt><dd className="mt-1 text-sm text-neutral-600">Design, hosting, SSL, and monthly content updates with support.</dd></div>
+          <div className="rounded-md border border-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-neutral-50"><dt className="font-medium">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-neutral-600">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
+          <div className="rounded-md border border-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-neutral-50"><dt className="font-medium">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-neutral-600">We’ll align the site with your brand and adjust layouts to fit your content.</dd></div>
         </dl>
       </section>
 

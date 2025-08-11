@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type PersonalInfo = {
   firstName: string;
@@ -356,7 +356,50 @@ export default function GetStartedPage() {
     postalCode: "",
     country: "",
   });
+  // Animated reveal wrapper used for progressive sections
+  function StepBlock({ show, children }: { show: boolean; children: React.ReactNode }) {
+    return (
+      <div
+        className={`transition-all duration-300 ${show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+        style={{ maxHeight: show ? undefined : 0, overflow: show ? undefined : "hidden" }}
+        aria-hidden={!show}
+      >
+        {children}
+      </div>
+    );
+  }
 
+  // Refs to scroll into view when moving forward/backward
+  const step1Ref = useRef<HTMLDivElement | null>(null);
+  const step2Ref = useRef<HTMLDivElement | null>(null);
+  const step3Ref = useRef<HTMLDivElement | null>(null);
+  const step4Ref = useRef<HTMLDivElement | null>(null);
+
+  // Smooth scroll helper with offset
+  function scrollIntoViewWithOffset(el: HTMLElement | null, offset = 80) {
+    if (!el) return;
+    try {
+      const rect = el.getBoundingClientRect();
+      const top = rect.top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: "smooth" });
+    } catch {}
+  }
+
+  useEffect(() => {
+    const map: Record<number, HTMLDivElement | null> = {
+      1: step1Ref.current,
+      2: step2Ref.current,
+      3: step3Ref.current,
+      4: step4Ref.current,
+    };
+    const el = map[step];
+    if (el) {
+      // slight delay to allow mount/transition start
+      setTimeout(() => {
+        scrollIntoViewWithOffset(el, 88);
+      }, 20);
+    }
+  }, [step]);
 
   const canProceedStep1 = useMemo(() => {
     const emailOk = /\S+@\S+\.\S+/.test(data.email);
@@ -443,45 +486,57 @@ export default function GetStartedPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6">
-          {step === 1 && (
-            <StepPersonalInfo data={data} onChange={handleChange} />
-          )}
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 space-y-8">
+          <div ref={step1Ref}>
+            <StepBlock show={step === 1}>
+              <StepPersonalInfo data={data} onChange={handleChange} />
+            </StepBlock>
+          </div>
 
-          {step === 2 && (
-            <StepPackageSelection
-              plans={PLANS}
-              selectedPlan={selectedPlan}
-              onSelect={(id) => {
-                setSelectedPlan(id);
-                // Reset add-on if not eligible
-                if (id === "startup") setAddonAiPhone(false);
-              }}
-              addonAiPhone={addonAiPhone}
-              onToggleAddon={() => setAddonAiPhone((v) => !v)}
-            />
-          )}
+          <div ref={step2Ref}>
+            <StepBlock show={step === 2}>
+              <StepPackageSelection
+                plans={PLANS}
+                selectedPlan={selectedPlan}
+                onSelect={(id) => {
+                  setSelectedPlan(id);
+                  if (id === "startup") setAddonAiPhone(false);
+                }}
+                addonAiPhone={addonAiPhone}
+                onToggleAddon={() => setAddonAiPhone((v) => !v)}
+              />
+            </StepBlock>
+          </div>
 
-          {step === 3 && selectedPlan && (
-            <StepSummary
-              personal={data}
-              planId={selectedPlan}
-              addonAiPhone={addonAiPhone}
-            />
-          )}
-          {step === 4 && selectedPlan && (
-            <StepCheckout
-              personal={data}
-              planId={selectedPlan}
-              addonAiPhone={addonAiPhone}
-              onPay={handleCheckout}
-              loading={checkoutLoading}
-              paid={mockPaid}
-              error={checkoutError}
-              billing={billing}
-              onBillingChange={handleBillingChange}
-            />
-          )}
+          <div ref={step3Ref}>
+            <StepBlock show={step === 3 && Boolean(selectedPlan)}>
+              {selectedPlan && (
+                <StepSummary
+                  personal={data}
+                  planId={selectedPlan}
+                  addonAiPhone={addonAiPhone}
+                />
+              )}
+            </StepBlock>
+          </div>
+
+          <div ref={step4Ref}>
+            <StepBlock show={step === 4 && Boolean(selectedPlan)}>
+              {selectedPlan && (
+                <StepCheckout
+                  personal={data}
+                  planId={selectedPlan}
+                  addonAiPhone={addonAiPhone}
+                  onPay={handleCheckout}
+                  loading={checkoutLoading}
+                  paid={mockPaid}
+                  error={checkoutError}
+                  billing={billing}
+                  onBillingChange={handleBillingChange}
+                />
+              )}
+            </StepBlock>
+          </div>
 
           {/* Actions */}
           <div className="mt-6 flex items-center justify-between">
