@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { webSearch } from "@/lib/search";
-import { deepseek, DSMessage } from "@/lib/deepseek";
+import { getDeepseek, DSMessage } from "@/lib/deepseek";
 
 export const runtime = "nodejs";
 
@@ -30,7 +30,8 @@ export async function POST(req: Request) {
     const citations = results.map((r, i) => ({ index: i + 1, title: r.title, url: r.url }));
     const { header, user } = buildPrompt(query, results);
 
-    const stream = await deepseek.chat.completions.create({
+    const client = getDeepseek();
+    const stream = await client.chat.completions.create({
       model: (model as any) || (reasoning ? "deepseek-reasoner" : "deepseek-chat"),
       messages: [
         { role: "system", content: header },

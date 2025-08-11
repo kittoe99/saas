@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { webSearch } from "@/lib/search";
-import { deepseek, dsComplete, r1Complete } from "@/lib/deepseek";
+import { getDeepseek, dsComplete, r1Complete } from "@/lib/deepseek";
 import { fetchPageText } from "@/lib/fetchText";
 
 function buildPrompt(query: string, sources: Array<{ title: string; url: string; content: string }>) {
@@ -78,7 +78,8 @@ export async function POST(req: Request) {
       let lastResults: Array<{ title: string; url: string; content: string }> = [];
 
       while (toolIterations < maxToolIterations) {
-        const response = await deepseek.chat.completions.create({
+        const client = getDeepseek();
+        const response = await client.chat.completions.create({
           model: (model as any) || (reasoning ? "deepseek-reasoner" : "deepseek-chat"),
           messages,
           tools,

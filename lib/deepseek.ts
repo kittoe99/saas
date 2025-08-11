@@ -1,10 +1,17 @@
 import OpenAI from "openai";
 
-// DeepSeek OpenAI-compatible client
-export const deepseek = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: "https://api.deepseek.com",
-});
+// Lazy DeepSeek OpenAI-compatible client to avoid build-time env requirement
+let _deepseek: OpenAI | null = null;
+export function getDeepseek(): OpenAI {
+  if (_deepseek) return _deepseek;
+  const key = process.env.DEEPSEEK_API_KEY;
+  if (!key) {
+    // Do not construct the client without a key; callers should gate usage by checking env
+    throw new Error("Missing DEEPSEEK_API_KEY env var");
+  }
+  _deepseek = new OpenAI({ apiKey: key, baseURL: "https://api.deepseek.com" });
+  return _deepseek;
+}
 
 export type DSMessage = { role: "system"|"user"|"assistant"; content: string };
 
@@ -14,7 +21,8 @@ export async function r1Complete(messages: Array<DSMessage>, options?: { tempera
   if (!process.env.DEEPSEEK_API_KEY) {
     throw new Error("Missing DEEPSEEK_API_KEY env var");
   }
-  const res = await deepseek.chat.completions.create({
+  const client = getDeepseek();
+  const res = await client.chat.completions.create({
     model: "deepseek-reasoner",
     messages,
     temperature: options?.temperature ?? 0.2,
@@ -34,7 +42,8 @@ export async function dsComplete(
   const model: string = (options?.model as string | undefined)
     || (options?.reasoning ? "deepseek-reasoner" : undefined)
     || DEFAULT_MODEL;
-  const res = await deepseek.chat.completions.create({
+  const client = getDeepseek();
+  const res = await client.chat.completions.create({
     model,
     messages,
     temperature: options?.temperature ?? 0.2,

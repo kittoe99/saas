@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { dsComplete } from "@/lib/deepseek";
-import { deepseek, DSMessage } from "@/lib/deepseek";
+import { getDeepseek, DSMessage } from "@/lib/deepseek";
 
 export const runtime = "nodejs";
 
@@ -20,7 +20,8 @@ export async function POST(req: Request) {
       ? `You are an expert analyst. Follow these instructions strictly to analyze the provided text. Instructions: ${instructions}`
       : "You are an expert analyst. Provide a concise, accurate analysis of the provided text.";
 
-    const stream = await deepseek.chat.completions.create({
+    const client = getDeepseek();
+    const stream = await client.chat.completions.create({
       model: (model as any) || (reasoning ? "deepseek-reasoner" : "deepseek-chat"),
       messages: [
         { role: "system", content: sys },
