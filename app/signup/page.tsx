@@ -35,7 +35,7 @@ export default function SignupPage() {
       if (error) throw error;
       if (data.user && !data.session) {
         // Email confirmation required — send user to verification screen
-        router.replace(`/verify-email?email=${encodeURIComponent(email)}`);
+        router.replace(`/verify-email?email=${encodeURIComponent(email)}&fromSignup=1`);
       } else {
         setSuccess("Account created. Redirecting...");
         window.location.replace("/");
