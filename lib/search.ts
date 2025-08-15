@@ -10,6 +10,16 @@ export async function webSearch(query: string, maxResults?: number, opts?: { sit
 
   // Tavily current docs: POST https://api.tavily.com/search with Bearer auth
   const finalQuery = opts?.siteDomain ? `site:${opts.siteDomain} ${query}` : query;
+
+  // Lighter defaults when a specific domain is provided
+  const useBasicDepth = Boolean(opts?.siteDomain);
+  const effectiveMax = typeof maxResults === "number" ? Math.max(1, Math.floor(maxResults)) : (useBasicDepth ? 3 : 10);
+  const includeRaw = useBasicDepth ? false : true;
+
+  // Add a 10s timeout to avoid hanging on slow searches
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+
   const resp = await fetch("https://api.tavily.com/search", {
     method: "POST",
     headers: {
@@ -19,16 +29,17 @@ export async function webSearch(query: string, maxResults?: number, opts?: { sit
     body: JSON.stringify({
       api_key: apiKey,
       query: finalQuery,
-      search_depth: "advanced",
-      // If caller doesn't specify, use a reasonable high default
-      max_results: typeof maxResults === "number" ? Math.max(1, Math.floor(maxResults)) : 10,
+      search_depth: useBasicDepth ? "basic" : "advanced",
+      // If caller doesn't specify, use a reasonable default
+      max_results: effectiveMax,
       include_answer: true,
-      include_raw_content: true,
+      include_raw_content: includeRaw,
       include_domains: opts?.siteDomain ? [opts.siteDomain] : undefined,
       include_images: false,
     }),
-    // 30s timeout via AbortController could be added if needed
-  } as RequestInit);
+    signal: controller.signal,
+    // 10s timeout via AbortController above
+  } as RequestInit).finally(() => clearTimeout(timeout));
 
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");

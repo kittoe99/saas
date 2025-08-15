@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         { role: "user", content: user },
       ] as DSMessage[],
       temperature: 0.2,
-      max_tokens: 1200,
+      max_tokens: 800,
       stream: true,
     } as any);
 

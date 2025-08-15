@@ -194,8 +194,8 @@ export default function OnboardingPage() {
         body: JSON.stringify({
           query: "What is this website about, services and relevant info, add bullet list and headings where necessary",
           site: currentUrl,
-          model: "deepseek-reasoner",
-          reasoning: true,
+          // Always use fast (chat) mode
+          reasoning: false,
         }),
       });
       if (!res.ok || !res.body) {
@@ -208,6 +208,7 @@ export default function OnboardingPage() {
       let buffered = "";
       let searchHeaderHandled = false;
       let metaHeaderHandled = false;
+      let live = ""; // incremental narrative buffer for UI streaming
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -232,6 +233,23 @@ export default function OnboardingPage() {
           }
           if (!metaHeaderHandled && first.startsWith("__META__")) {
             metaHeaderHandled = true; buffered = rest; progressed = true; continue;
+          }
+        }
+
+        // Incrementally render narrative once headers are consumed
+        if (searchHeaderHandled && metaHeaderHandled) {
+          if (buffered.length > live.length) {
+            const partial = buffered
+              .replace(/\s*\[[0-9]+\]\s*$/g, "") // trim dangling citation at the very end of the stream
+              .trim();
+            live = partial;
+            setSummary({
+              summary: live,
+              details: {},
+              about: "",
+              purpose: "",
+              services: [],
+            });
           }
         }
       }
