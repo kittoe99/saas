@@ -1,12 +1,71 @@
 "use client";
 import VectorArt from "./components/VectorArt";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+// Words to animate in the hero headline
+const PHRASES = [
+  "website design",
+  "managed hosting",
+  "monthly updates",
+  "priority support",
+] as const;
 
 const SECTION_IDS = ["create", "design", "features", "testimonial", "faq"] as const;
 
 export default function Home() {
   type SectionId = typeof SECTION_IDS[number];
   const [activeId, setActiveId] = useState<SectionId>("create");
+  const [typedText, setTypedText] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isReduced, setIsReduced] = useState(false);
+  const longestPhrase = useMemo(() =>
+    [...PHRASES].sort((a, b) => b.length - a.length)[0]
+  , []);
+
+  useEffect(() => {
+    // Respect reduced motion preference
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handle = () => setIsReduced(mq.matches);
+    handle();
+    mq.addEventListener?.("change", handle);
+    return () => mq.removeEventListener?.("change", handle);
+  }, []);
+
+  useEffect(() => {
+    if (isReduced) {
+      // Static text if user prefers reduced motion
+      setTypedText(PHRASES[0]);
+      return;
+    }
+
+    const current = PHRASES[phraseIndex % PHRASES.length];
+    const typingSpeed = isDeleting ? 40 : 90; // ms per char
+    const pauseAtFull = 1200; // hold time when a word completes
+    const pauseAtEmpty = 400; // slight delay before next word
+
+    let timer: number;
+
+    if (!isDeleting && typedText === current) {
+      // Pause at full word, then start deleting
+      timer = window.setTimeout(() => setIsDeleting(true), pauseAtFull);
+    } else if (isDeleting && typedText === "") {
+      // Pause at empty, then move to next word
+      timer = window.setTimeout(() => {
+        setIsDeleting(false);
+        setPhraseIndex((i) => (i + 1) % PHRASES.length);
+      }, pauseAtEmpty);
+    } else {
+      timer = window.setTimeout(() => {
+        const next = isDeleting
+          ? current.slice(0, typedText.length - 1)
+          : current.slice(0, typedText.length + 1);
+        setTypedText(next);
+      }, typingSpeed);
+    }
+
+    return () => window.clearTimeout(timer);
+  }, [typedText, isDeleting, phraseIndex, isReduced]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -40,34 +99,53 @@ export default function Home() {
   return (
     <div className="py-10 md:py-16">
       {/* Hero */}
-      <section className="grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-neutral-200 bg-neutral-50 transition-colors duration-300 hover:border-[#1a73e8]/40">
+      <section className="relative grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-neutral-200 bg-white shadow-sm">
+        {/* Soft background accent */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-[radial-gradient(1200px_600px_at_10%_-10%,rgba(26,115,232,0.06),transparent_60%),radial-gradient(1000px_500px_at_90%_110%,rgba(26,115,232,0.05),transparent_60%)]" />
+
         <div>
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">Pay‑by‑month, all‑inclusive website design</h1>
-          <p className="mt-4 text-neutral-700 text-lg md:text-xl">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
-          <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-3">
-            <a href="/get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-[#1a73e8] text-white transition-all duration-200 hover:bg-[#1664c4] shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]">Start monthly plan</a>
-            <a href="#features" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white gap-2 transition-all duration-200 hover:border-[#1664c4] hover:text-[#1664c4] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]">
-              <span>See what’s included</span>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+          <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1 text-xs text-neutral-600 shadow-xs backdrop-blur">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#1a73e8]" /> No setup fees • Cancel anytime
+          </div>
+          <h1 className="mt-4 text-4xl md:text-6xl font-bold leading-tight tracking-tight">
+            Pay‑by‑month, all‑inclusive
+            {/* Reserve height with invisible placeholder to prevent layout shift */}
+            <span className="block relative">
+              <span className="opacity-0 select-none" aria-hidden="true">{longestPhrase}</span>
+              <span className="absolute inset-0 bg-clip-text text-transparent bg-gradient-to-r from-[#1a73e8] to-[#1664c4] whitespace-nowrap">
+                {typedText}
+                <span className="type-caret align-[-0.1em]" aria-hidden="true" />
+              </span>
+            </span>
+          </h1>
+          <p className="mt-4 text-neutral-700 text-lg md:text-xl max-w-xl">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <a href="/get-started" className="inline-flex items-center justify-center px-5 py-3 rounded-md bg-[#1a73e8] text-white text-sm md:text-base font-medium transition-all duration-200 hover:bg-[#1664c4] shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]">
+              Get started
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-2 h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </a>
+            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-md border border-neutral-300 text-neutral-800 bg-white text-sm md:text-base gap-2 transition-all duration-200 hover:border-neutral-400 hover:bg-neutral-50 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-neutral-300">
+              See what’s included
             </a>
           </div>
-          <div className="mt-2 text-xs text-neutral-500">No long‑term contracts. Cancel anytime.</div>
-          <ul className="mt-6 text-sm text-neutral-700 grid sm:grid-cols-2 gap-y-2 gap-x-6">
-            <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Design + build included</span></li>
-            <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Managed hosting & SSL</span></li>
-            <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Content updates every month</span></li>
-            <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1a73e8]" /><span>Priority support</span></li>
+          <div className="mt-3 text-xs text-neutral-500">All essentials covered. Simple pricing, no surprises.</div>
+          <ul className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-neutral-700 max-w-2xl">
+            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-[#1a73e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Design + build included</span></li>
+            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-[#1a73e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Managed hosting & SSL</span></li>
+            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-[#1a73e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Monthly content updates</span></li>
           </ul>
         </div>
-        {/* Hero vector */}
-        <div className="group relative h-[300px] sm:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-white to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 hover:shadow-md">
+        {/* Hero visual */}
+        <div className="group relative h-[300px] sm:h-[380px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-white to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 hover:shadow-md">
+          <div aria-hidden className="absolute -right-10 -top-10 h-60 w-60 rounded-full bg-[#1a73e8]/10 blur-2xl" />
           <VectorArt
             variant="dashboard"
             className="absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
             aria-label="Website design preview"
           />
+          <div className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs text-neutral-700 shadow-sm backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#1a73e8]" /> Live preview
+          </div>
         </div>
       </section>
       {/* Centered tabs that scroll to sections (sticky + active highlighting) */}
