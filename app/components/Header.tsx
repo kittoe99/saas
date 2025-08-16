@@ -235,7 +235,7 @@ export default function Header() {
             aria-label="Open menu"
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="md:hidden inline-flex items-center justify-center rounded-md border border-neutral-300 p-2 text-neutral-700"
+            className="md:hidden inline-flex items-center justify-center rounded-md border border-neutral-300 p-2.5 text-neutral-700 hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -258,21 +258,25 @@ export default function Header() {
         {open && (
           <>
             {/* Backdrop overlay */}
-            <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setOpen(false)} />
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-40" onClick={() => setOpen(false)} />
             {/* Dropdown sheet */}
             <div className="absolute left-0 right-0 top-full z-50 md:hidden">
-              <nav className="mx-3 sm:mx-4 mt-2 flex flex-col rounded-xl border border-neutral-200 bg-white shadow-lg overflow-hidden">
+              <nav className="mx-3 sm:mx-4 mt-2 flex flex-col rounded-xl border border-neutral-200 bg-white shadow-lg overflow-hidden animate-mobile-menu">
               {/* Overview */}
               <a
                 href="#overview"
-                className="block px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-4 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
                 Overview
               </a>
+              <div className="h-px bg-neutral-100" />
               {/* Features - collapsible group */}
               <details>
-                <summary className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 cursor-pointer select-none">Features</summary>
+                <summary className="flex items-center justify-between px-4 py-4 text-base text-neutral-800 hover:bg-neutral-50 cursor-pointer select-none">
+                  <span>Features</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </summary>
                 <div className="pb-3">
                   <a href="#features-website" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Website</a>
                   <a href="#features-sales" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
@@ -280,17 +284,22 @@ export default function Header() {
                   <a href="#features-payments" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Payments <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
                 </div>
               </details>
+              <div className="h-px bg-neutral-100" />
               {/* Showcase */}
               <Link
                 href="/showcase"
-                className="block px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-4 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
                 Showcase
               </Link>
+              <div className="h-px bg-neutral-100" />
               {/* Tools - collapsible group */}
               <details>
-                <summary className="px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 cursor-pointer select-none">Tools</summary>
+                <summary className="flex items-center justify-between px-4 py-4 text-base text-neutral-800 hover:bg-neutral-50 cursor-pointer select-none">
+                  <span>Tools</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </summary>
                 <div className="pb-3">
                   <a href="#tools-ai-website-builder" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Ai Website Builder <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
                   <a href="#tools-ai-agents" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Ai Agents <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
@@ -299,18 +308,20 @@ export default function Header() {
                   <a href="#tools-custom-ai" className="block px-6 py-2 text-neutral-700 hover:bg-neutral-50" onClick={() => setOpen(false)}>Custom Ai solution <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
                 </div>
               </details>
+              <div className="h-px bg-neutral-100" />
               {/* News */}
               <Link
                 href="/blog"
-                className="block px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-4 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
                 News
               </Link>
+              <div className="h-px bg-neutral-100" />
               {/* Contact */}
               <Link
                 href="/contact"
-                className="block px-4 py-3.5 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-4 text-base text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
                 onClick={() => setOpen(false)}
               >
                 Contact

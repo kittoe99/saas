@@ -187,7 +187,7 @@ function StepCheckout({
         </div>
 
         {/* Billing form (editable) */}
-        <div className="rounded-xl border border-neutral-200 p-4 bg-white">
+        <form className="rounded-xl border border-neutral-200 p-4 bg-white" autoComplete="on" onSubmit={(e) => e.preventDefault()}>
           <div className="text-sm font-medium text-neutral-700">Billing information</div>
           <div className="mt-3 grid grid-cols-1 gap-3">
             <Field label="Full name" required>
@@ -196,7 +196,8 @@ function StepCheckout({
                 placeholder="Name on invoice"
                 value={billing.fullName || ""}
                 onChange={(e) => onBillingChange("fullName", e.target.value)}
-                autoComplete="name"
+                autoComplete="section-billing name"
+                name="name"
               />
             </Field>
             {/* Billing email removed per request */}
@@ -206,7 +207,8 @@ function StepCheckout({
                 placeholder="123 Main St"
                 value={billing.address1 || ""}
                 onChange={(e) => onBillingChange("address1", e.target.value)}
-                autoComplete="address-line1"
+                autoComplete="section-billing address-line1"
+                name="address-line1"
               />
             </Field>
             <Field label="Address line 2 (optional)">
@@ -215,7 +217,8 @@ function StepCheckout({
                 placeholder="Apt, suite, etc."
                 value={billing.address2 || ""}
                 onChange={(e) => onBillingChange("address2", e.target.value)}
-                autoComplete="address-line2"
+                autoComplete="section-billing address-line2"
+                name="address-line2"
               />
             </Field>
             <Field label="Zip code" required>
@@ -224,7 +227,8 @@ function StepCheckout({
                 placeholder="ZIP / Postal code"
                 value={billing.postalCode || ""}
                 onChange={(e) => onBillingChange("postalCode", e.target.value)}
-                autoComplete="postal-code"
+                autoComplete="section-billing postal-code"
+                name="postal-code"
               />
             </Field>
             <div className="mt-1 text-xs text-neutral-500">Use a different billing name if needed — it won't change your personal info.</div>
@@ -242,7 +246,7 @@ function StepCheckout({
               </button>
             </div>
           </div>
-        </div>
+        </form>
       </div>
 
       {/* Card details (mock, Stripe-like UI) */}
@@ -437,137 +441,255 @@ export default function GetStartedPage() {
 
   return (
     <div className="py-10 md:py-16">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <header className="mb-8">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Get Started</h1>
           <p className="mt-2 text-neutral-600">Complete a few quick steps to continue your account setup.</p>
         </header>
+        <div className="md:grid md:grid-cols-[220px_1fr] md:gap-6">
+          {/* Left vertical progress */}
+          <aside className="hidden md:block">
+            <ProgressSidebar current={step} />
+          </aside>
 
-        {/* Progress (segmented with breakpoints) */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between text-sm text-neutral-600">
-            <div>
-              <span className="font-medium text-neutral-800">Step {step} of {TOTAL_STEPS}</span>
-              <span className="ml-2">{step === 1 ? "Personal info" : step === 2 ? "Package" : step === 3 ? "Summary" : "Checkout"}</span>
-            </div>
-          </div>
-          {/* Segments */}
-          <div className="mt-3">
-            <div className="grid grid-cols-4 gap-1">
-              {[1,2,3,4].map((i) => (
-                <div
-                  key={i}
-                  className={classNames(
-                    "h-2 rounded", 
-                    i <= step ? "bg-[#1a73e8]" : "bg-neutral-200"
-                  )}
-                />
-              ))}
-            </div>
-            {/* Breakpoints */}
-            <div className="mt-2 grid grid-cols-4 text-[11px] text-neutral-600">
-              <div className={classNames("flex items-center gap-2", step >= 1 && "text-neutral-800")}> 
-                <span className={classNames("h-2.5 w-2.5 rounded-full", step >= 1 ? "bg-[#1a73e8]" : "bg-neutral-300")} />
-                <span className="hidden sm:inline">Personal</span>
-              </div>
-              <div className={classNames("flex items-center gap-2 justify-center", step >= 2 && "text-neutral-800")}> 
-                <span className={classNames("h-2.5 w-2.5 rounded-full", step >= 2 ? "bg-[#1a73e8]" : "bg-neutral-300")} />
-                <span className="hidden sm:inline">Package</span>
-              </div>
-              <div className={classNames("flex items-center gap-2 justify-center", step >= 3 && "text-neutral-800")}> 
-                <span className={classNames("h-2.5 w-2.5 rounded-full", step >= 3 ? "bg-[#1a73e8]" : "bg-neutral-300")} />
-                <span className="hidden sm:inline">Summary</span>
-              </div>
-              <div className={classNames("flex items-center gap-2 justify-end", step >= 4 && "text-neutral-800")}> 
-                <span className={classNames("h-2.5 w-2.5 rounded-full", step >= 4 ? "bg-[#1a73e8]" : "bg-neutral-300")} />
-                <span className="hidden sm:inline">Checkout</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 space-y-8">
-          <div ref={step1Ref}>
-            <StepBlock show={step === 1}>
-              <StepPersonalInfo data={data} onChange={handleChange} />
-            </StepBlock>
-          </div>
-
-          <div ref={step2Ref}>
-            <StepBlock show={step === 2}>
-              <StepPackageSelection
-                plans={PLANS}
-                selectedPlan={selectedPlan}
-                onSelect={(id) => {
-                  setSelectedPlan(id);
-                  if (id === "startup") setAddonAiPhone(false);
-                }}
-                addonAiPhone={addonAiPhone}
-                onToggleAddon={() => setAddonAiPhone((v) => !v)}
-              />
-            </StepBlock>
-          </div>
-
-          <div ref={step3Ref}>
-            <StepBlock show={step === 3 && Boolean(selectedPlan)}>
-              {selectedPlan && (
-                <StepSummary
-                  personal={data}
-                  planId={selectedPlan}
-                  addonAiPhone={addonAiPhone}
-                />
-              )}
-            </StepBlock>
-          </div>
-
-          <div ref={step4Ref}>
-            <StepBlock show={step === 4 && Boolean(selectedPlan)}>
-              {selectedPlan && (
-                <StepCheckout
-                  personal={data}
-                  planId={selectedPlan}
-                  addonAiPhone={addonAiPhone}
-                  onPay={handleCheckout}
-                  loading={checkoutLoading}
-                  paid={mockPaid}
-                  error={checkoutError}
-                  billing={billing}
-                  onBillingChange={handleBillingChange}
-                />
-              )}
-            </StepBlock>
-          </div>
-
-          {/* Actions */}
-          <div className="mt-6 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={handleBack}
-              disabled={step === 1}
+          {/* Right step cards */}
+          <div className="space-y-4">
+            {/* Step 1 */}
+            <details
+              ref={step1Ref as any}
+              open={step === 1}
               className={classNames(
-                "px-4 py-2 rounded-md border text-sm",
-                step === 1
-                  ? "border-neutral-200 text-neutral-400 bg-neutral-50 cursor-not-allowed"
-                  : "border-neutral-300 text-neutral-700 bg-white hover:bg-neutral-50"
+                "relative rounded-xl border",
+                step > 1 ? "bg-green-50 border-green-200" : "bg-white border-neutral-200"
               )}
+              onToggle={(e) => {
+                const el = e.currentTarget as HTMLDetailsElement;
+                if (el.open) setStep(1);
+              }}
             >
-              Back
-            </button>
-            {step !== 4 && (
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={(step === 1 && !canProceedStep1) || (step === 2 && !selectedPlan)}
-                className={classNames(
-                  "px-4 py-2 rounded-md text-white text-sm",
-                  (step === 1 && !canProceedStep1) || (step === 2 && !selectedPlan)
-                    ? "bg-[#93b7f1] cursor-not-allowed"
-                    : "bg-[#1a73e8] hover:opacity-95"
-                )}
-              >
-                {step === TOTAL_STEPS ? "Finish" : "Continue"}
-              </button>
-            )}
+              {step > 1 && (
+                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />
+              )}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 1 && (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>
+                    )}
+                    <span>1. Personal info</span>
+                  </div>
+                  {step > 1 && (
+                    <div className="text-xs text-neutral-600 mt-0.5 truncate">{`${data.firstName} ${data.lastName}`.trim()} • {data.email || "—"}</div>
+                  )}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames(
+                    "text-xs rounded-full px-2 py-0.5",
+                    step > 1 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700"
+                  )}>{step > 1 ? "Completed" : step === 1 ? "In progress" : "Locked"}</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </div>
+              </summary>
+              <div className="accordion border-t border-neutral-200">
+                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                  <StepPersonalInfo data={data} onChange={handleChange} />
+                  <div className="mt-4 flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={!canProceedStep1}
+                      className={classNames(
+                        "px-4 py-2 rounded-md text-white text-sm",
+                        !canProceedStep1 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
+                      )}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            {/* Step 2 */}
+            <details
+              ref={step2Ref as any}
+              open={step === 2}
+              className={classNames(
+                "relative rounded-xl border",
+                step > 2 ? "bg-green-50 border-green-200" : step >= 2 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => {
+                const el = e.currentTarget as HTMLDetailsElement;
+                if (el.open && step >= 2) setStep(2);
+                if (step < 2) {
+                  // prevent opening if locked
+                  el.open = false;
+                }
+              }}
+            >
+              {step > 2 && (
+                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />
+              )}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 2 && (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>
+                    )}
+                    <span>2. Package</span>
+                  </div>
+                  {step > 2 && (
+                    <div className="text-xs text-neutral-600 mt-0.5 truncate">{PLANS.find(p=>p.id===selectedPlan!)?.name || "—"}</div>
+                  )}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames(
+                    "text-xs rounded-full px-2 py-0.5",
+                    step > 2 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700"
+                  )}>{step > 2 ? "Completed" : step === 2 ? "In progress" : "Locked"}</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </div>
+              </summary>
+              <div className="accordion border-t border-neutral-200">
+                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                  <StepPackageSelection
+                    plans={PLANS}
+                    selectedPlan={selectedPlan}
+                    onSelect={(id) => {
+                      setSelectedPlan(id);
+                      if (id === "startup") setAddonAiPhone(false);
+                    }}
+                    addonAiPhone={addonAiPhone}
+                    onToggleAddon={() => setAddonAiPhone((v) => !v)}
+                  />
+                  <div className="mt-4 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={!selectedPlan}
+                      className={classNames(
+                        "px-4 py-2 rounded-md text-white text-sm",
+                        !selectedPlan ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
+                      )}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            {/* Step 3 */}
+            <details
+              ref={step3Ref as any}
+              open={step === 3}
+              className={classNames(
+                "relative rounded-xl border",
+                step > 3 ? "bg-green-50 border-green-200" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => {
+                const el = e.currentTarget as HTMLDetailsElement;
+                if (el.open && step >= 3) setStep(3);
+                if (step < 3) el.open = false;
+              }}
+            >
+              {step > 3 && (
+                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />
+              )}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 3 && (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>
+                    )}
+                    <span>3. Summary</span>
+                  </div>
+                  {step > 3 && (
+                    <div className="text-xs text-neutral-600 mt-0.5 truncate">Ready to pay</div>
+                  )}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames(
+                    "text-xs rounded-full px-2 py-0.5",
+                    step > 3 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700"
+                  )}>{step > 3 ? "Completed" : step === 3 ? "In progress" : "Locked"}</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </div>
+              </summary>
+              <div className="accordion border-t border-neutral-200">
+                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                  {selectedPlan && (
+                    <StepSummary personal={data} planId={selectedPlan} addonAiPhone={addonAiPhone} />
+                  )}
+                  <div className="mt-4 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={!selectedPlan}
+                      className={classNames(
+                        "px-4 py-2 rounded-md text-white text-sm",
+                        !selectedPlan ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
+                      )}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            {/* Step 4 */}
+            <details
+              ref={step4Ref as any}
+              open={step === 4}
+              className={classNames("rounded-xl border bg-white", step >= 4 ? "border-neutral-200" : "border-neutral-100 opacity-70")}
+              onToggle={(e) => {
+                const el = e.currentTarget as HTMLDetailsElement;
+                if (el.open && step >= 4) setStep(4);
+                if (step < 4) el.open = false;
+              }}
+            >
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800">4. Checkout</div>
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">{step === 4 ? "In progress" : step > 4 ? "Completed" : "Locked"}</span>
+                  <svg className="chev h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </div>
+              </summary>
+              <div className="accordion border-t border-neutral-200">
+                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                  {selectedPlan && (
+                    <StepCheckout
+                      personal={data}
+                      planId={selectedPlan}
+                      addonAiPhone={addonAiPhone}
+                      onPay={handleCheckout}
+                      loading={checkoutLoading}
+                      paid={mockPaid}
+                      error={checkoutError}
+                      billing={billing}
+                      onBillingChange={handleBillingChange}
+                    />
+                  )}
+                </div>
+              </div>
+            </details>
           </div>
         </div>
 
@@ -600,6 +722,50 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
         props.className || ""
       )}
     />
+  );
+}
+
+function ProgressSidebar({ current }: { current: number }) {
+  const items = [
+    { id: 1, label: "Personal" },
+    { id: 2, label: "Package" },
+    { id: 3, label: "Summary" },
+    { id: 4, label: "Checkout" },
+  ];
+  return (
+    <div className="relative pl-6">
+      {/* Vertical line */}
+      <div className="absolute left-2 top-0 bottom-0 w-[2px] bg-neutral-200 rounded" aria-hidden />
+      {/* Progress */}
+      <div
+        className="absolute left-2 w-[2px] bg-[#1a73e8] rounded transition-all"
+        style={{ top: 0, height: `${(Math.max(1, current) - 1) / (TOTAL_STEPS - 1) * 100}%` }}
+        aria-hidden
+      />
+      <ol className="space-y-6">
+        {items.map((it, idx) => {
+          const active = it.id === current;
+          const done = it.id < current;
+          return (
+            <li key={it.id} className="flex items-start gap-3">
+              <span
+                className={classNames(
+                  "mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px]",
+                  done ? "bg-[#1a73e8] border-[#1a73e8] text-white" : active ? "border-[#1a73e8] text-[#1a73e8]" : "border-neutral-300 text-neutral-500"
+                )}
+                aria-hidden
+              >
+                {done ? "✓" : it.id}
+              </span>
+              <div>
+                <div className={classNames("text-sm", done ? "text-neutral-700" : active ? "text-neutral-900 font-medium" : "text-neutral-600")}>{it.label}</div>
+                <div className="text-xs text-neutral-500">Step {it.id} of {TOTAL_STEPS}</div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
@@ -698,7 +864,7 @@ function StepPersonalInfo({
   onChange: <K extends keyof PersonalInfo>(key: K, value: PersonalInfo[K]) => void;
 }) {
   return (
-    <div>
+    <form autoComplete="on" onSubmit={(e) => e.preventDefault()}>
       <h2 className="text-lg font-medium tracking-tight">Personal info</h2>
       <p className="mt-1 text-sm text-neutral-600">Tell us a bit about you so we can set up your account.</p>
 
@@ -710,6 +876,7 @@ function StepPersonalInfo({
             value={data.firstName}
             onChange={(e) => onChange("firstName", e.target.value)}
             autoComplete="given-name"
+            name="given-name"
           />
         </Field>
         <Field label="Last name" required>
@@ -719,6 +886,7 @@ function StepPersonalInfo({
             value={data.lastName}
             onChange={(e) => onChange("lastName", e.target.value)}
             autoComplete="family-name"
+            name="family-name"
           />
         </Field>
       </div>
@@ -731,6 +899,7 @@ function StepPersonalInfo({
             value={data.email}
             onChange={(e) => onChange("email", e.target.value)}
             autoComplete="email"
+            name="email"
           />
         </Field>
         <Field label="Phone (optional)">
@@ -740,10 +909,11 @@ function StepPersonalInfo({
             value={data.phone || ""}
             onChange={(e) => onChange("phone", e.target.value)}
             autoComplete="tel"
+            name="tel"
           />
         </Field>
       </div>
 
-    </div>
+    </form>
   );
 }
