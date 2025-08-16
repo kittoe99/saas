@@ -32,12 +32,123 @@ const SITE_TYPES: SiteType[] = [
   "Personal brand",
 ];
 
+// Categories per site type
+const CATEGORY_OPTIONS: Partial<Record<SiteType, string[]>> = {
+  Ecommerce: ["Apparel", "Electronics", "Home & Garden", "Beauty", "Food & Beverage", "Other"],
+  SaaS: ["Dev Tools", "Marketing", "Finance", "Productivity", "Healthcare", "Education", "Other"],
+  Agency: ["Web", "SEO", "Advertising", "Branding", "Creative", "Consulting", "Other"],
+  "Small business": ["Restaurants", "Transportation", "Home Services", "Retail", "Health & Wellness", "Professional Services", "Other"],
+  Portfolio: ["Design", "Development", "Photography", "Video", "Art", "Writing", "Other"],
+  Blog: ["Tech", "Lifestyle", "Finance", "Travel", "Food", "Education", "Other"],
+  Nonprofit: ["Education", "Health", "Environment", "Community", "Arts", "Religion", "Other"],
+  Community: ["Local", "Professional", "Hobby", "Education", "Tech", "Other"],
+  "Personal brand": ["Coaching", "Speaking", "Content Creator", "Consulting", "Other"],
+  "Hobby site": ["Gaming", "DIY", "Outdoors", "Arts & Crafts", "Collectibles", "Other"],
+};
+
+function categoriesFor(siteType: SiteType | null): string[] {
+  return siteType ? (CATEGORY_OPTIONS[siteType] || ["Other"]) : [];
+}
+
+// Config for type-specific questions (Option A)
+type TypeQuestion =
+  | { kind: "text"; key: string; label: string; placeholder?: string; required?: boolean }
+  | { kind: "number"; key: string; label: string; min?: number; max?: number; required?: boolean }
+  | { kind: "select"; key: string; label: string; options: string[]; required?: boolean }
+  | { kind: "chips"; key: string; label: string; hint?: string; required?: boolean };
+
+const TYPE_QUESTIONS: Partial<Record<SiteType, TypeQuestion[]>> = {
+  Ecommerce: [
+    { kind: "chips", key: "productCategories", label: "Product categories", hint: "Comma-separated" },
+    { kind: "number", key: "skuCount", label: "Approx. SKU count", min: 0 },
+    { kind: "select", key: "platform", label: "Platform preference", options: ["Shopify", "WooCommerce", "Wix", "Other"] },
+    { kind: "chips", key: "paymentProviders", label: "Payment providers", hint: "Stripe, PayPal, etc." },
+    { kind: "chips", key: "shippingRegions", label: "Fulfillment/shipping regions" },
+  ],
+  SaaS: [
+    { kind: "text", key: "icp", label: "Target users / ICP", required: true },
+    { kind: "chips", key: "keyFeatures", label: "Key features" },
+    { kind: "chips", key: "pricingTiers", label: "Pricing tiers (names)" },
+    { kind: "chips", key: "integrations", label: "Integrations" },
+  ],
+  Agency: [
+    { kind: "chips", key: "serviceCategories", label: "Service categories", hint: "e.g. Web, SEO, Ads" },
+    { kind: "select", key: "bookingMethod", label: "Booking method", options: ["phone", "form", "schedule"] },
+  ],
+  "Small business": [
+    { kind: "chips", key: "serviceCategories", label: "Service categories" },
+    { kind: "chips", key: "businessHours", label: "Business hours", hint: "e.g. Mon-Fri 9-5" },
+  ],
+  Portfolio: [
+    { kind: "chips", key: "workTypes", label: "Work types", hint: "e.g. Design, Development" },
+    { kind: "number", key: "caseStudyCount", label: "# of case studies to feature", min: 0 },
+    { kind: "chips", key: "mediaLinks", label: "Media links", hint: "Drive/Figma/Behance" },
+  ],
+  Blog: [
+    { kind: "chips", key: "topics", label: "Topics" },
+    { kind: "select", key: "frequency", label: "Posting frequency", options: ["Weekly", "Biweekly", "Monthly", "Quarterly"] },
+    { kind: "chips", key: "authors", label: "Authors (names)" },
+    { kind: "text", key: "newsletterProvider", label: "Newsletter provider" },
+  ],
+  Nonprofit: [
+    { kind: "text", key: "mission", label: "Mission summary", required: true },
+    { kind: "chips", key: "programs", label: "Programs / services" },
+    { kind: "chips", key: "donationMethods", label: "Donation methods", hint: "Stripe, PayPal, Other" },
+  ],
+  Community: [
+    { kind: "text", key: "purpose", label: "Community purpose", required: true },
+    { kind: "chips", key: "channels", label: "Channels", hint: "Discord, Slack, Forum" },
+    { kind: "chips", key: "events", label: "Events cadence" },
+  ],
+  "Personal brand": [
+    { kind: "chips", key: "speakingTopics", label: "Speaking topics" },
+    { kind: "chips", key: "offers", label: "Offers", hint: "Courses, Coaching" },
+    { kind: "text", key: "newsletterProvider", label: "Newsletter provider" },
+  ],
+  "Hobby site": [
+    { kind: "text", key: "niche", label: "Topic / niche" },
+    { kind: "select", key: "mediaType", label: "Primary media type", options: ["Articles", "Gallery", "Video"] },
+    { kind: "chips", key: "communityFeatures", label: "Community features", hint: "Comments, Discord" },
+  ],
+};
+
+function typeQuestionsFor(siteType: SiteType | null): TypeQuestion[] {
+  return siteType ? (TYPE_QUESTIONS[siteType] || []) : [];
+}
+
+function isTypeSpecificValid(siteType: SiteType | null, data: Record<string, any>): boolean {
+  const qs = typeQuestionsFor(siteType);
+  for (const q of qs) {
+    if (!q.required) continue;
+    const v = data?.[q.key];
+    if (q.kind === "number") {
+      if (typeof v !== "number") return false;
+    } else {
+      if (!v || (typeof v === "string" && v.trim().length === 0)) return false;
+    }
+  }
+  return true;
+}
+
 export default function OnboardingPage() {
   const [siteType, setSiteType] = useState<SiteType | null>(null);
+  const [category, setCategory] = useState<string>("");
   const [name, setName] = useState("");
   const [nameFocused, setNameFocused] = useState(false);
   const [hasCurrent, setHasCurrent] = useState<"yes" | "no" | null>(null);
   const [currentUrl, setCurrentUrl] = useState("");
+  // New onboarding fields for DFY website build
+  const [businessPhone, setBusinessPhone] = useState("");
+  const [businessEmail, setBusinessEmail] = useState("");
+  const [services, setServices] = useState(""); // comma-separated
+  const [serviceAreas, setServiceAreas] = useState(""); // comma-separated
+  const [primaryColor, setPrimaryColor] = useState<string>("#1a73e8");
+  const [contactMethod, setContactMethod] = useState<"email" | "phone" | "form" | "schedule" | null>(null);
+  const [socialX, setSocialX] = useState("");
+  const [socialLinkedIn, setSocialLinkedIn] = useState("");
+  const [socialInstagram, setSocialInstagram] = useState("");
+  const [socialFacebook, setSocialFacebook] = useState("");
+  const [typeSpecific, setTypeSpecific] = useState<Record<string, any>>({});
   const [searching, setSearching] = useState(false);
   const [summary, setSummary] = useState<
     | null
@@ -75,11 +186,17 @@ export default function OnboardingPage() {
   // Step orchestration
   const [step, setStep] = useState(1);
   const step1Done = !!siteType;
-  const step2Done = name.trim().length >= 2;
-  const step3Done = !!siteType && !!name.trim() && (hasCurrent === "no" || (hasCurrent === "yes" && (siteAdded || skipped)));
+  const step2Done = step1Done && category.trim().length > 0;
+  const step3Done = name.trim().length >= 2;
+  const step4Done = !!siteType && !!name.trim() && (hasCurrent === "no" || (hasCurrent === "yes" && (siteAdded || skipped)));
+  const step5Done = (businessPhone.trim().length >= 7 || /\S+@\S+\.\S+/.test(businessEmail)) && !!contactMethod;
+  const step6Done = services.trim().length > 0 || serviceAreas.trim().length > 0;
   const canGoStep2 = step1Done;
   const canGoStep3 = step2Done;
   const canGoStep4 = step3Done;
+  const canGoStep5 = step4Done;
+  const canGoStep6 = step5Done;
+  const canGoStep7 = step6Done && isTypeSpecificValid(siteType, typeSpecific);
 
   // Minimal nudge scrolling: only scroll enough so the element is slightly in view
   // Removed auto-scroll helper
@@ -91,6 +208,8 @@ export default function OnboardingPage() {
       // We only restore focus to the input so the user can start typing immediately.
       try { nameInputRef.current?.focus({ preventScroll: true } as any); } catch {}
     }, 120);
+    // reset category when site type changes
+    setCategory("");
   }, [siteType]);
 
   // If the input is intended to be focused, ensure it stays focused across re-renders
@@ -337,7 +456,7 @@ export default function OnboardingPage() {
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
         {/* Sidebar */}
         <aside className="hidden lg:block">
-          <ProgressSidebar current={step} done={{ s1: step1Done, s2: step2Done, s3: step3Done }} />
+          <ProgressSidebar current={step} done={{ s1: step1Done, s2: step2Done, s3: step3Done, s4: step4Done, s5: step5Done, s6: step6Done }} />
         </aside>
 
         {/* Steps */}
@@ -403,8 +522,8 @@ export default function OnboardingPage() {
               </div>
             </div>
           </details>
-
-          {/* Step 2 */}
+          
+          {/* Step 2: Category/Industry */}
           <details
             open={step === 2}
             className={classNames(
@@ -422,9 +541,9 @@ export default function OnboardingPage() {
               <div>
                 <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
                   {step > 2 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>2. Name</span>
+                  <span>2. Category / Industry</span>
                 </div>
-                {step > 2 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{name}</div>}
+                {step > 2 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{category}</div>}
               </div>
               <div className="ml-auto flex items-center gap-3">
                 <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 2 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 2 ? "Completed" : step === 2 ? "In progress" : "Locked"}</span>
@@ -433,27 +552,24 @@ export default function OnboardingPage() {
             </summary>
             <div className="accordion border-t border-neutral-200">
               <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <label className="block text-sm font-medium">Name of site / business / organization</label>
-                <input
-                  ref={nameInputRef}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onBlur={() => setNameFocused(false)}
-                  onFocus={() => setNameFocused(true)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      if (composingRef.current) return;
-                      if (name.trim().length >= 2) setStep(3);
-                    }
-                  }}
-                  onCompositionStart={() => { composingRef.current = true; }}
-                  onCompositionEnd={() => { composingRef.current = false; }}
-                  autoComplete="off"
-                  placeholder="e.g. Bello Moving"
-                  className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
-                />
-                <div className="mt-3 flex justify-between">
+                <label className="block text-sm font-medium">Select a category / industry</label>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {categoriesFor(siteType).map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCategory(c)}
+                      className={classNames(
+                        "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
+                        category === c ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"
+                      )}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                {category && <div className="mt-2 text-xs text-gray-600">Selected: {category}</div>}
+                <div className="mt-4 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(1)}>Back</button>
                   <button
                     type="button"
@@ -489,12 +605,79 @@ export default function OnboardingPage() {
               <div>
                 <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
                   {step > 3 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>3. Website details</span>
+                  <span>3. Name</span>
                 </div>
-                {step > 3 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{hasCurrent === 'yes' ? currentUrl : 'No current website'}</div>}
+                {step > 3 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{name}</div>}
               </div>
               <div className="ml-auto flex items-center gap-3">
                 <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 3 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 3 ? "Completed" : step === 3 ? "In progress" : "Locked"}</span>
+                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+              </div>
+            </summary>
+            <div className="accordion border-t border-neutral-200">
+              <div className="accordion-content p-4 sm:p-5 fade-slide">
+                <label className="block text-sm font-medium">Name of site / business / organization</label>
+                <input
+                  ref={nameInputRef}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={() => setNameFocused(false)}
+                  onFocus={() => setNameFocused(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (composingRef.current) return;
+                      if (name.trim().length >= 2) setStep(4);
+                    }
+                  }}
+                  onCompositionStart={() => { composingRef.current = true; }}
+                  onCompositionEnd={() => { composingRef.current = false; }}
+                  autoComplete="off"
+                  placeholder="e.g. Bello Moving"
+                  className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                />
+                <div className="mt-3 flex justify-between">
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(2)}>Back</button>
+                  <button
+                    type="button"
+                    className={classNames(
+                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
+                      !canGoStep4 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
+                    )}
+                    disabled={!canGoStep4}
+                    onClick={() => setStep(4)}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* Step 4 */}
+          <details
+            open={step === 4}
+            className={classNames(
+              "relative rounded-xl border",
+              step > 4 ? "bg-green-50 border-green-200" : step >= 4 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+            )}
+            onToggle={(e) => {
+              const el = e.currentTarget as HTMLDetailsElement;
+              if (el.open && canGoStep4) setStep(4);
+              if (!canGoStep4) el.open = false;
+            }}
+          >
+            {step > 4 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
+            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                  {step > 4 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
+                  <span>4. Website details</span>
+                </div>
+                {step > 4 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{hasCurrent === 'yes' ? currentUrl : 'No current website'}</div>}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 4 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 4 ? "Completed" : step === 4 ? "In progress" : "Locked"}</span>
                 <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
               </div>
             </summary>
@@ -712,15 +895,15 @@ export default function OnboardingPage() {
                 )}
 
                 <div className="mt-4 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(2)}>Back</button>
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(3)}>Back</button>
                   <button
                     type="button"
                     className={classNames(
                       "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
-                      !canGoStep4 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
+                      !canGoStep5 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
                     )}
-                    disabled={!canGoStep4}
-                    onClick={() => setStep(4)}
+                    disabled={!canGoStep5}
+                    onClick={() => setStep(5)}
                   >
                     Continue
                   </button>
@@ -729,41 +912,231 @@ export default function OnboardingPage() {
             </div>
           </details>
 
-          {/* Step 4 */}
+          {/* Step 5: Business & Contact */}
           <details
-            open={step === 4}
-            className={classNames("relative rounded-xl border", step >= 4 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70")}
+            open={step === 5}
+            className={classNames(
+              "relative rounded-xl border",
+              step > 5 ? "bg-green-50 border-green-200" : step >= 5 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+            )}
             onToggle={(e) => {
               const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep4) setStep(4);
-              if (!canGoStep4) el.open = false;
+              if (el.open && canGoStep5) setStep(5);
+              if (!canGoStep5) el.open = false;
+            }}
+          >
+            {step > 5 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
+            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                  {step > 5 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
+                  <span>5. Business & Contact</span>
+                </div>
+                {step > 5 && (
+                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
+                    {[businessPhone || null, businessEmail || null].filter(Boolean).join(" • ") || "Contact preferences set"}
+                  </div>
+                )}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 5 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 5 ? "Completed" : step === 5 ? "In progress" : "Locked"}</span>
+                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+              </div>
+            </summary>
+            <div className="accordion border-t border-neutral-200">
+              <div className="accordion-content p-4 sm:p-5 fade-slide">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium">Business phone</label>
+                    <input value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} placeholder="(555) 123-4567" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Business email</label>
+                    <input type="email" value={businessEmail} onChange={(e) => setBusinessEmail(e.target.value)} placeholder="hello@yourbusiness.com" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium">Preferred contact method</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {["email","phone","form","schedule"].map((m) => (
+                      <button key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]", contactMethod === m ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5")}>{m}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium">Primary color</label>
+                    <div className="mt-1 flex items-center gap-2">
+                      <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 rounded-md border border-gray-300 bg-white" />
+                      <input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Social links (optional)</label>
+                    <div className="mt-1 grid gap-2">
+                      <input value={socialX} onChange={(e) => setSocialX(e.target.value)} placeholder="X / Twitter URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                      <input value={socialLinkedIn} onChange={(e) => setSocialLinkedIn(e.target.value)} placeholder="LinkedIn URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                      <input value={socialInstagram} onChange={(e) => setSocialInstagram(e.target.value)} placeholder="Instagram URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                      <input value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)} placeholder="Facebook URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-between">
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(4)}>Back</button>
+                  <button
+                    type="button"
+                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]", !canGoStep6 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95")}
+                    disabled={!canGoStep6}
+                    onClick={() => setStep(6)}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* Step 6: Services & Areas */}
+          <details
+            open={step === 6}
+            className={classNames("relative rounded-xl border", step > 6 ? "bg-green-50 border-green-200" : step >= 6 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70")}
+            onToggle={(e) => {
+              const el = e.currentTarget as HTMLDetailsElement;
+              if (el.open && canGoStep6) setStep(6);
+              if (!canGoStep6) el.open = false;
+            }}
+          >
+            {step > 6 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
+            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                  {step > 6 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
+                  <span>6. Services & Areas</span>
+                </div>
+                {step > 6 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{[services, serviceAreas].filter(Boolean).join(" • ")}</div>}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 6 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 6 ? "Completed" : step === 6 ? "In progress" : "Locked"}</span>
+                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+              </div>
+            </summary>
+            <div className="accordion border-t border-neutral-200">
+              <div className="accordion-content p-4 sm:p-5 fade-slide">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium">Services you provide</label>
+                    <textarea value={services} onChange={(e) => setServices(e.target.value)} rows={3} placeholder="e.g. Local moves, Long-distance moves, Packing services" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                    <div className="mt-1 text-xs text-gray-500">Comma-separated</div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Service areas (if applicable)</label>
+                    <textarea value={serviceAreas} onChange={(e) => setServiceAreas(e.target.value)} rows={3} placeholder="e.g. San Francisco, Oakland, San Jose" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                    <div className="mt-1 text-xs text-gray-500">Comma-separated</div>
+                  </div>
+                </div>
+                {/* Type-specific details (Option A) */}
+                {siteType && typeQuestionsFor(siteType).length > 0 && (
+                  <div className="mt-6 border-t border-neutral-200 pt-4">
+                    <div className="text-sm font-medium mb-2">Type-specific details</div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {typeQuestionsFor(siteType).map((q) => {
+                        const v = typeSpecific[q.key];
+                        const setVal = (val: any) => setTypeSpecific((prev) => ({ ...prev, [q.key]: val }));
+                        if (q.kind === "text") {
+                          return (
+                            <div key={q.key}>
+                              <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
+                              <input value={v || ""} onChange={(e) => setVal(e.target.value)} placeholder={q.placeholder || ""} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                            </div>
+                          );
+                        }
+                        if (q.kind === "number") {
+                          return (
+                            <div key={q.key}>
+                              <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
+                              <input type="number" value={typeof v === "number" ? v : (v ?? "")} onChange={(e) => {
+                                const val = e.target.value;
+                                setVal(val === "" ? "" : Number(val));
+                              }} min={q.min ?? undefined} max={q.max ?? undefined} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                            </div>
+                          );
+                        }
+                        if (q.kind === "select") {
+                          return (
+                            <div key={q.key}>
+                              <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
+                              <select value={v || ""} onChange={(e) => setVal(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
+                                <option value="">Select…</option>
+                                {q.options.map((opt) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            </div>
+                          );
+                        }
+                        // chips -> comma-separated input
+                        return (
+                          <div key={q.key}>
+                            <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
+                            <input value={v || ""} onChange={(e) => setVal(e.target.value)} placeholder={q.hint || "Comma-separated"} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                            {q.hint && <div className="mt-1 text-xs text-gray-500">{q.hint}</div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                <div className="mt-4 flex justify-between">
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(5)}>Back</button>
+                  <button
+                    type="button"
+                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]", !canGoStep7 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95")}
+                    disabled={!canGoStep7}
+                    onClick={() => setStep(7)}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* Step 7: Finish */}
+          <details
+            open={step === 7}
+            className={classNames("relative rounded-xl border", step >= 7 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70")}
+            onToggle={(e) => {
+              const el = e.currentTarget as HTMLDetailsElement;
+              if (el.open && canGoStep7) setStep(7);
+              if (!canGoStep7) el.open = false;
             }}
           >
             <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
               <div>
                 <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  <span>4. Finish</span>
+                  <span>7. Finish</span>
                 </div>
-                {canGoStep4 && <div className="text-xs text-neutral-600 mt-0.5 truncate">You can change these later.</div>}
+                {canGoStep7 && <div className="text-xs text-neutral-600 mt-0.5 truncate">You can change these later.</div>}
               </div>
               <div className="ml-auto flex items-center gap-3">
-                <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">{step === 4 ? "In progress" : step > 4 ? "Completed" : "Locked"}</span>
+                <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">{step === 7 ? "In progress" : step > 7 ? "Completed" : "Locked"}</span>
                 <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
               </div>
             </summary>
             <div className="accordion border-t border-neutral-200">
               <div className="accordion-content p-4 sm:p-5 fade-slide">
                 <div ref={actionsRef} className="flex items-center justify-between">
-                  <div className="text-xs text-gray-500">You can change these later.</div>
+                  <div className="text-xs text-gray-500">Review & save your onboarding info.</div>
                   <button
                     className={classNames(
                       "rounded-md px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
-                      !canGoStep4 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
+                      !canGoStep7 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
                     )}
-                    disabled={!canGoStep4}
+                    disabled={!canGoStep7}
                     onClick={() => {
                       const payload = {
                         siteType,
+                        category,
                         name,
                         hasCurrent,
                         currentUrl: hasCurrent === "yes" ? currentUrl : "",
@@ -771,6 +1144,14 @@ export default function OnboardingPage() {
                         autoSummary: summary,
                         siteAdded,
                         skipped,
+                        businessPhone,
+                        businessEmail,
+                        contactMethod,
+                        primaryColor,
+                        social: { x: socialX, linkedIn: socialLinkedIn, instagram: socialInstagram, facebook: socialFacebook },
+                        services: services.split(',').map((s) => s.trim()).filter(Boolean),
+                        serviceAreas: serviceAreas.split(',').map((s) => s.trim()).filter(Boolean),
+                        typeSpecific: { type: siteType, data: typeSpecific },
                       };
                       alert(`Saved!\n${JSON.stringify(payload, null, 2)}`);
                     }}
@@ -788,12 +1169,15 @@ export default function OnboardingPage() {
 }
 
 // Minimal vertical progress sidebar to mirror get-started
-function ProgressSidebar({ current, done }: { current: number; done: { s1: boolean; s2: boolean; s3: boolean } }) {
+function ProgressSidebar({ current, done }: { current: number; done: { s1: boolean; s2: boolean; s3: boolean; s4: boolean; s5: boolean; s6: boolean } }) {
   const steps = [
     { id: 1, label: "Type", completed: done.s1 },
-    { id: 2, label: "Name", completed: done.s2 },
-    { id: 3, label: "Website", completed: done.s3 },
-    { id: 4, label: "Finish", completed: false },
+    { id: 2, label: "Category", completed: done.s2 },
+    { id: 3, label: "Name", completed: done.s3 },
+    { id: 4, label: "Website details", completed: done.s4 },
+    { id: 5, label: "Business & Contact", completed: done.s5 },
+    { id: 6, label: "Services & Areas", completed: done.s6 },
+    { id: 7, label: "Finish", completed: false },
   ];
   const total = steps.length;
   return (
