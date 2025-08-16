@@ -379,30 +379,9 @@ export default function GetStartedPage() {
   const step3Ref = useRef<HTMLDivElement | null>(null);
   const step4Ref = useRef<HTMLDivElement | null>(null);
 
-  // Smooth scroll helper with offset
-  function scrollIntoViewWithOffset(el: HTMLElement | null, offset = 80) {
-    if (!el) return;
-    try {
-      const rect = el.getBoundingClientRect();
-      const top = rect.top + window.scrollY - offset;
-      window.scrollTo({ top, behavior: "smooth" });
-    } catch {}
-  }
-
+  // Auto-scroll disabled per design: keep position stable between steps
   useEffect(() => {
-    const map: Record<number, HTMLDivElement | null> = {
-      1: step1Ref.current,
-      2: step2Ref.current,
-      3: step3Ref.current,
-      4: step4Ref.current,
-    };
-    const el = map[step];
-    if (el) {
-      // slight delay to allow mount/transition start
-      setTimeout(() => {
-        scrollIntoViewWithOffset(el, 88);
-      }, 20);
-    }
+    // no-op
   }, [step]);
 
   const canProceedStep1 = useMemo(() => {

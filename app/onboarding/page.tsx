@@ -82,25 +82,7 @@ export default function OnboardingPage() {
   const canGoStep4 = step3Done;
 
   // Minimal nudge scrolling: only scroll enough so the element is slightly in view
-  function scrollIntoViewWithOffset(el: HTMLElement | null, _offset = 0, margin = 16, maxNudge = 120) {
-    if (!el) return;
-    try {
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      let delta = 0;
-      if (rect.top < margin) {
-        delta = rect.top - margin;
-      } else if (rect.bottom > vh - margin) {
-        delta = rect.bottom - (vh - margin);
-      }
-      if (Math.abs(delta) < 8) return; // already good enough
-      // Cap nudge to avoid large jumps
-      if (delta > 0) delta = Math.min(delta, maxNudge);
-      else delta = Math.max(delta, -maxNudge);
-      const target = window.scrollY + delta;
-      window.scrollTo({ top: target, behavior: "smooth" });
-    } catch {}
-  }
+  // Removed auto-scroll helper
 
   // Scroll to name when type chosen
   useEffect(() => {
@@ -119,24 +101,12 @@ export default function OnboardingPage() {
     }
   }, [nameFocused, name]);
   // Do NOT auto-scroll on every keystroke; next step reveals only on explicit commit (Enter/Continue)
-  // Scroll to URL or actions when hasCurrent set
+  // Scroll to URL or actions when 
   useEffect(() => {
-    if (!hasCurrent) return;
-    const target = hasCurrent === "yes" ? urlRef.current : actionsRef.current;
-    setTimeout(() => {
-      // Avoid scroll if user is typing name to prevent focus loss
-      if (document.activeElement === nameInputRef.current) return;
-      scrollIntoViewWithOffset(target as HTMLElement);
-    }, 100);
+    // no-op
   }, [hasCurrent]);
-  // After site added or skipped (with yes), scroll to actions
   useEffect(() => {
-    if (hasCurrent === "yes" && (siteAdded || skipped)) {
-      setTimeout(() => {
-        if (document.activeElement === nameInputRef.current) return;
-        scrollIntoViewWithOffset(actionsRef.current as HTMLElement);
-      }, 100);
-    }
+    // no-op
   }, [siteAdded, skipped, hasCurrent]);
 
   // Animated reveal wrapper for step-by-step UX
