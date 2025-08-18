@@ -46,8 +46,80 @@ const CATEGORY_OPTIONS: Partial<Record<SiteType, string[]>> = {
   "Hobby site": ["Gaming", "DIY", "Outdoors", "Arts & Crafts", "Collectibles", "Other"],
 };
 
+// Common countries list for suggestions filter
+const COUNTRIES: Array<{ code: string; name: string }> = [
+  { code: "us", name: "United States" },
+  { code: "ca", name: "Canada" },
+  { code: "gb", name: "United Kingdom" },
+  { code: "au", name: "Australia" },
+  { code: "in", name: "India" },
+  { code: "ie", name: "Ireland" },
+  { code: "nz", name: "New Zealand" },
+  { code: "za", name: "South Africa" },
+  { code: "de", name: "Germany" },
+  { code: "fr", name: "France" },
+  { code: "es", name: "Spain" },
+  { code: "it", name: "Italy" },
+  { code: "nl", name: "Netherlands" },
+  { code: "se", name: "Sweden" },
+  { code: "no", name: "Norway" },
+  { code: "dk", name: "Denmark" },
+  { code: "fi", name: "Finland" },
+  { code: "br", name: "Brazil" },
+  { code: "mx", name: "Mexico" },
+  { code: "ar", name: "Argentina" },
+  { code: "cl", name: "Chile" },
+  { code: "jp", name: "Japan" },
+  { code: "kr", name: "South Korea" },
+  { code: "sg", name: "Singapore" },
+  { code: "my", name: "Malaysia" },
+  { code: "ph", name: "Philippines" },
+  { code: "id", name: "Indonesia" },
+  { code: "ae", name: "United Arab Emirates" },
+  { code: "sa", name: "Saudi Arabia" },
+  { code: "ng", name: "Nigeria" },
+  { code: "ke", name: "Kenya" },
+];
+
 function categoriesFor(siteType: SiteType | null): string[] {
   return siteType ? (CATEGORY_OPTIONS[siteType] || ["Other"]) : [];
+}
+
+// Suggested services per site type and category
+const BASE_SERVICES: Partial<Record<SiteType, string[]>> = {
+  Ecommerce: ["Product listings", "Checkout", "Shipping", "Returns", "Discounts", "Analytics"],
+  SaaS: ["User auth", "Billing", "Dashboard", "Integrations", "Docs", "Support"],
+  Agency: ["Consultation", "Project inquiry", "Portfolio", "Booking", "Testimonials", "Contact"],
+  "Small business": ["About", "Services", "Pricing", "Contact", "Booking", "FAQ"],
+  Portfolio: ["Case studies", "Gallery", "About", "Contact", "Blog"],
+  Blog: ["Categories", "Newsletter", "Search", "Comments", "About"],
+  Nonprofit: ["Mission", "Programs", "Donate", "Volunteer", "Events", "Contact"],
+  Community: ["Forums", "Events", "Members", "Rules", "Contact"],
+  "Personal brand": ["About", "Speaking", "Coaching", "Newsletter", "Contact"],
+  "Hobby site": ["Articles", "Gallery", "How-tos", "Contact"],
+};
+
+const CATEGORY_SERVICES: Record<string, string[]> = {
+  Restaurants: ["Catering services", "Online ordering", "Table reservations", "Private events", "Delivery"],
+  Transportation: ["Moving services", "Logistics", "Vehicle transport", "Freight", "Courier"],
+  "Home Services": ["Moving services", "Junk removal services", "Cleaning services", "Plumbing services", "Electrical services", "HVAC services", "Landscaping services"],
+  Retail: ["Personal shopping", "Repairs", "Warranty handling", "Delivery"],
+  "Health & Wellness": ["Massage therapy", "Chiropractic care", "Physical therapy", "Nutrition coaching", "Telehealth"],
+  "Professional Services": ["Consulting services", "Book consultation", "Audits", "Training", "Support"],
+  Design: ["Brand design", "Web design", "Packaging design", "Illustration"],
+  Development: ["Web development", "App development", "API development", "Maintenance"],
+  Photography: ["Portrait sessions", "Event photography", "Product photography", "Editing services"],
+  Tech: ["Product reviews", "Tutorials", "How-to guides", "Consulting"],
+  Education: ["Tutoring", "Workshops", "Courses", "Admissions consulting"],
+  Apparel: ["Custom tailoring", "Alterations", "Personal styling"],
+  Electronics: ["Phone repair services", "Computer repair services", "Screen replacement", "Battery replacement", "Device diagnostics"],
+};
+
+function servicesFor(siteType: SiteType | null, category: string): string[] {
+  const cat = CATEGORY_SERVICES[category] || [];
+  if (cat.length) return cat;
+  const base = siteType ? (BASE_SERVICES[siteType] || []) : [];
+  return base.length ? base : ["Custom service"];
 }
 
 // Config for type-specific questions (Option A)
@@ -72,11 +144,9 @@ const TYPE_QUESTIONS: Partial<Record<SiteType, TypeQuestion[]>> = {
     { kind: "chips", key: "integrations", label: "Integrations" },
   ],
   Agency: [
-    { kind: "chips", key: "serviceCategories", label: "Service categories", hint: "e.g. Web, SEO, Ads" },
     { kind: "select", key: "bookingMethod", label: "Booking method", options: ["phone", "form", "schedule"] },
   ],
   "Small business": [
-    { kind: "chips", key: "serviceCategories", label: "Service categories" },
     { kind: "chips", key: "businessHours", label: "Business hours", hint: "e.g. Mon-Fri 9-5" },
   ],
   Portfolio: [
@@ -130,6 +200,20 @@ function isTypeSpecificValid(siteType: SiteType | null, data: Record<string, any
   return true;
 }
 
+// Preset brand color palette for selection (pick up to 2)
+const PRESET_COLORS: string[] = [
+  "#1a73e8", // Blue
+  "#ef4444", // Red
+  "#10b981", // Green
+  "#f59e0b", // Amber
+  "#3b82f6", // Light Blue
+  "#8b5cf6", // Purple
+  "#ec4899", // Pink
+  "#0ea5e9", // Sky
+  "#22c55e", // Emerald
+  "#111827", // Near-black
+];
+
 export default function OnboardingPage() {
   const [siteType, setSiteType] = useState<SiteType | null>(null);
   const [category, setCategory] = useState<string>("");
@@ -140,9 +224,10 @@ export default function OnboardingPage() {
   // New onboarding fields for DFY website build
   const [businessPhone, setBusinessPhone] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
-  const [services, setServices] = useState(""); // comma-separated
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [newService, setNewService] = useState("");
   const [serviceAreas, setServiceAreas] = useState(""); // comma-separated
-  const [primaryColor, setPrimaryColor] = useState<string>("#1a73e8");
+  const [primaryColors, setPrimaryColors] = useState<string[]>([]); // up to 2 selections
   const [contactMethod, setContactMethod] = useState<"email" | "phone" | "form" | "schedule" | null>(null);
   const [socialX, setSocialX] = useState("");
   const [socialLinkedIn, setSocialLinkedIn] = useState("");
@@ -183,6 +268,13 @@ export default function OnboardingPage() {
   const actionsRef = React.useRef<HTMLDivElement | null>(null);
   const composingRef = React.useRef(false);
 
+  // Service areas (cities with radius)
+  const [countryCode, setCountryCode] = useState<string>("");
+  const [cityQuery, setCityQuery] = useState("");
+  const [citySuggestions, setCitySuggestions] = useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
+  const [cities, setCities] = useState<Array<{ name: string; displayName: string; lat: number; lon: number; radiusKm: number }>>([]);
+  const [distanceUnit, setDistanceUnit] = useState<"km" | "mi">("km");
+
   // Step orchestration
   const [step, setStep] = useState(1);
   const step1Done = !!siteType;
@@ -190,13 +282,15 @@ export default function OnboardingPage() {
   const step3Done = name.trim().length >= 2;
   const step4Done = !!siteType && !!name.trim() && (hasCurrent === "no" || (hasCurrent === "yes" && (siteAdded || skipped)));
   const step5Done = (businessPhone.trim().length >= 7 || /\S+@\S+\.\S+/.test(businessEmail)) && !!contactMethod;
-  const step6Done = services.trim().length > 0 || serviceAreas.trim().length > 0;
+  const step6Done = selectedServices.length > 0;
+  const step7Done = cities.length > 0; // at least one service area
   const canGoStep2 = step1Done;
   const canGoStep3 = step2Done;
   const canGoStep4 = step3Done;
   const canGoStep5 = step4Done;
   const canGoStep6 = step5Done;
-  const canGoStep7 = step6Done && isTypeSpecificValid(siteType, typeSpecific);
+  const canGoStep7 = step6Done; // proceed to areas
+  const canGoStep8 = step7Done && isTypeSpecificValid(siteType, typeSpecific);
 
   // Minimal nudge scrolling: only scroll enough so the element is slightly in view
   // Removed auto-scroll helper
@@ -275,6 +369,37 @@ export default function OnboardingPage() {
   const [searchedCount, setSearchedCount] = useState<number | null>(null);
   const [searchedPreview, setSearchedPreview] = useState<Array<{ index: number; title: string; url: string; snippet?: string }>>([]);
   const [showSources, setShowSources] = useState(false);
+
+  // Debounced city suggestions using OpenStreetMap Nominatim
+  useEffect(() => {
+    const q = cityQuery.trim();
+    if (!q) { setCitySuggestions([]); return; }
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({
+          q,
+          format: "json",
+          addressdetails: "1",
+          limit: "6",
+        });
+        const cc = countryCode.trim().toLowerCase();
+        if (cc) params.set("countrycodes", cc);
+        const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
+        const res = await fetch(url, { signal: ctrl.signal, headers: { "Accept-Language": "en" } });
+        if (!res.ok) throw new Error("Address lookup failed");
+        const data = await res.json();
+        setCitySuggestions(Array.isArray(data) ? data.slice(0, 6) : []);
+      } catch (e) {
+        if (!(e as any)?.name?.includes("Abort")) setCitySuggestions([]);
+      }
+    }, 350);
+    return () => { clearTimeout(t); ctrl.abort(); };
+  }, [cityQuery, countryCode]);
+
+  // Helpers for unit conversion (store internally in km)
+  const toDisplayDistance = (km: number) => distanceUnit === "km" ? km : Math.round(km * 0.621371);
+  const fromDisplayDistance = (val: number) => distanceUnit === "km" ? val : Math.round(val / 0.621371);
 
   async function summarizeUrl() {
     if (!currentUrl) return;
@@ -456,7 +581,7 @@ export default function OnboardingPage() {
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
         {/* Sidebar */}
         <aside className="hidden lg:block">
-          <ProgressSidebar current={step} done={{ s1: step1Done, s2: step2Done, s3: step3Done, s4: step4Done, s5: step5Done, s6: step6Done }} />
+          <ProgressSidebar current={step} done={{ s1: step1Done, s2: step2Done, s3: step3Done, s4: step4Done, s5: step5Done, s6: step6Done, s7: step7Done }} />
         </aside>
 
         {/* Steps */}
@@ -965,10 +1090,39 @@ export default function OnboardingPage() {
                 </div>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium">Primary color</label>
-                    <div className="mt-1 flex items-center gap-2">
-                      <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 rounded-md border border-gray-300 bg-white" />
-                      <input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                    <label className="block text-sm font-medium">Brand colors (select up to 2)</label>
+                    <div className="mt-2">
+                      <div className="grid grid-cols-8 gap-2">
+                        {PRESET_COLORS.map((c) => {
+                          const selected = primaryColors.includes(c);
+                          const atLimit = !selected && primaryColors.length >= 2;
+                          return (
+                            <button
+                              key={c}
+                              type="button"
+                              aria-pressed={selected}
+                              title={c}
+                              onClick={() => {
+                                setPrimaryColors((prev) => {
+                                  if (prev.includes(c)) return prev.filter((x) => x !== c);
+                                  if (prev.length >= 2) return prev; // enforce max 2
+                                  return [...prev, c];
+                                });
+                              }}
+                              className={classNames(
+                                "h-8 w-8 rounded-md border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
+                                selected ? "ring-2 ring-[#1a73e8] border-[#1a73e8]" : "border-gray-300",
+                                atLimit ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
+                              )}
+                              style={{ backgroundColor: c }}
+                              disabled={atLimit}
+                            />
+                          );
+                        })}
+                      </div>
+                      <div className="mt-2 text-xs text-gray-600">
+                        {primaryColors.length === 0 ? "No color selected" : `Selected: ${primaryColors.join(", ")}`}
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -996,7 +1150,7 @@ export default function OnboardingPage() {
             </div>
           </details>
 
-          {/* Step 6: Services & Areas */}
+          {/* Step 6: Services */}
           <details
             open={step === 6}
             className={classNames("relative rounded-xl border", step > 6 ? "bg-green-50 border-green-200" : step >= 6 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70")}
@@ -1011,9 +1165,9 @@ export default function OnboardingPage() {
               <div>
                 <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
                   {step > 6 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>6. Services & Areas</span>
+                  <span>6. Services</span>
                 </div>
-                {step > 6 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{[services, serviceAreas].filter(Boolean).join(" • ")}</div>}
+                {step > 6 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{selectedServices.join(', ')}</div>}
               </div>
               <div className="ml-auto flex items-center gap-3">
                 <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 6 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 6 ? "Completed" : step === 6 ? "In progress" : "Locked"}</span>
@@ -1025,14 +1179,58 @@ export default function OnboardingPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-sm font-medium">Services you provide</label>
-                    <textarea value={services} onChange={(e) => setServices(e.target.value)} rows={3} placeholder="e.g. Local moves, Long-distance moves, Packing services" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                    <div className="mt-1 text-xs text-gray-500">Comma-separated</div>
+                    <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {servicesFor(siteType, category).map((s) => {
+                        const selected = selectedServices.includes(s);
+                        return (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setSelectedServices((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])}
+                            className={classNames(
+                              "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
+                              selected ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"
+                            )}
+                          >
+                            {s}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        value={newService}
+                        onChange={(e) => setNewService(e.target.value)}
+                        placeholder="Add a custom service"
+                        className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const v = newService.trim();
+                          if (!v) return;
+                          setSelectedServices((prev) => (prev.includes(v) ? prev : [...prev, v]));
+                          setNewService("");
+                        }}
+                        className="rounded-md bg-[#1a73e8] px-3 py-2 text-sm text-white transition-colors hover:bg-[#1664c4] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    {selectedServices.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {selectedServices.map((s) => (
+                          <span key={s} className="inline-flex items-center gap-1 rounded-full bg-[#1a73e8]/10 text-[#1a73e8] px-2 py-1 text-xs border border-[#1a73e8]/30">
+                            {s}
+                            <button type="button" aria-label={`Remove ${s}`} className="ml-1 text-[#1a73e8] hover:text-[#1664c4]" onClick={() => setSelectedServices((prev) => prev.filter((x) => x !== s))}>
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium">Service areas (if applicable)</label>
-                    <textarea value={serviceAreas} onChange={(e) => setServiceAreas(e.target.value)} rows={3} placeholder="e.g. San Francisco, Oakland, San Jose" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                    <div className="mt-1 text-xs text-gray-500">Comma-separated</div>
-                  </div>
+                  <div />
                 </div>
                 {/* Type-specific details (Option A) */}
                 {siteType && typeQuestionsFor(siteType).length > 0 && (
@@ -1042,6 +1240,48 @@ export default function OnboardingPage() {
                       {typeQuestionsFor(siteType).map((q) => {
                         const v = typeSpecific[q.key];
                         const setVal = (val: any) => setTypeSpecific((prev) => ({ ...prev, [q.key]: val }));
+                        // Special-case: render preset card selector for business hours
+                        if (q.key === "businessHours") {
+                          const PRESET_HOURS = [
+                            "Mon-Fri 9-5",
+                            "Mon-Sat 9-6",
+                            "Weekends only",
+                            "24/7",
+                            "By appointment",
+                          ];
+                          return (
+                            <div key={q.key}>
+                              <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
+                              <div className="mt-2 grid grid-cols-2 gap-2">
+                                {PRESET_HOURS.map((opt) => {
+                                  const selected = v === opt;
+                                  return (
+                                    <button
+                                      key={opt}
+                                      type="button"
+                                      onClick={() => setVal(opt)}
+                                      className={classNames(
+                                        "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
+                                        selected ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"
+                                      )}
+                                    >
+                                      {opt}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div className="mt-3 flex gap-2">
+                                <input
+                                  value={typeof v === "string" && !PRESET_HOURS.includes(v) ? v : ""}
+                                  onChange={(e) => setVal(e.target.value)}
+                                  placeholder="Custom hours (optional)"
+                                  className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                                />
+                              </div>
+                              {/* Hint intentionally omitted here to satisfy TypeScript union constraints */}
+                            </div>
+                          );
+                        }
                         if (q.kind === "text") {
                           return (
                             <div key={q.key}>
@@ -1101,25 +1341,177 @@ export default function OnboardingPage() {
             </div>
           </details>
 
-          {/* Step 7: Finish */}
+          {/* Step 7: Service areas */}
           <details
             open={step === 7}
-            className={classNames("relative rounded-xl border", step >= 7 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70")}
+            className={classNames(
+              "relative rounded-xl border",
+              step > 7 ? "bg-green-50 border-green-200" : step >= 7 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+            )}
             onToggle={(e) => {
               const el = e.currentTarget as HTMLDetailsElement;
               if (el.open && canGoStep7) setStep(7);
               if (!canGoStep7) el.open = false;
             }}
           >
+            {step > 7 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
             <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
               <div>
                 <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  <span>7. Finish</span>
+                  {step > 7 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
+                  <span>7. Service areas</span>
                 </div>
-                {canGoStep7 && <div className="text-xs text-neutral-600 mt-0.5 truncate">You can change these later.</div>}
+                {step > 7 && (
+                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
+                    {cities.length > 0 ? cities.map(c => `${c.name} (${toDisplayDistance(c.radiusKm)}${distanceUnit})`).join(' • ') : ''}
+                  </div>
+                )}
               </div>
               <div className="ml-auto flex items-center gap-3">
-                <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">{step === 7 ? "In progress" : step > 7 ? "Completed" : "Locked"}</span>
+                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 7 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 7 ? "Completed" : step === 7 ? "In progress" : "Locked"}</span>
+                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+              </div>
+            </summary>
+            <div className="accordion border-t border-neutral-200">
+              <div className="accordion-content p-4 sm:p-5 fade-slide">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium">Country</label>
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                    >
+                      <option value="">Select country…</option>
+                      {COUNTRIES.map(c => (
+                        <option key={c.code} value={c.code}>{c.name}</option>
+                      ))}
+                    </select>
+                    <div className="mt-1 text-xs text-gray-500">Selecting a country helps us suggest locations in your region.</div>
+                    <div className="mt-3">
+                      <span className="block text-sm font-medium mb-1">Units</span>
+                      <div className="inline-flex rounded-md border border-gray-300 overflow-hidden">
+                        <button type="button" className={`px-3 py-1.5 text-sm ${distanceUnit === 'km' ? 'bg-[#1a73e8] text-white' : 'bg-white text-neutral-700'}`} onClick={() => setDistanceUnit('km')}>km</button>
+                        <button type="button" className={`px-3 py-1.5 text-sm border-l border-gray-300 ${distanceUnit === 'mi' ? 'bg-[#1a73e8] text-white' : 'bg-white text-neutral-700'}`} onClick={() => setDistanceUnit('mi')}>mi</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Add city/area</label>
+                    <input
+                      value={cityQuery}
+                      onChange={(e) => setCityQuery(e.target.value)}
+                      placeholder="Start typing a city or area"
+                      className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                    />
+                    {citySuggestions.length > 0 && (
+                      <div className="mt-2 rounded-md border border-gray-200 bg-white shadow-sm">
+                        <ul className="max-h-48 overflow-auto py-1">
+                          {citySuggestions.map((sug, idx) => (
+                            <li key={`${sug.lat}-${sug.lon}-${idx}`}>
+                              <button
+                                type="button"
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                onClick={() => {
+                                  const name = sug.display_name.split(',')[0]?.trim() || sug.display_name;
+                                  const newCity = { name, displayName: sug.display_name, lat: parseFloat(sug.lat), lon: parseFloat(sug.lon), radiusKm: 25 };
+                                  setCities((prev) => {
+                                    const exists = prev.some(c => Math.abs(c.lat - newCity.lat) < 0.0001 && Math.abs(c.lon - newCity.lon) < 0.0001);
+                                    return exists ? prev : [...prev, newCity];
+                                  });
+                                  setCityQuery("");
+                                  setCitySuggestions([]);
+                                }}
+                              >
+                                {sug.display_name}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {cities.length > 0 && (
+                  <div className="mt-4 grid gap-3">
+                    {cities.map((c, i) => (
+                      <div key={`${c.lat}-${c.lon}-${i}`} className="rounded-md border border-gray-200 p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm font-medium">{c.name}</div>
+                            <div className="text-xs text-gray-600 truncate max-w-[70ch]">{c.displayName}</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="text-xs text-red-600 hover:underline"
+                            onClick={() => setCities(prev => prev.filter((_, idx) => idx !== i))}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div className="mt-3">
+                          <label className="block text-xs font-medium text-gray-700">Radius: {toDisplayDistance(c.radiusKm)} {distanceUnit}</label>
+                          <input
+                            type="range"
+                            min={1}
+                            max={distanceUnit === 'km' ? 200 : 125}
+                            value={toDisplayDistance(c.radiusKm)}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              const km = fromDisplayDistance(val);
+                              setCities(prev => prev.map((cc, idx) => idx === i ? { ...cc, radiusKm: km } : cc));
+                            }}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="mt-3">
+                          <img
+                            alt={`Map of ${c.displayName}`}
+                            className="w-full h-40 object-cover rounded border border-gray-200"
+                            src={`https://staticmap.openstreetmap.de/staticmap.php?center=${c.lat},${c.lon}&zoom=10&size=600x200&maptype=mapnik&markers=${c.lat},${c.lon},red`}
+                          />
+                          <div className="mt-1 text-[10px] text-gray-500">Map data © OpenStreetMap contributors</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-4 flex justify-between">
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(6)}>Back</button>
+                  <button
+                    type="button"
+                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]", !canGoStep8 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95")}
+                    disabled={!canGoStep8}
+                    onClick={() => setStep(8)}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* Step 8: Finish */}
+          <details
+            open={step === 8}
+            className={classNames("relative rounded-xl border", step >= 8 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70")}
+            onToggle={(e) => {
+              const el = e.currentTarget as HTMLDetailsElement;
+              if (el.open && canGoStep8) setStep(8);
+              if (!canGoStep8) el.open = false;
+            }}
+          >
+            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                  <span>8. Finish</span>
+                </div>
+                {canGoStep8 && <div className="text-xs text-neutral-600 mt-0.5 truncate">You can change these later.</div>}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">{step === 8 ? "In progress" : step > 8 ? "Completed" : "Locked"}</span>
                 <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
               </div>
             </summary>
@@ -1130,9 +1522,9 @@ export default function OnboardingPage() {
                   <button
                     className={classNames(
                       "rounded-md px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
-                      !canGoStep7 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
+                      !canGoStep8 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
                     )}
-                    disabled={!canGoStep7}
+                    disabled={!canGoStep8}
                     onClick={() => {
                       const payload = {
                         siteType,
@@ -1147,10 +1539,10 @@ export default function OnboardingPage() {
                         businessPhone,
                         businessEmail,
                         contactMethod,
-                        primaryColor,
+                        primaryColors,
                         social: { x: socialX, linkedIn: socialLinkedIn, instagram: socialInstagram, facebook: socialFacebook },
-                        services: services.split(',').map((s) => s.trim()).filter(Boolean),
-                        serviceAreas: serviceAreas.split(',').map((s) => s.trim()).filter(Boolean),
+                        services: selectedServices,
+                        serviceAreas: cities,
                         typeSpecific: { type: siteType, data: typeSpecific },
                       };
                       alert(`Saved!\n${JSON.stringify(payload, null, 2)}`);
@@ -1169,15 +1561,16 @@ export default function OnboardingPage() {
 }
 
 // Minimal vertical progress sidebar to mirror get-started
-function ProgressSidebar({ current, done }: { current: number; done: { s1: boolean; s2: boolean; s3: boolean; s4: boolean; s5: boolean; s6: boolean } }) {
+function ProgressSidebar({ current, done }: { current: number; done: { s1: boolean; s2: boolean; s3: boolean; s4: boolean; s5: boolean; s6: boolean; s7: boolean } }) {
   const steps = [
     { id: 1, label: "Type", completed: done.s1 },
     { id: 2, label: "Category", completed: done.s2 },
     { id: 3, label: "Name", completed: done.s3 },
     { id: 4, label: "Website details", completed: done.s4 },
     { id: 5, label: "Business & Contact", completed: done.s5 },
-    { id: 6, label: "Services & Areas", completed: done.s6 },
-    { id: 7, label: "Finish", completed: false },
+    { id: 6, label: "Services", completed: done.s6 },
+    { id: 7, label: "Service areas", completed: done.s7 },
+    { id: 8, label: "Finish", completed: false },
   ];
   const total = steps.length;
   return (
