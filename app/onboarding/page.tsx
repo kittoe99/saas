@@ -808,7 +808,7 @@ export default function OnboardingPage() {
             </summary>
             <div className="accordion border-t border-neutral-200">
               <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <div className="mb-3">
+                <div className="mb-3 min-w-0">
                   <label className="block text-sm font-medium">Do you have a current website?</label>
                   <div className="mt-2 flex gap-2">
                     <button
@@ -1003,7 +1003,7 @@ export default function OnboardingPage() {
                     )}
 
                     {showManual && (
-                      <div className="mt-4">
+                      <div className="mt-4 min-w-0">
                         <label className="block text-sm font-medium">Describe the site in your own words</label>
                         <textarea
                           value={manualDesc}
@@ -1167,7 +1167,28 @@ export default function OnboardingPage() {
                   {step > 6 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
                   <span>6. Services</span>
                 </div>
-                {step > 6 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{selectedServices.join(', ')}</div>}
+                {step > 6 && (
+                  <div className="mt-0.5 max-w-[90vw] sm:max-w-[520px]">
+                    <div className="flex flex-wrap gap-1">
+                      {selectedServices.length === 0 ? (
+                        <span className="text-xs text-neutral-600">No services selected</span>
+                      ) : (
+                        <>
+                          {selectedServices.slice(0, 3).map((s) => (
+                            <span key={s} className="text-[10px] rounded-full bg-[#1a73e8]/10 text-[#1a73e8] px-2 py-0.5 border border-[#1a73e8]/20 break-words whitespace-normal">
+                              {s}
+                            </span>
+                          ))}
+                          {selectedServices.length > 3 && (
+                            <span className="text-[10px] rounded-full bg-neutral-100 text-neutral-700 px-2 py-0.5 border border-neutral-200">
+                              +{selectedServices.length - 3} more
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="ml-auto flex items-center gap-3">
                 <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 6 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 6 ? "Completed" : step === 6 ? "In progress" : "Locked"}</span>
@@ -1362,8 +1383,25 @@ export default function OnboardingPage() {
                   <span>7. Service areas</span>
                 </div>
                 {step > 7 && (
-                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
-                    {cities.length > 0 ? cities.map(c => `${c.name} (${toDisplayDistance(c.radiusKm)}${distanceUnit})`).join(' • ') : ''}
+                  <div className="mt-0.5 max-w-[90vw] sm:max-w-[520px]">
+                    <div className="flex flex-wrap gap-1">
+                      {cities.length === 0 ? (
+                        <span className="text-xs text-neutral-600">No locations added</span>
+                      ) : (
+                        <>
+                          {cities.slice(0, 3).map((c, idx) => (
+                            <span key={`${c.name}-${idx}`} className="text-[10px] rounded-full bg-neutral-100 text-neutral-700 px-2 py-0.5 border border-neutral-200 break-words whitespace-normal">
+                              {c.name} ({toDisplayDistance(c.radiusKm)}{distanceUnit})
+                            </span>
+                          ))}
+                          {cities.length > 3 && (
+                            <span className="text-[10px] rounded-full bg-neutral-100 text-neutral-700 px-2 py-0.5 border border-neutral-200">
+                              +{cities.length - 3} more
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1404,6 +1442,7 @@ export default function OnboardingPage() {
                       placeholder="Start typing a city or area"
                       className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
                     />
+                    <div className="mt-1 text-xs text-gray-500">Type address to add more locations</div>
                     {citySuggestions.length > 0 && (
                       <div className="mt-2 rounded-md border border-gray-200 bg-white shadow-sm">
                         <ul className="max-h-48 overflow-auto py-1">
@@ -1450,29 +1489,43 @@ export default function OnboardingPage() {
                             Remove
                           </button>
                         </div>
-                        <div className="mt-3">
-                          <label className="block text-xs font-medium text-gray-700">Radius: {toDisplayDistance(c.radiusKm)} {distanceUnit}</label>
+                        <div className="mt-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <label className="block text-sm font-medium">Service radius</label>
+                            <div className="flex items-center gap-2 text-xs text-neutral-700">
+                              <span className="whitespace-nowrap">{toDisplayDistance(c.radiusKm)}{distanceUnit}</span>
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                min={distanceUnit === 'km' ? 1 : 1}
+                                max={distanceUnit === 'km' ? 200 : 125}
+                                step={distanceUnit === 'km' ? 1 : 1}
+                                value={toDisplayDistance(c.radiusKm)}
+                                onChange={(e) => {
+                                  const raw = Number(e.target.value || 0);
+                                  const clamped = Math.max(1, Math.min(raw, distanceUnit === 'km' ? 200 : 125));
+                                  const km = fromDisplayDistance(clamped);
+                                  setCities(prev => prev.map((cc, idx) => idx === i ? { ...cc, radiusKm: km } : cc));
+                                }}
+                                className="w-20 rounded border border-gray-300 px-2 py-1"
+                              />
+                            </div>
+                          </div>
                           <input
                             type="range"
-                            min={1}
+                            min={distanceUnit === 'km' ? 1 : 1}
                             max={distanceUnit === 'km' ? 200 : 125}
+                            step={distanceUnit === 'km' ? 1 : 1}
                             value={toDisplayDistance(c.radiusKm)}
                             onChange={(e) => {
                               const val = Number(e.target.value);
                               const km = fromDisplayDistance(val);
                               setCities(prev => prev.map((cc, idx) => idx === i ? { ...cc, radiusKm: km } : cc));
                             }}
-                            className="w-full"
+                            className="mt-2 w-full"
                           />
                         </div>
-                        <div className="mt-3">
-                          <img
-                            alt={`Map of ${c.displayName}`}
-                            className="w-full h-40 object-cover rounded border border-gray-200"
-                            src={`https://staticmap.openstreetmap.de/staticmap.php?center=${c.lat},${c.lon}&zoom=10&size=600x200&maptype=mapnik&markers=${c.lat},${c.lon},red`}
-                          />
-                          <div className="mt-1 text-[10px] text-gray-500">Map data © OpenStreetMap contributors</div>
-                        </div>
+                        {/* Map preview removed as requested; radius control retained */}
                       </div>
                     ))}
                   </div>
