@@ -1410,7 +1410,7 @@ export default function OnboardingPage() {
             <div className="accordion border-t border-neutral-200">
               <div className="accordion-content p-4 sm:p-5 fade-slide">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm font-medium">Country</label>
                     <select
                       value={countryCode}
@@ -1431,9 +1431,9 @@ export default function OnboardingPage() {
                       </div>
                     </div>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm font-medium">Add city/area</label>
-                    <div className="mt-1 flex items-stretch gap-2">
+                    <div className="mt-1 flex items-stretch gap-2 min-w-0">
                       <input
                         value={cityQuery}
                         onChange={(e) => setCityQuery(e.target.value)}
@@ -1444,7 +1444,7 @@ export default function OnboardingPage() {
                         autoCapitalize="none"
                         spellCheck={false}
                         name="location-entry"
-                        className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                        className="flex-1 min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
                       />
                       <button
                         type="button"
@@ -1461,7 +1461,7 @@ export default function OnboardingPage() {
                     </div>
                     <div className="mt-1 text-xs text-gray-500">Click Search to see suggestions for the city or area you entered.</div>
                     {citySuggestions.length > 0 && (
-                      <div className="mt-2 rounded-md border border-gray-200 bg-white shadow-sm">
+                      <div className="mt-2 rounded-md border border-gray-200 bg-white shadow-sm overflow-hidden max-w-full">
                         <ul className="max-h-48 overflow-auto py-2 space-y-2">
                           {citySuggestions.map((sug, idx) => {
                             const parts = sug.display_name.split(',');
@@ -1471,7 +1471,7 @@ export default function OnboardingPage() {
                               <li key={`${sug.lat}-${sug.lon}-${idx}`} className="px-2">
                                 <button
                                   type="button"
-                                  className="w-full text-left rounded-md border border-gray-200 px-3 py-2 hover:border-[#1a73e8] hover:bg-[#1a73e8]/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
+                                  className="w-full min-w-0 text-left rounded-md border border-gray-200 px-3 py-2 hover:border-[#1a73e8] hover:bg-[#1a73e8]/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
                                   onClick={() => {
                                     const name = title;
                                     const newCity = { name, displayName: sug.display_name, lat: parseFloat(sug.lat), lon: parseFloat(sug.lon), radiusKm: 25 };
@@ -1483,8 +1483,8 @@ export default function OnboardingPage() {
                                     setCitySuggestions([]);
                                   }}
                                 >
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
+                                  <div className="flex items-start justify-between gap-3 min-w-0">
+                                    <div className="min-w-0 max-w-full">
                                       <div className="text-sm font-medium text-neutral-900 truncate">{title}</div>
                                       {subtitle && (
                                         <div className="text-xs text-neutral-600 truncate">{subtitle}</div>
