@@ -228,11 +228,8 @@ const PRESET_COLORS: string[] = [
   "#111827", // Near-black
 ];
 
-// Additional options
-const MUST_HAVE_PAGES = ["About", "Pricing", "Testimonials", "Blog", "Careers", "Contact", "FAQ", "Privacy", "Terms"];
-const VOICE_TONES = ["Professional", "Friendly", "Playful", "Minimal"];
+// Minimal options
 const PRIMARY_GOALS = ["Leads", "Sales", "Bookings", "Community", "Content"];
-const TIMEZONES = ["UTC", "US/Pacific", "US/Mountain", "US/Central", "US/Eastern", "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney"];
 
 export default function OnboardingPage() {
   const [siteType, setSiteType] = useState<SiteType | null>(null);
@@ -267,10 +264,14 @@ export default function OnboardingPage() {
   const [timeZone, setTimeZone] = useState<string>("");
   const [responseSla, setResponseSla] = useState<string>("");
   const [bookingTool, setBookingTool] = useState<string>("");
+  const [businessHours, setBusinessHours] = useState<string>("");
+  const [businessHoursMode, setBusinessHoursMode] = useState<"standard" | "24_7" | "appointment" | "custom">("standard");
+  const [step6Phase, setStep6Phase] = useState<"services" | "hours">("services");
   const [voiceTone, setVoiceTone] = useState<string[]>([]);
   const [highContrast, setHighContrast] = useState<boolean>(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [assetFiles, setAssetFiles] = useState<File[]>([]);
   const [serviceDetails, setServiceDetails] = useState<Record<string, { description?: string; price?: string; cta?: "Call" | "Form" | "Booking" | "None" }>>({});
   const [onSiteMode, setOnSiteMode] = useState<"onsite" | "online">("onsite");
   const [coverageType, setCoverageType] = useState<"single" | "multi" | "nationwide">("single");
@@ -741,19 +742,13 @@ export default function OnboardingPage() {
                   ))}
                 </div>
                 {category && <div className="mt-2 text-xs text-gray-600">Selected: {category}</div>}
-                {/* Subcategory + Primary goal */}
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="min-w-0">
-                    <label className="block text-sm font-medium">Subcategory (optional)</label>
-                    <input value={subcategory} onChange={(e) => setSubcategory(e.target.value)} placeholder="e.g. Plumbing" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                  </div>
-                  <div className="min-w-0">
-                    <label className="block text-sm font-medium">Primary goal</label>
-                    <select value={primaryGoal} onChange={(e) => setPrimaryGoal(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
-                      <option value="">Select…</option>
-                      {PRIMARY_GOALS.map((g) => (<option key={g} value={g}>{g}</option>))}
-                    </select>
-                  </div>
+                {/* Optional: keep only primary goal (no subcategory) to avoid micro-requests */}
+                <div className="mt-4 max-w-sm">
+                  <label className="block text-sm font-medium">Primary goal (optional)</label>
+                  <select value={primaryGoal} onChange={(e) => setPrimaryGoal(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
+                    <option value="">Select…</option>
+                    {PRIMARY_GOALS.map((g) => (<option key={g} value={g}>{g}</option>))}
+                  </select>
                 </div>
                 <div className="mt-4 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(1)}>Back</button>
@@ -822,17 +817,7 @@ export default function OnboardingPage() {
                   placeholder="e.g. Bello Moving"
                   className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
                 />
-                {/* Tagline + Preferred domain */}
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium">Tagline (optional)</label>
-                    <input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Short tagline" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Preferred domain (optional)</label>
-                    <input value={preferredDomain} onChange={(e) => setPreferredDomain(e.target.value)} placeholder="example.com" inputMode="url" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                  </div>
-                </div>
+                {/* Removed optional tagline and preferred domain to keep flow minimal */}
                 <div className="mt-3 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(2)}>Back</button>
                   <button
@@ -1091,33 +1076,7 @@ export default function OnboardingPage() {
                   </div>
                 )}
 
-                {/* Extra website details available whether or not a current site exists */}
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <div className="min-w-0">
-                    <label className="block text-sm font-medium">Competitors / inspiration (up to 3)</label>
-                    <div className="mt-1 grid gap-2">
-                      {competitors.map((u, i) => (
-                        <input key={i} value={u} onChange={(e) => setCompetitors((prev) => prev.map((x, idx) => idx === i ? e.target.value : x))} placeholder={`https://site${i+1}.com`} inputMode="url" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <label className="block text-sm font-medium">Must-have pages</label>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      {MUST_HAVE_PAGES.map((p) => {
-                        const selected = mustHavePages.includes(p);
-                        return (
-                          <button key={p} type="button" onClick={() => setMustHavePages((prev) => selected ? prev.filter((x) => x !== p) : [...prev, p])} className={classNames("rounded-md border px-3 py-1.5 text-xs transition-colors", selected ? "border-[#1a73e8] bg-[#1a73e8]/10 text-[#1a73e8]" : "border-gray-300 text-neutral-700 hover:bg-[#1a73e8]/5")}>{p}</button>
-                        );
-                      })}
-                    </div>
-                    {mustHavePages.length > 0 && <div className="mt-1 text-xs text-gray-600">Selected: {mustHavePages.join(', ')}</div>}
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium">Content sources (Drive/Notion/Figma links)</label>
-                    <input value={contentSources} onChange={(e) => setContentSources(e.target.value)} placeholder="Links to existing content (optional)" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                  </div>
-                </div>
+                {/* Removed competitors, must-have pages, content sources to avoid burden */}
 
                 <div className="mt-6 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(3)}>Back</button>
@@ -1235,68 +1194,7 @@ export default function OnboardingPage() {
                     </div>
                   </div>
                 </div>
-                {/* Additional business details */}
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium">Business address</label>
-                    <input value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="Street, City, State/Region" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Time zone</label>
-                    <select value={timeZone} onChange={(e) => setTimeZone(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
-                      <option value="">Select…</option>
-                      {TIMEZONES.map((tz) => (<option key={tz} value={tz}>{tz}</option>))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Response SLA</label>
-                    <select value={responseSla} onChange={(e) => setResponseSla(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
-                      <option value="">Select…</option>
-                      {['Same day','24 hours','48 hours','1 week'].map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Booking tool</label>
-                    <select value={bookingTool} onChange={(e) => setBookingTool(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
-                      <option value="">Select…</option>
-                      {['Calendly','TidyCal','Acuity','In-house','None'].map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium">Voice & tone</label>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      {VOICE_TONES.map((t) => {
-                        const selected = voiceTone.includes(t);
-                        return (
-                          <button key={t} type="button" onClick={() => setVoiceTone((prev) => selected ? prev.filter((x) => x !== t) : [...prev, t])} className={classNames("rounded-md border px-3 py-1.5 text-xs transition-colors", selected ? "border-[#1a73e8] bg-[#1a73e8]/10 text-[#1a73e8]" : "border-gray-300 text-neutral-700 hover:bg-[#1a73e8]/5")}>{t}</button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="inline-flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={highContrast} onChange={(e) => setHighContrast(e.target.checked)} className="rounded border-gray-300" /> Prefer high contrast</label>
-                  </div>
-                  <div className="sm:col-span-2 grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-sm font-medium">Logo (optional)</label>
-                      <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} className="mt-1 block w-full text-xs text-gray-600" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium">Favicon (optional)</label>
-                      <input type="file" accept="image/*" onChange={(e) => setFaviconFile(e.target.files?.[0] || null)} className="mt-1 block w-full text-xs text-gray-600" />
-                    </div>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium">Languages</label>
-                    <input value={languages.join(', ')} onChange={(e) => setLanguages(e.target.value.split(',').map((x) => x.trim()).filter(Boolean))} placeholder="e.g. English, Spanish" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Primary language</label>
-                    <select value={primaryLanguage} onChange={(e) => setPrimaryLanguage(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
-                      {languages.map((l) => (<option key={l} value={l}>{l}</option>))}
-                    </select>
-                  </div>
-                </div>
+                {/* Removed business address, time zone, SLA, booking tool, voice/tone, accessibility, uploads, and localization */}
 
                 <div className="mt-6 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(4)}>Back</button>
@@ -1360,201 +1258,135 @@ export default function OnboardingPage() {
             </summary>
             <div className="accordion border-t border-neutral-200">
               <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium">Services you provide</label>
-                    <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {servicesFor(siteType, category).map((s) => {
-                        const selected = selectedServices.includes(s);
-                        return (
+                {step6Phase === "services" ? (
+                  <>
+                    <div className="grid gap-6 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-sm font-medium">Services you provide</label>
+                        <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {servicesFor(siteType, category).map((s) => {
+                            const selected = selectedServices.includes(s);
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => setSelectedServices((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])}
+                                className={classNames(
+                                  "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
+                                  selected ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"
+                                )}
+                              >
+                                {s}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          <input
+                            value={newService}
+                            onChange={(e) => setNewService(e.target.value)}
+                            placeholder="Add a custom service"
+                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                          />
                           <button
-                            key={s}
                             type="button"
-                            onClick={() => setSelectedServices((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])}
-                            className={classNames(
-                              "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
-                              selected ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"
-                            )}
+                            onClick={() => {
+                              const v = newService.trim();
+                              if (!v) return;
+                              setSelectedServices((prev) => (prev.includes(v) ? prev : [...prev, v]));
+                              setNewService("");
+                            }}
+                            className="rounded-md bg-[#1a73e8] px-3 py-2 text-sm text-white transition-colors hover:bg-[#1664c4] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
                           >
-                            {s}
+                            Add
                           </button>
-                        );
-                      })}
+                        </div>
+                        {selectedServices.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {selectedServices.map((s) => (
+                              <span key={s} className="inline-flex items-center gap-1 rounded-full bg-[#1a73e8]/10 text-[#1a73e8] px-2 py-1 text-xs border border-[#1a73e8]/30">
+                                {s}
+                                <button type="button" aria-label={`Remove ${s}`} className="ml-1 text-[#1a73e8] hover:text-[#1664c4]" onClick={() => setSelectedServices((prev) => prev.filter((x) => x !== s))}>
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="mt-3 flex gap-2">
-                      <input
-                        value={newService}
-                        onChange={(e) => setNewService(e.target.value)}
-                        placeholder="Add a custom service"
-                        className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
-                      />
+                    <div className="mt-4 flex justify-between">
+                      <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(5)}>Back</button>
                       <button
                         type="button"
-                        onClick={() => {
-                          const v = newService.trim();
-                          if (!v) return;
-                          setSelectedServices((prev) => (prev.includes(v) ? prev : [...prev, v]));
-                          setNewService("");
-                        }}
-                        className="rounded-md bg-[#1a73e8] px-3 py-2 text-sm text-white transition-colors hover:bg-[#1664c4] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
+                        className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]", !canGoStep7 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95")}
+                        disabled={!canGoStep7}
+                        onClick={() => setStep6Phase("hours")}
                       >
-                        Add
+                        Continue
                       </button>
                     </div>
-                    {selectedServices.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {selectedServices.map((s) => (
-                          <span key={s} className="inline-flex items-center gap-1 rounded-full bg-[#1a73e8]/10 text-[#1a73e8] px-2 py-1 text-xs border border-[#1a73e8]/30">
-                            {s}
-                            <button type="button" aria-label={`Remove ${s}`} className="ml-1 text-[#1a73e8] hover:text-[#1664c4]" onClick={() => setSelectedServices((prev) => prev.filter((x) => x !== s))}>
-                              ×
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium">Business hours</label>
+                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[
+                          { key: "standard", title: "Standard hours", desc: "Typical weekdays/weekends" },
+                          { key: "24_7", title: "Open 24/7", desc: "Always available" },
+                          { key: "appointment", title: "By appointment only", desc: "Contact to schedule" },
+                          { key: "custom", title: "Custom schedule", desc: "Specify your own" },
+                        ].map((opt) => {
+                          const k = opt.key as typeof businessHoursMode;
+                          const selected = businessHoursMode === k;
+                          return (
+                            <button
+                              key={k}
+                              type="button"
+                              onClick={() => {
+                                setBusinessHoursMode(k);
+                                if (k === "24_7") setBusinessHours("24/7");
+                                else if (k === "appointment") setBusinessHours("By appointment only");
+                                else if (k === "standard") setBusinessHours("");
+                              }}
+                              className={classNames(
+                                "rounded-md border p-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
+                                selected ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"
+                              )}
+                            >
+                              <div className="text-sm font-medium">{opt.title}</div>
+                              <div className="text-xs text-neutral-600">{opt.desc}</div>
                             </button>
-                          </span>
-                        ))}
+                          );
+                        })}
                       </div>
-                    )}
-                  </div>
-                  <div />
-                </div>
-                {/* Per-service details */}
-                {selectedServices.length > 0 && (
-                  <div className="mt-4 space-y-3">
-                    {selectedServices.map((s) => {
-                      const det = serviceDetails[s] || {};
-                      return (
-                        <div key={s} className="rounded-md border border-gray-200 p-3">
-                          <div className="text-sm font-medium mb-2">{s}</div>
-                          <div className="grid gap-3 sm:grid-cols-3">
-                            <div className="sm:col-span-2">
-                              <label className="block text-xs font-medium text-gray-700">Description (optional)</label>
-                              <input value={det.description || ""} onChange={(e) => setServiceDetails((prev) => ({ ...prev, [s]: { ...prev[s], description: e.target.value } }))} placeholder="Short blurb" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700">Starting price (optional)</label>
-                              <input value={det.price || ""} onChange={(e) => setServiceDetails((prev) => ({ ...prev, [s]: { ...prev[s], price: e.target.value } }))} placeholder="$" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                            </div>
-                          </div>
-                          <div className="mt-3">
-                            <label className="block text-xs font-medium text-gray-700">Primary CTA</label>
-                            <div className="mt-1 flex flex-wrap gap-2">
-                              {["Call","Form","Booking","None"].map((opt) => {
-                                const selected = det.cta === opt;
-                                return (
-                                  <button key={opt} type="button" onClick={() => setServiceDetails((prev) => ({ ...prev, [s]: { ...prev[s], cta: opt as any } }))} className={classNames("rounded-md border px-3 py-1.5 text-xs transition-colors", selected ? "border-[#1a73e8] bg-[#1a73e8]/10 text-[#1a73e8]" : "border-gray-300 text-neutral-700 hover:bg-[#1a73e8]/5")}>{opt}</button>
-                                );
-                              })}
-                            </div>
-                          </div>
+                      {businessHoursMode === "custom" && (
+                        <div className="mt-3">
+                          <label className="block text-sm font-medium">Custom schedule</label>
+                          <textarea
+                            rows={4}
+                            value={businessHours}
+                            onChange={(e) => setBusinessHours(e.target.value)}
+                            placeholder="e.g. Mon–Fri 9am–5pm; Sat 10am–2pm; Sun closed"
+                            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                          />
+                          <div className="mt-1 text-xs text-gray-500">Optional. You can refine this later.</div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-                {/* Type-specific details (Option A) */}
-                {siteType && typeQuestionsFor(siteType).length > 0 && (
-                  <div className="mt-6 border-t border-neutral-200 pt-4">
-                    <div className="text-sm font-medium mb-2">Type-specific details</div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {typeQuestionsFor(siteType).map((q) => {
-                        const v = typeSpecific[q.key];
-                        const setVal = (val: any) => setTypeSpecific((prev) => ({ ...prev, [q.key]: val }));
-                        // Special-case: render preset card selector for business hours
-                        if (q.key === "businessHours") {
-                          const PRESET_HOURS = [
-                            "Mon-Fri 9-5",
-                            "Mon-Sat 9-6",
-                            "Weekends only",
-                            "24/7",
-                            "By appointment",
-                          ];
-                          return (
-                            <div key={q.key}>
-                              <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
-                              <div className="mt-2 grid grid-cols-2 gap-2">
-                                {PRESET_HOURS.map((opt) => {
-                                  const selected = v === opt;
-                                  return (
-                                    <button
-                                      key={opt}
-                                      type="button"
-                                      onClick={() => setVal(opt)}
-                                      className={classNames(
-                                        "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
-                                        selected ? "border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#1a73e8]/5" : "border-gray-300 hover:bg-[#1a73e8]/5"
-                                      )}
-                                    >
-                                      {opt}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                              <div className="mt-3 flex gap-2">
-                                <input
-                                  value={typeof v === "string" && !PRESET_HOURS.includes(v) ? v : ""}
-                                  onChange={(e) => setVal(e.target.value)}
-                                  placeholder="Custom hours (optional)"
-                                  className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
-                                />
-                              </div>
-                              {/* Hint intentionally omitted here to satisfy TypeScript union constraints */}
-                            </div>
-                          );
-                        }
-                        if (q.kind === "text") {
-                          return (
-                            <div key={q.key}>
-                              <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
-                              <input value={v || ""} onChange={(e) => setVal(e.target.value)} placeholder={q.placeholder || ""} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                            </div>
-                          );
-                        }
-                        if (q.kind === "number") {
-                          return (
-                            <div key={q.key}>
-                              <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
-                              <input type="number" value={typeof v === "number" ? v : (v ?? "")} onChange={(e) => {
-                                const val = e.target.value;
-                                setVal(val === "" ? "" : Number(val));
-                              }} min={q.min ?? undefined} max={q.max ?? undefined} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                            </div>
-                          );
-                        }
-                        if (q.kind === "select") {
-                          return (
-                            <div key={q.key}>
-                              <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
-                              <select value={v || ""} onChange={(e) => setVal(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
-                                <option value="">Select…</option>
-                                {q.options.map((opt) => (
-                                  <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                              </select>
-                            </div>
-                          );
-                        }
-                        // chips -> comma-separated input
-                        return (
-                          <div key={q.key}>
-                            <label className="block text-sm font-medium">{q.label}{q.required ? <span className="text-red-600">*</span> : null}</label>
-                            <input value={v || ""} onChange={(e) => setVal(e.target.value)} placeholder={q.hint || "Comma-separated"} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                            {q.hint && <div className="mt-1 text-xs text-gray-500">{q.hint}</div>}
-                          </div>
-                        );
-                      })}
+                      )}
                     </div>
-                  </div>
+                    <div className="mt-4 flex justify-between">
+                      <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep6Phase("services")}>Back</button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8] bg-[#1a73e8] hover:opacity-95"
+                        onClick={() => setStep(7)}
+                      >
+                        Continue
+                      </button>
+                    </div>
+                  </>
                 )}
-                <div className="mt-4 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(5)}>Back</button>
-                  <button
-                    type="button"
-                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]", !canGoStep7 ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95")}
-                    disabled={!canGoStep7}
-                    onClick={() => setStep(7)}
-                  >
-                    Continue
-                  </button>
-                </div>
               </div>
             </div>
           </details>
@@ -1609,30 +1441,7 @@ export default function OnboardingPage() {
             </summary>
             <div className="accordion border-t border-neutral-200">
               <div className="accordion-content p-4 sm:p-5 fade-slide">
-                {/* On-site vs online + coverage type */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2 grid gap-3 sm:grid-cols-3">
-                    <div>
-                      <label className="block text-sm font-medium">Delivery mode</label>
-                      <div className="mt-1 inline-flex rounded-md border border-gray-300 overflow-hidden">
-                        <button type="button" className={`px-3 py-1.5 text-sm ${onSiteMode === 'onsite' ? 'bg-[#1a73e8] text-white' : 'bg-white text-neutral-700'}`} onClick={() => setOnSiteMode('onsite')}>On-site</button>
-                        <button type="button" className={`px-3 py-1.5 text-sm border-l border-gray-300 ${onSiteMode === 'online' ? 'bg-[#1a73e8] text-white' : 'bg-white text-neutral-700'}`} onClick={() => setOnSiteMode('online')}>Online</button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium">Coverage type</label>
-                      <select value={coverageType} onChange={(e) => setCoverageType(e.target.value as any)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
-                        <option value="single">Single location</option>
-                        <option value="multi">Multi-location</option>
-                        <option value="nationwide">Nationwide</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium">Travel fee policy (optional)</label>
-                      <input value={travelFeePolicy} onChange={(e) => setTravelFeePolicy(e.target.value)} placeholder="e.g. $30 beyond 30mi" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
-                    </div>
-                  </div>
-                </div>
+                {/* Removed delivery mode, coverage type, travel fee; keep core service areas only */}
                 <div className="grid gap-4 sm:grid-cols-2 mt-4">
                   <div className="min-w-0">
                     <label className="block text-sm font-medium">Country</label>
@@ -1800,7 +1609,7 @@ export default function OnboardingPage() {
             </div>
           </details>
 
-          {/* Step 8: Finish */}
+          {/* Step 8: Brand assets (optional) & Finish */}
           <details
             open={step === 8}
             className={classNames("relative rounded-xl border", step >= 8 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70")}
@@ -1813,9 +1622,9 @@ export default function OnboardingPage() {
             <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
               <div>
                 <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  <span>8. Finish</span>
+                  <span>8. Brand assets (optional)</span>
                 </div>
-                {canGoStep8 && <div className="text-xs text-neutral-600 mt-0.5 truncate">You can change these later.</div>}
+                {canGoStep8 && <div className="text-xs text-neutral-600 mt-0.5 truncate">Add a logo and any brand images (optional). You can change these later.</div>}
               </div>
               <div className="ml-auto flex items-center gap-3">
                 <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">{step === 8 ? "In progress" : step > 8 ? "Completed" : "Locked"}</span>
@@ -1824,7 +1633,100 @@ export default function OnboardingPage() {
             </summary>
             <div className="accordion border-t border-neutral-200">
               <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <div ref={actionsRef} className="flex items-center justify-between">
+                {/* Upload UI */}
+                <div className="grid gap-6 sm:grid-cols-2">
+                  {/* Logo uploader */}
+                  <div>
+                    <label className="block text-sm font-medium">Logo (SVG or PNG)</label>
+                    <div
+                      className="mt-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-6 text-center hover:bg-[#1a73e8]/5 transition-colors"
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (!e.dataTransfer?.files?.length) return;
+                        const f = e.dataTransfer.files[0];
+                        if (f) setLogoFile(f);
+                      }}
+                    >
+                      <svg className="h-10 w-10 text-[#1a73e8]" viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <rect x="3" y="12" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                      <div className="mt-2 text-sm text-neutral-700">
+                        Drag & drop logo here, or
+                        <label className="mx-1 inline-flex cursor-pointer text-[#1a73e8] underline">
+                          <input
+                            type="file"
+                            accept="image/svg+xml,image/png,image/x-png"
+                            className="hidden"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) setLogoFile(f); }}
+                          />
+                          browse
+                        </label>
+                      </div>
+                      <div className="mt-1 text-xs text-neutral-500">Recommended: square, transparent background.</div>
+                      {logoFile && (
+                        <div className="mt-3 w-full rounded border border-gray-200 bg-gray-50 p-2 text-left text-xs text-neutral-700">
+                          <div className="flex items-center justify-between">
+                            <span className="truncate max-w-[70%]">{logoFile.name} ({Math.round(logoFile.size/1024)} KB)</span>
+                            <button type="button" className="text-red-600 hover:underline" onClick={() => setLogoFile(null)}>Remove</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Brand images / assets uploader */}
+                  <div>
+                    <label className="block text-sm font-medium">Brand images / assets</label>
+                    <div
+                      className="mt-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-6 text-center hover:bg-[#1a73e8]/5 transition-colors"
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const files = Array.from(e.dataTransfer?.files || []);
+                        if (files.length) setAssetFiles((prev) => [...prev, ...files]);
+                      }}
+                    >
+                      <svg className="h-10 w-10 text-[#1a73e8]" viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <rect x="3" y="12" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                      <div className="mt-2 text-sm text-neutral-700">
+                        Drag & drop files here, or
+                        <label className="mx-1 inline-flex cursor-pointer text-[#1a73e8] underline">
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*,.pdf,.zip"
+                            className="hidden"
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || []);
+                              if (files.length) setAssetFiles((prev) => [...prev, ...files]);
+                            }}
+                          />
+                          browse
+                        </label>
+                      </div>
+                      <div className="mt-1 text-xs text-neutral-500">Images, PDFs, or a ZIP. Optional.</div>
+                      {assetFiles.length > 0 && (
+                        <div className="mt-3 w-full rounded border border-gray-200 bg-gray-50 p-2 text-left text-xs text-neutral-700">
+                          <ul className="space-y-1">
+                            {assetFiles.map((f, i) => (
+                              <li key={`${f.name}-${i}`} className="flex items-center justify-between">
+                                <span className="truncate max-w-[70%]">{f.name} ({Math.round(f.size/1024)} KB)</span>
+                                <button type="button" className="text-red-600 hover:underline" onClick={() => setAssetFiles((prev) => prev.filter((_, idx) => idx !== i))}>Remove</button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div ref={actionsRef} className="mt-6 flex items-center justify-between">
                   <div className="text-xs text-gray-500">Review & save your onboarding info.</div>
                   <button
                     className={classNames(
@@ -1836,43 +1738,33 @@ export default function OnboardingPage() {
                       const payload = {
                         siteType,
                         category,
-                        subcategory,
                         primaryGoal,
                         name,
-                        tagline,
-                        preferredDomain,
                         hasCurrent,
                         currentUrl: hasCurrent === "yes" ? currentUrl : "",
                         description: manualDesc,
                         autoSummary: summary,
                         siteAdded,
                         skipped,
-                        competitors: competitors.filter((x) => x.trim()),
-                        mustHavePages,
-                        contentSources,
                         businessPhone,
                         businessEmail,
-                        businessAddress,
-                        timeZone,
-                        responseSla,
-                        bookingTool,
                         contactMethod,
+                        businessHours,
                         primaryColors,
-                        accessibility: { highContrast },
-                        brandAssets: { logo: !!logoFile, favicon: !!faviconFile },
-                        voiceTone,
                         social: { x: socialX, linkedIn: socialLinkedIn, instagram: socialInstagram, facebook: socialFacebook },
                         services: selectedServices,
-                        serviceDetails,
                         serviceAreas: cities,
-                        delivery: { mode: onSiteMode, coverageType, travelFeePolicy },
-                        localization: { languages, primaryLanguage },
                         typeSpecific: { type: siteType, data: typeSpecific },
+                        uploads: {
+                          logo: logoFile ? { name: logoFile.name, size: logoFile.size, type: logoFile.type } : null,
+                          favicon: faviconFile ? { name: faviconFile.name, size: faviconFile.size, type: faviconFile.type } : null,
+                          assets: assetFiles.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+                        },
                       };
                       alert(`Saved!\n${JSON.stringify(payload, null, 2)}`);
                     }}
                   >
-                    Save and continue
+                    Save and finish
                   </button>
                 </div>
               </div>
@@ -1894,7 +1786,7 @@ function ProgressSidebar({ current, done }: { current: number; done: { s1: boole
     { id: 5, label: "Business & Contact", completed: done.s5 },
     { id: 6, label: "Services", completed: done.s6 },
     { id: 7, label: "Service areas", completed: done.s7 },
-    { id: 8, label: "Finish", completed: false },
+    { id: 8, label: "Assets", completed: false },
   ];
   const total = steps.length;
   return (
