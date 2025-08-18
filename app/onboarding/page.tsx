@@ -200,6 +200,20 @@ function isTypeSpecificValid(siteType: SiteType | null, data: Record<string, any
   return true;
 }
 
+// Short helper descriptions per site type
+const TYPE_HINTS: Partial<Record<SiteType, string>> = {
+  "Small business": "Typical deliverables: Services, Pricing, Contact, Booking, FAQs.",
+  SaaS: "Typical deliverables: Landing, Features, Pricing, Docs, Auth, Billing.",
+  Ecommerce: "Typical deliverables: Catalog, PDP, Cart, Checkout, Returns, Analytics.",
+  Agency: "Typical deliverables: Portfolio, Services, Inquiry Form, Booking, Testimonials.",
+  Portfolio: "Typical deliverables: Work, About, Contact, Case studies.",
+  Blog: "Typical deliverables: Categories, Search, Newsletter, About.",
+  Nonprofit: "Typical deliverables: Mission, Programs, Donate, Volunteer, Events.",
+  Community: "Typical deliverables: Forums/Channels, Events, Members, Rules.",
+  "Personal brand": "Typical deliverables: About, Offers, Speaking, Newsletter, Contact.",
+  "Hobby site": "Typical deliverables: Articles, Gallery, How‑tos, Community.",
+};
+
 // Preset brand color palette for selection (pick up to 2)
 const PRESET_COLORS: string[] = [
   "#1a73e8", // Blue
@@ -213,6 +227,12 @@ const PRESET_COLORS: string[] = [
   "#22c55e", // Emerald
   "#111827", // Near-black
 ];
+
+// Additional options
+const MUST_HAVE_PAGES = ["About", "Pricing", "Testimonials", "Blog", "Careers", "Contact", "FAQ", "Privacy", "Terms"];
+const VOICE_TONES = ["Professional", "Friendly", "Playful", "Minimal"];
+const PRIMARY_GOALS = ["Leads", "Sales", "Bookings", "Community", "Content"];
+const TIMEZONES = ["UTC", "US/Pacific", "US/Mountain", "US/Central", "US/Eastern", "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney"];
 
 export default function OnboardingPage() {
   const [siteType, setSiteType] = useState<SiteType | null>(null);
@@ -235,6 +255,29 @@ export default function OnboardingPage() {
   const [socialFacebook, setSocialFacebook] = useState("");
   const [typeSpecific, setTypeSpecific] = useState<Record<string, any>>({});
   const [searching, setSearching] = useState(false);
+  // New fields across steps
+  const [subcategory, setSubcategory] = useState("");
+  const [primaryGoal, setPrimaryGoal] = useState<string>("");
+  const [tagline, setTagline] = useState("");
+  const [preferredDomain, setPreferredDomain] = useState("");
+  const [competitors, setCompetitors] = useState<string[]>(["", "", ""]);
+  const [mustHavePages, setMustHavePages] = useState<string[]>([]);
+  const [contentSources, setContentSources] = useState<string>("");
+  const [businessAddress, setBusinessAddress] = useState("");
+  const [timeZone, setTimeZone] = useState<string>("");
+  const [responseSla, setResponseSla] = useState<string>("");
+  const [bookingTool, setBookingTool] = useState<string>("");
+  const [voiceTone, setVoiceTone] = useState<string[]>([]);
+  const [highContrast, setHighContrast] = useState<boolean>(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [serviceDetails, setServiceDetails] = useState<Record<string, { description?: string; price?: string; cta?: "Call" | "Form" | "Booking" | "None" }>>({});
+  const [onSiteMode, setOnSiteMode] = useState<"onsite" | "online">("onsite");
+  const [coverageType, setCoverageType] = useState<"single" | "multi" | "nationwide">("single");
+  const [travelFeePolicy, setTravelFeePolicy] = useState("");
+  const [languages, setLanguages] = useState<string[]>(["English"]);
+  const [primaryLanguage, setPrimaryLanguage] = useState<string>("English");
+  const [teamNotes, setTeamNotes] = useState("");
   const [summary, setSummary] = useState<
     | null
     | {
@@ -627,7 +670,14 @@ export default function OnboardingPage() {
                     </button>
                   ))}
                 </div>
-                {siteType && <div className="mt-2 text-xs text-gray-600">Selected: {siteType}</div>}
+                {siteType && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    <div>Selected: {siteType}</div>
+                    {TYPE_HINTS[siteType] && (
+                      <div className="mt-1 text-[11px] text-gray-500">{TYPE_HINTS[siteType] as string}</div>
+                    )}
+                  </div>
+                )}
                 <div className="mt-4 flex justify-end">
                   <button
                     type="button"
@@ -691,6 +741,20 @@ export default function OnboardingPage() {
                   ))}
                 </div>
                 {category && <div className="mt-2 text-xs text-gray-600">Selected: {category}</div>}
+                {/* Subcategory + Primary goal */}
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="min-w-0">
+                    <label className="block text-sm font-medium">Subcategory (optional)</label>
+                    <input value={subcategory} onChange={(e) => setSubcategory(e.target.value)} placeholder="e.g. Plumbing" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                  </div>
+                  <div className="min-w-0">
+                    <label className="block text-sm font-medium">Primary goal</label>
+                    <select value={primaryGoal} onChange={(e) => setPrimaryGoal(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
+                      <option value="">Select…</option>
+                      {PRIMARY_GOALS.map((g) => (<option key={g} value={g}>{g}</option>))}
+                    </select>
+                  </div>
+                </div>
                 <div className="mt-4 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(1)}>Back</button>
                   <button
@@ -758,6 +822,17 @@ export default function OnboardingPage() {
                   placeholder="e.g. Bello Moving"
                   className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
                 />
+                {/* Tagline + Preferred domain */}
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium">Tagline (optional)</label>
+                    <input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Short tagline" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Preferred domain (optional)</label>
+                    <input value={preferredDomain} onChange={(e) => setPreferredDomain(e.target.value)} placeholder="example.com" inputMode="url" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                  </div>
+                </div>
                 <div className="mt-3 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(2)}>Back</button>
                   <button
@@ -1016,7 +1091,35 @@ export default function OnboardingPage() {
                   </div>
                 )}
 
-                <div className="mt-4 flex justify-between">
+                {/* Extra website details available whether or not a current site exists */}
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <div className="min-w-0">
+                    <label className="block text-sm font-medium">Competitors / inspiration (up to 3)</label>
+                    <div className="mt-1 grid gap-2">
+                      {competitors.map((u, i) => (
+                        <input key={i} value={u} onChange={(e) => setCompetitors((prev) => prev.map((x, idx) => idx === i ? e.target.value : x))} placeholder={`https://site${i+1}.com`} inputMode="url" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <label className="block text-sm font-medium">Must-have pages</label>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {MUST_HAVE_PAGES.map((p) => {
+                        const selected = mustHavePages.includes(p);
+                        return (
+                          <button key={p} type="button" onClick={() => setMustHavePages((prev) => selected ? prev.filter((x) => x !== p) : [...prev, p])} className={classNames("rounded-md border px-3 py-1.5 text-xs transition-colors", selected ? "border-[#1a73e8] bg-[#1a73e8]/10 text-[#1a73e8]" : "border-gray-300 text-neutral-700 hover:bg-[#1a73e8]/5")}>{p}</button>
+                        );
+                      })}
+                    </div>
+                    {mustHavePages.length > 0 && <div className="mt-1 text-xs text-gray-600">Selected: {mustHavePages.join(', ')}</div>}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium">Content sources (Drive/Notion/Figma links)</label>
+                    <input value={contentSources} onChange={(e) => setContentSources(e.target.value)} placeholder="Links to existing content (optional)" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(3)}>Back</button>
                   <button
                     type="button"
@@ -1132,7 +1235,70 @@ export default function OnboardingPage() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-4 flex justify-between">
+                {/* Additional business details */}
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium">Business address</label>
+                    <input value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="Street, City, State/Region" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Time zone</label>
+                    <select value={timeZone} onChange={(e) => setTimeZone(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
+                      <option value="">Select…</option>
+                      {TIMEZONES.map((tz) => (<option key={tz} value={tz}>{tz}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Response SLA</label>
+                    <select value={responseSla} onChange={(e) => setResponseSla(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
+                      <option value="">Select…</option>
+                      {['Same day','24 hours','48 hours','1 week'].map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Booking tool</label>
+                    <select value={bookingTool} onChange={(e) => setBookingTool(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
+                      <option value="">Select…</option>
+                      {['Calendly','TidyCal','Acuity','In-house','None'].map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium">Voice & tone</label>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {VOICE_TONES.map((t) => {
+                        const selected = voiceTone.includes(t);
+                        return (
+                          <button key={t} type="button" onClick={() => setVoiceTone((prev) => selected ? prev.filter((x) => x !== t) : [...prev, t])} className={classNames("rounded-md border px-3 py-1.5 text-xs transition-colors", selected ? "border-[#1a73e8] bg-[#1a73e8]/10 text-[#1a73e8]" : "border-gray-300 text-neutral-700 hover:bg-[#1a73e8]/5")}>{t}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="inline-flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={highContrast} onChange={(e) => setHighContrast(e.target.checked)} className="rounded border-gray-300" /> Prefer high contrast</label>
+                  </div>
+                  <div className="sm:col-span-2 grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium">Logo (optional)</label>
+                      <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} className="mt-1 block w-full text-xs text-gray-600" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium">Favicon (optional)</label>
+                      <input type="file" accept="image/*" onChange={(e) => setFaviconFile(e.target.files?.[0] || null)} className="mt-1 block w-full text-xs text-gray-600" />
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium">Languages</label>
+                    <input value={languages.join(', ')} onChange={(e) => setLanguages(e.target.value.split(',').map((x) => x.trim()).filter(Boolean))} placeholder="e.g. English, Spanish" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Primary language</label>
+                    <select value={primaryLanguage} onChange={(e) => setPrimaryLanguage(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
+                      {languages.map((l) => (<option key={l} value={l}>{l}</option>))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(4)}>Back</button>
                   <button
                     type="button"
@@ -1250,6 +1416,40 @@ export default function OnboardingPage() {
                   </div>
                   <div />
                 </div>
+                {/* Per-service details */}
+                {selectedServices.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    {selectedServices.map((s) => {
+                      const det = serviceDetails[s] || {};
+                      return (
+                        <div key={s} className="rounded-md border border-gray-200 p-3">
+                          <div className="text-sm font-medium mb-2">{s}</div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="sm:col-span-2">
+                              <label className="block text-xs font-medium text-gray-700">Description (optional)</label>
+                              <input value={det.description || ""} onChange={(e) => setServiceDetails((prev) => ({ ...prev, [s]: { ...prev[s], description: e.target.value } }))} placeholder="Short blurb" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700">Starting price (optional)</label>
+                              <input value={det.price || ""} onChange={(e) => setServiceDetails((prev) => ({ ...prev, [s]: { ...prev[s], price: e.target.value } }))} placeholder="$" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <label className="block text-xs font-medium text-gray-700">Primary CTA</label>
+                            <div className="mt-1 flex flex-wrap gap-2">
+                              {["Call","Form","Booking","None"].map((opt) => {
+                                const selected = det.cta === opt;
+                                return (
+                                  <button key={opt} type="button" onClick={() => setServiceDetails((prev) => ({ ...prev, [s]: { ...prev[s], cta: opt as any } }))} className={classNames("rounded-md border px-3 py-1.5 text-xs transition-colors", selected ? "border-[#1a73e8] bg-[#1a73e8]/10 text-[#1a73e8]" : "border-gray-300 text-neutral-700 hover:bg-[#1a73e8]/5")}>{opt}</button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
                 {/* Type-specific details (Option A) */}
                 {siteType && typeQuestionsFor(siteType).length > 0 && (
                   <div className="mt-6 border-t border-neutral-200 pt-4">
@@ -1409,7 +1609,31 @@ export default function OnboardingPage() {
             </summary>
             <div className="accordion border-t border-neutral-200">
               <div className="accordion-content p-4 sm:p-5 fade-slide">
+                {/* On-site vs online + coverage type */}
                 <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2 grid gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="block text-sm font-medium">Delivery mode</label>
+                      <div className="mt-1 inline-flex rounded-md border border-gray-300 overflow-hidden">
+                        <button type="button" className={`px-3 py-1.5 text-sm ${onSiteMode === 'onsite' ? 'bg-[#1a73e8] text-white' : 'bg-white text-neutral-700'}`} onClick={() => setOnSiteMode('onsite')}>On-site</button>
+                        <button type="button" className={`px-3 py-1.5 text-sm border-l border-gray-300 ${onSiteMode === 'online' ? 'bg-[#1a73e8] text-white' : 'bg-white text-neutral-700'}`} onClick={() => setOnSiteMode('online')}>Online</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium">Coverage type</label>
+                      <select value={coverageType} onChange={(e) => setCoverageType(e.target.value as any)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]">
+                        <option value="single">Single location</option>
+                        <option value="multi">Multi-location</option>
+                        <option value="nationwide">Nationwide</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium">Travel fee policy (optional)</label>
+                      <input value={travelFeePolicy} onChange={(e) => setTravelFeePolicy(e.target.value)} placeholder="e.g. $30 beyond 30mi" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]" />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 mt-4">
                   <div className="min-w-0">
                     <label className="block text-sm font-medium">Country</label>
                     <select
@@ -1612,20 +1836,37 @@ export default function OnboardingPage() {
                       const payload = {
                         siteType,
                         category,
+                        subcategory,
+                        primaryGoal,
                         name,
+                        tagline,
+                        preferredDomain,
                         hasCurrent,
                         currentUrl: hasCurrent === "yes" ? currentUrl : "",
                         description: manualDesc,
                         autoSummary: summary,
                         siteAdded,
                         skipped,
+                        competitors: competitors.filter((x) => x.trim()),
+                        mustHavePages,
+                        contentSources,
                         businessPhone,
                         businessEmail,
+                        businessAddress,
+                        timeZone,
+                        responseSla,
+                        bookingTool,
                         contactMethod,
                         primaryColors,
+                        accessibility: { highContrast },
+                        brandAssets: { logo: !!logoFile, favicon: !!faviconFile },
+                        voiceTone,
                         social: { x: socialX, linkedIn: socialLinkedIn, instagram: socialInstagram, facebook: socialFacebook },
                         services: selectedServices,
+                        serviceDetails,
                         serviceAreas: cities,
+                        delivery: { mode: onSiteMode, coverageType, travelFeePolicy },
+                        localization: { languages, primaryLanguage },
                         typeSpecific: { type: siteType, data: typeSpecific },
                       };
                       alert(`Saved!\n${JSON.stringify(payload, null, 2)}`);
