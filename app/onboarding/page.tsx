@@ -877,22 +877,22 @@ export default function OnboardingPage() {
                       </div>
                     )}
 
-                    {notFound && !searching && (
-                      <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-                        <div className="font-medium">Site Not Found</div>
-                        <p className="mt-1 text-red-900">We couldn’t find enough public information for this URL.</p>
+                    {(!!error || notFound) && !searching && (
+                      <div className="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900">
+                        <div className="font-medium">Site search unavailable due to server overload</div>
+                        <p className="mt-1">Please try again shortly or skip this step for now.</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <button
                             type="button"
                             className="rounded-md px-3 py-2 text-sm border border-[#1a73e8] text-[#1a73e8] bg-white transition-colors hover:border-[#1664c4] hover:text-[#1664c4] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
-                            onClick={() => { setNotFound(false); setSummary(null); }}
+                            onClick={() => { setNotFound(false); setError(null); setSummary(null); summarizeUrl(); }}
                           >
                             Retry
                           </button>
                           <button
                             type="button"
                             className="rounded-md bg-[#1a73e8] px-3 py-2 text-sm text-white transition-colors hover:bg-[#1664c4] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
-                            onClick={() => { setSkipped(true); }}
+                            onClick={() => { setSkipped(true); setError(null); setNotFound(false); }}
                           >
                             Skip for now
                           </button>
@@ -1015,7 +1015,7 @@ export default function OnboardingPage() {
                       </div>
                     )}
 
-                    {error && (<div className="mt-3 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</div>)}
+                    {/* Hide raw error to avoid irrelevant content when search fails */}
                   </div>
                 )}
 
