@@ -274,6 +274,7 @@ export default function OnboardingPage() {
   const [citySuggestions, setCitySuggestions] = useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
   const [cities, setCities] = useState<Array<{ name: string; displayName: string; lat: number; lon: number; radiusKm: number }>>([]);
   const [distanceUnit, setDistanceUnit] = useState<"km" | "mi">("km");
+  const [isCitySearching, setIsCitySearching] = useState(false);
 
   // Step orchestration
   const [step, setStep] = useState(1);
@@ -370,32 +371,28 @@ export default function OnboardingPage() {
   const [searchedPreview, setSearchedPreview] = useState<Array<{ index: number; title: string; url: string; snippet?: string }>>([]);
   const [showSources, setShowSources] = useState(false);
 
-  // Debounced city suggestions using OpenStreetMap Nominatim
-  useEffect(() => {
+  // Manual city suggestions search (only on user action)
+  async function runCitySearch() {
     const q = cityQuery.trim();
     if (!q) { setCitySuggestions([]); return; }
     const ctrl = new AbortController();
-    const t = setTimeout(async () => {
-      try {
-        const params = new URLSearchParams({
-          q,
-          format: "json",
-          addressdetails: "1",
-          limit: "6",
-        });
-        const cc = countryCode.trim().toLowerCase();
-        if (cc) params.set("countrycodes", cc);
-        const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
-        const res = await fetch(url, { signal: ctrl.signal, headers: { "Accept-Language": "en" } });
-        if (!res.ok) throw new Error("Address lookup failed");
-        const data = await res.json();
-        setCitySuggestions(Array.isArray(data) ? data.slice(0, 6) : []);
-      } catch (e) {
-        if (!(e as any)?.name?.includes("Abort")) setCitySuggestions([]);
-      }
-    }, 350);
-    return () => { clearTimeout(t); ctrl.abort(); };
-  }, [cityQuery, countryCode]);
+    try {
+      setIsCitySearching(true);
+      const params = new URLSearchParams({ q, format: "json", addressdetails: "1", limit: "6" });
+      const cc = countryCode.trim().toLowerCase();
+      if (cc) params.set("countrycodes", cc);
+      const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
+      const res = await fetch(url, { signal: ctrl.signal, headers: { "Accept-Language": "en" } });
+      if (!res.ok) throw new Error("Address lookup failed");
+      const data = await res.json();
+      setCitySuggestions(Array.isArray(data) ? data.slice(0, 6) : []);
+    } catch (e) {
+      setCitySuggestions([]);
+    } finally {
+      setIsCitySearching(false);
+      ctrl.abort();
+    }
+  }
 
   // Helpers for unit conversion (store internally in km)
   const toDisplayDistance = (km: number) => distanceUnit === "km" ? km : Math.round(km * 0.621371);
@@ -1436,36 +1433,69 @@ export default function OnboardingPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium">Add city/area</label>
-                    <input
-                      value={cityQuery}
-                      onChange={(e) => setCityQuery(e.target.value)}
-                      placeholder="Start typing a city or area"
-                      className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
-                    />
-                    <div className="mt-1 text-xs text-gray-500">Type address to add more locations</div>
+                    <div className="mt-1 flex items-stretch gap-2">
+                      <input
+                        value={cityQuery}
+                        onChange={(e) => setCityQuery(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); runCitySearch(); } }}
+                        placeholder="Type a city or area"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        name="location-entry"
+                        className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-[#1a73e8]/30 focus:border-[#1a73e8]"
+                      />
+                      <button
+                        type="button"
+                        onClick={runCitySearch}
+                        disabled={!cityQuery.trim() || isCitySearching}
+                        className={classNames(
+                          "shrink-0 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]",
+                          !cityQuery.trim() || isCitySearching ? "bg-[#93b7f1] cursor-not-allowed" : "bg-[#1a73e8] hover:opacity-95"
+                        )}
+                        aria-label="Search city"
+                      >
+                        {isCitySearching ? "Searching…" : "Search"}
+                      </button>
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500">Click Search to see suggestions for the city or area you entered.</div>
                     {citySuggestions.length > 0 && (
                       <div className="mt-2 rounded-md border border-gray-200 bg-white shadow-sm">
-                        <ul className="max-h-48 overflow-auto py-1">
-                          {citySuggestions.map((sug, idx) => (
-                            <li key={`${sug.lat}-${sug.lon}-${idx}`}>
-                              <button
-                                type="button"
-                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
-                                onClick={() => {
-                                  const name = sug.display_name.split(',')[0]?.trim() || sug.display_name;
-                                  const newCity = { name, displayName: sug.display_name, lat: parseFloat(sug.lat), lon: parseFloat(sug.lon), radiusKm: 25 };
-                                  setCities((prev) => {
-                                    const exists = prev.some(c => Math.abs(c.lat - newCity.lat) < 0.0001 && Math.abs(c.lon - newCity.lon) < 0.0001);
-                                    return exists ? prev : [...prev, newCity];
-                                  });
-                                  setCityQuery("");
-                                  setCitySuggestions([]);
-                                }}
-                              >
-                                {sug.display_name}
-                              </button>
-                            </li>
-                          ))}
+                        <ul className="max-h-48 overflow-auto py-2 space-y-2">
+                          {citySuggestions.map((sug, idx) => {
+                            const parts = sug.display_name.split(',');
+                            const title = parts[0]?.trim() || sug.display_name;
+                            const subtitle = parts.slice(1).join(',').trim();
+                            return (
+                              <li key={`${sug.lat}-${sug.lon}-${idx}`} className="px-2">
+                                <button
+                                  type="button"
+                                  className="w-full text-left rounded-md border border-gray-200 px-3 py-2 hover:border-[#1a73e8] hover:bg-[#1a73e8]/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1a73e8]"
+                                  onClick={() => {
+                                    const name = title;
+                                    const newCity = { name, displayName: sug.display_name, lat: parseFloat(sug.lat), lon: parseFloat(sug.lon), radiusKm: 25 };
+                                    setCities((prev) => {
+                                      const exists = prev.some(c => Math.abs(c.lat - newCity.lat) < 0.0001 && Math.abs(c.lon - newCity.lon) < 0.0001);
+                                      return exists ? prev : [...prev, newCity];
+                                    });
+                                    setCityQuery("");
+                                    setCitySuggestions([]);
+                                  }}
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <div className="text-sm font-medium text-neutral-900 truncate">{title}</div>
+                                      {subtitle && (
+                                        <div className="text-xs text-neutral-600 truncate">{subtitle}</div>
+                                      )}
+                                    </div>
+                                    <span className="ml-auto shrink-0 inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-700 border border-neutral-200">Add</span>
+                                  </div>
+                                </button>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     )}
@@ -1473,10 +1503,10 @@ export default function OnboardingPage() {
                 </div>
 
                 {cities.length > 0 && (
-                  <div className="mt-4 grid gap-3">
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     {cities.map((c, i) => (
-                      <div key={`${c.lat}-${c.lon}-${i}`} className="rounded-md border border-gray-200 p-3">
-                        <div className="flex items-center justify-between">
+                      <div key={`${c.lat}-${c.lon}-${i}`} className="rounded-md border border-gray-200 p-3 min-w-0">
+                        <div className="flex items-center justify-between min-w-0">
                           <div>
                             <div className="text-sm font-medium">{c.name}</div>
                             <div className="text-xs text-gray-600 truncate max-w-[70ch]">{c.displayName}</div>
@@ -1490,7 +1520,7 @@ export default function OnboardingPage() {
                           </button>
                         </div>
                         <div className="mt-2">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-2 min-w-0">
                             <label className="block text-sm font-medium">Service radius</label>
                             <div className="flex items-center gap-2 text-xs text-neutral-700">
                               <span className="whitespace-nowrap">{toDisplayDistance(c.radiusKm)}{distanceUnit}</span>
@@ -1507,7 +1537,7 @@ export default function OnboardingPage() {
                                   const km = fromDisplayDistance(clamped);
                                   setCities(prev => prev.map((cc, idx) => idx === i ? { ...cc, radiusKm: km } : cc));
                                 }}
-                                className="w-20 rounded border border-gray-300 px-2 py-1"
+                                className="w-24 shrink-0 rounded border border-gray-300 px-2 py-1"
                               />
                             </div>
                           </div>
