@@ -62,6 +62,10 @@ export async function POST(req: Request) {
 
     // Perform search first (Tavily default)
     const results = await webSearch(query, undefined as any, { siteDomain });
+    if (!Array.isArray(results) || results.length === 0) {
+      // Explicitly communicate zero-results so UI can show unified failure state
+      return NextResponse.json({ error: "NO_RESULTS" }, { status: 204 });
+    }
     const citations = results.map((r, i) => ({ index: i + 1, title: r.title, url: r.url }));
     const { header, user } = buildPrompt(query, results);
 
