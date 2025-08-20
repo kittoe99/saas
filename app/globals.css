@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  /* Lighten background ~40% towards white: #faf6ec -> #fcfaf4 */
-  --background: #fcfaf4;
+  /* Global background: warm light */
+  --background: #efeae2;
   --foreground: #171717;
 }
 
@@ -115,13 +115,15 @@ details[open] .fade-slide {
 .border-match { border-color: var(--background) !important; }
 /* Common explicit backgrounds */
 .bg-white.border-match { border-color: #ffffff !important; }
-/* Escape Tailwind arbitrary color class for warm background */
+/* Escape Tailwind arbitrary color class for warm backgrounds */
 .bg-\[\#faf6ec\].border-match { border-color: #faf6ec !important; }
+.bg-\[\#efeae2\].border-match { border-color: #efeae2 !important; }
 
 /* Optional helpers for convenience */
 .border-on-page { border-color: var(--background) !important; }
 .border-on-white { border-color: #ffffff !important; }
 .border-on-warm { border-color: #faf6ec !important; }
+.border-on-gray { border-color: #efeae2 !important; }
 
 /* Global container border reset: hide borders on typical containers */
 div.border:not(.keep-border),
