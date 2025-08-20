@@ -99,7 +99,7 @@ export default function Home() {
   return (
     <div className="py-10 md:py-16">
       {/* Hero */}
-      <section className="relative grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-[#d9d1b9] bg-white shadow-sm">
+      <section className="relative grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-[#d9d1b9] bg-[#f7f3e6] shadow-sm">
         {/* Soft background accent */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-[radial-gradient(1200px_600px_at_10%_-10%,rgba(26,115,232,0.06),transparent_60%),radial-gradient(1000px_500px_at_90%_110%,rgba(26,115,232,0.05),transparent_60%)]" />
 
@@ -124,7 +124,7 @@ export default function Home() {
               Get started
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-2 h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </a>
-            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-md border border-neutral-900 text-neutral-900 bg-white text-sm md:text-base gap-2 transition-all duration-200 hover:bg-neutral-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black">
+            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-md border border-neutral-900 text-neutral-900 bg-[#f7f3e6] text-sm md:text-base gap-2 transition-all duration-200 hover:bg-[#efe8d2] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black">
               See what’s included
             </a>
           </div>
@@ -136,7 +136,7 @@ export default function Home() {
           </ul>
         </div>
         {/* Hero visual */}
-        <div className="group relative h-[300px] sm:h-[380px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-neutral-100 to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 hover:shadow-md">
+        <div className="group relative h-[300px] sm:h-[380px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-[#f7f3e6] to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 hover:shadow-md">
           <div aria-hidden className="absolute -right-10 -top-10 h-60 w-60 rounded-full bg-[#1a73e8]/10 blur-2xl" />
           <VectorArt
             variant="dashboard"
@@ -152,7 +152,7 @@ export default function Home() {
       <div className="sticky top-16 md:top-20 z-30 mt-14">
         <div className="flex justify-center">
           <div
-            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full border border-[#d9d1b9] bg-white px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-sm whitespace-nowrap snap-x snap-mandatory ring-1 ring-[#d9d1b9]/40"
+            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full border border-[#d9d1b9] bg-[#f7f3e6] px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-sm whitespace-nowrap snap-x snap-mandatory ring-1 ring-[#d9d1b9]/40"
             role="tablist"
             aria-label="Section tabs"
           >
@@ -165,8 +165,8 @@ export default function Home() {
                     href={`#${id}`}
                     className={
                       (isActive
-                        ? "border border-black text-black bg-white font-medium shadow-sm"
-                        : "text-neutral-800 hover:text-black hover:bg-neutral-100") +
+                        ? "border border-black text-black bg-[#f7f3e6] font-medium shadow-sm"
+                        : "text-neutral-800 hover:text-black hover:bg-[#efe8d2]") +
                       " px-3 sm:px-4 py-1.5 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-all duration-200 hover:shadow-xs snap-start"
                     }
                     aria-current={isActive ? "true" : undefined}
@@ -189,7 +189,7 @@ export default function Home() {
           <p className="mt-2 text-neutral-600 max-w-2xl">We handle structure, visuals, and monthly content updates so you can focus on your business. Everything is responsive and easy to evolve.</p>
         </header>
         <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-start">
-          <div className="group relative h-52 sm:h-64 md:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-neutral-100 to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 hover:shadow-md">
+          <div className="group relative h-52 sm:h-64 md:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-[#f7f3e6] to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 hover:shadow-md">
             <VectorArt
               variant="builder"
               className="absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
@@ -220,7 +220,7 @@ export default function Home() {
           <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">Clean layouts, reusable components, and clear hierarchy ensure a polished experience across every page.</p>
         </header>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
-          <div className="group p-5 rounded-xl border border-[#d9d1b9] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
+          <div className="group p-5 rounded-xl border border-[#d9d1b9] bg-[#f7f3e6] transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Clean, modern layouts preview" />
             </div>
@@ -255,7 +255,7 @@ export default function Home() {
           <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">From your website to sales automation and payments—built in, simple to use, and ready to scale.</p>
         </header>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6">
-          <div id="features-website" className="group p-5 rounded-xl border border-[#d9d1b9] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
+          <div id="features-website" className="group p-5 rounded-xl border border-[#d9d1b9] bg-[#f7f3e6] transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Website feature preview" />
             </div>
@@ -263,7 +263,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Design, hosting, and updates</h3>
             <p className="mt-2 text-sm text-neutral-600">Launch fast with professional design and monthly updates included.</p>
           </div>
-          <div id="features-sales" className="group p-5 rounded-xl border border-[#d9d1b9] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
+          <div id="features-sales" className="group p-5 rounded-xl border border-[#d9d1b9] bg-[#f7f3e6] transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="sales" className="absolute inset-0 h-full w-full" aria-label="Sales & automation preview" />
             </div>
@@ -271,7 +271,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Funnels, forms, workflows</h3>
             <p className="mt-2 text-sm text-neutral-600">Capture leads and automate follow‑ups without extra tools.</p>
           </div>
-          <div id="features-ai" className="group p-5 rounded-xl border border-[#d9d1b9] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
+          <div id="features-ai" className="group p-5 rounded-xl border border-[#d9d1b9] bg-[#f7f3e6] transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="ai" className="absolute inset-0 h-full w-full" aria-label="AI features preview" />
             </div>
@@ -279,7 +279,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Content, insights, assistance</h3>
             <p className="mt-2 text-sm text-neutral-600">Speed up content, find insights, and get helpful suggestions.</p>
           </div>
-          <div id="features-payments" className="group p-5 rounded-xl border border-[#d9d1b9] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
+          <div id="features-payments" className="group p-5 rounded-xl border border-[#d9d1b9] bg-[#f7f3e6] transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-[#1a73e8]/30">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="payments" className="absolute inset-0 h-full w-full" aria-label="Payments preview" />
             </div>
@@ -296,7 +296,7 @@ export default function Home() {
           <div className="text-xs uppercase tracking-wider text-neutral-500">Testimonial</div>
           <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight">What our clients say</h2>
         </header>
-        <div className="rounded-xl border border-[#d9d1b9] bg-white p-6">
+        <div className="rounded-xl border border-[#d9d1b9] bg-[#f7f3e6] p-6">
           <div className="flex items-start gap-4">
             <div className="relative h-12 w-12 rounded-full overflow-hidden border border-neutral-200 bg-neutral-100 shrink-0">
               <VectorArt variant="avatar" className="absolute inset-0 h-full w-full" aria-label="Client avatar" />
@@ -313,9 +313,9 @@ export default function Home() {
       <section id="faq" className="scroll-mt-24 mt-20 md:mt-28">
         <h2 className="text-2xl md:text-4xl font-semibold tracking-tight">FAQ</h2>
         <dl className="mt-4 space-y-4">
-          <div className="rounded-md border border-[#d9d1b9] bg-white p-4 transition-colors duration-200 hover:bg-neutral-100"><dt className="font-medium">What’s included in the monthly plan?</dt><dd className="mt-1 text-sm text-neutral-600">Design, hosting, SSL, and monthly content updates with support.</dd></div>
-          <div className="rounded-md border border-[#d9d1b9] bg-white p-4 transition-colors duration-200 hover:bg-neutral-100"><dt className="font-medium">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-neutral-600">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
-          <div className="rounded-md border border-[#d9d1b9] bg-white p-4 transition-colors duration-200 hover:bg-neutral-100"><dt className="font-medium">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-neutral-600">We’ll align the site with your brand and adjust layouts to fit your content.</dd></div>
+          <div className="rounded-md border border-[#d9d1b9] bg-[#f7f3e6] p-4 transition-colors duration-200 hover:bg-[#efe8d2]"><dt className="font-medium">What’s included in the monthly plan?</dt><dd className="mt-1 text-sm text-neutral-600">Design, hosting, SSL, and monthly content updates with support.</dd></div>
+          <div className="rounded-md border border-[#d9d1b9] bg-[#f7f3e6] p-4 transition-colors duration-200 hover:bg-[#efe8d2]"><dt className="font-medium">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-neutral-600">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
+          <div className="rounded-md border border-[#d9d1b9] bg-[#f7f3e6] p-4 transition-colors duration-200 hover:bg-[#efe8d2]"><dt className="font-medium">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-neutral-600">We’ll align the site with your brand and adjust layouts to fit your content.</dd></div>
         </dl>
       </section>
 
