@@ -91,7 +91,7 @@ export default function ChatWidget() {
         type="button"
         aria-label={open ? "Close support" : "Open support"}
         onClick={() => setOpen((v) => !v)}
-        className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black text-white shadow-lg flex items-center justify-center hover:bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
+        className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-success-accent text-white shadow-lg flex items-center justify-center transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent"
       >
         {open ? (
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -124,7 +124,7 @@ export default function ChatWidget() {
                 <div
                   className={
                     m.role === "user"
-                      ? "max-w-[80%] rounded-lg bg-[#1a73e8] text-white px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-sm"
+                      ? "max-w-[80%] rounded-lg bg-success-accent text-white px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-sm"
                       : "max-w-[80%] rounded-lg bg-neutral-100 text-neutral-900 px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-sm"
                   }
                 >
@@ -149,9 +149,9 @@ export default function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type a message..."
-                className="flex-1 min-w-0 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md border border-neutral-200 bg-white outline-none text-sm sm:text-sm"
+                className="flex-1 min-w-0 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md border border-neutral-200 bg-white outline-none text-sm sm:text-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               />
-              <button type="submit" className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md bg-black text-white text-sm sm:text-sm hover:bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-black">Send</button>
+              <button type="submit" className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md bg-success-accent text-white text-sm sm:text-sm transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">Send</button>
             </div>
           </form>
 

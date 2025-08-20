@@ -58,9 +58,9 @@ export default function RootLayout({
                     <input
                       type="email"
                       placeholder="Enter your email"
-                      className="flex-1 min-w-0 px-3 py-2 rounded-md border border-[#d9d1b9] bg-transparent focus:bg-[#f7f3e6] outline-none w-full text-neutral-900 placeholder:text-neutral-500"
+                      className="flex-1 min-w-0 px-3 py-2 rounded-md border border-[#d9d1b9] bg-transparent focus:bg-[#f7f3e6] outline-none w-full text-neutral-900 placeholder:text-neutral-500 focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f3e6]"
                     />
-                    <button className="px-4 py-2 rounded-md bg-black text-white w-full sm:w-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-black">Subscribe</button>
+                    <button className="px-4 py-2 rounded-md bg-success-accent text-white w-full sm:w-auto transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f3e6]">Subscribe</button>
                   </div>
                 </div>
               </div>

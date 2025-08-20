@@ -237,7 +237,7 @@ export default function AITestPage() {
             <button
               type="button"
               onClick={() => setSearchEnabled((v) => !v)}
-              className={`px-3 py-1.5 text-sm rounded-full border shadow-sm transition-colors flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black ${searchEnabled ? "bg-black text-white border-black hover:bg-neutral-900" : "bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900"}`}
+              className={`px-3 py-1.5 text-sm rounded-full border shadow-sm transition-colors flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent ${searchEnabled ? "bg-success-accent text-white border-success hover:opacity-90" : "bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900"}`}
               title="Enable web search for the next message"
             >
               {/* search icon */}
@@ -251,7 +251,7 @@ export default function AITestPage() {
             <button
               type="button"
               onClick={() => setReasoningEnabled((v) => !v)}
-              className={`px-3 py-1.5 text-sm rounded-full border shadow-sm transition-colors flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black ${reasoningEnabled ? "bg-black text-white border-black hover:bg-neutral-900" : "bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900"}`}
+              className={`px-3 py-1.5 text-sm rounded-full border shadow-sm transition-colors flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent ${reasoningEnabled ? "bg-success-accent text-white border-success hover:opacity-90" : "bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900"}`}
               title="Enable R1-style reasoning for the next message"
             >
               {/* brain icon */}
@@ -265,7 +265,7 @@ export default function AITestPage() {
             <div className="flex items-center gap-2">
               <label className="text-sm opacity-80">Model</label>
               <select
-                className="text-sm border border-neutral-300 dark:border-neutral-700 rounded p-1.5 bg-white dark:bg-neutral-900 outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
+                className="text-sm border border-neutral-300 dark:border-neutral-700 rounded p-1.5 bg-white dark:bg-neutral-900 outline-none focus:ring-2 focus:ring-success-accent/40 focus:border-success"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 title="Select DeepSeek model"
@@ -278,7 +278,7 @@ export default function AITestPage() {
             <StepBlock show={searchEnabled}>
               <div ref={siteRef}>
                 <input
-                  className="flex-1 min-w-[160px] border border-neutral-300 dark:border-neutral-700 rounded p-2 text-sm bg-white dark:bg-neutral-900 outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
+                  className="flex-1 min-w-[160px] border border-neutral-300 dark:border-neutral-700 rounded p-2 text-sm bg-white dark:bg-neutral-900 outline-none focus:ring-2 focus:ring-success-accent/40 focus:border-success"
                   placeholder="Restrict to site (optional): example.com"
                   value={site}
                   onChange={(e) => setSite(e.target.value)}
@@ -289,14 +289,14 @@ export default function AITestPage() {
 
           <div className="flex items-end gap-2">
             <textarea
-              className="flex-1 border border-neutral-300 dark:border-neutral-700 rounded p-2 min-h-[44px] max-h-[160px] bg-white dark:bg-neutral-900 outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
+              className="flex-1 border border-neutral-300 dark:border-neutral-700 rounded p-2 min-h-[44px] max-h-[160px] bg-white dark:bg-neutral-900 outline-none focus:ring-2 focus:ring-success-accent/40 focus:border-success"
               placeholder={searchEnabled ? "Ask the web..." : "Ask anything..."}
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
             <button
               disabled={sending || !input.trim()}
-              className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-900 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
+              className="rounded-md bg-success-accent px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent"
               onClick={async () => {
                 const content = input.trim();
                 if (!content) return;

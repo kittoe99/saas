@@ -254,7 +254,7 @@ function StepCheckout({
       <div className="mt-5 rounded-xl border border-neutral-200 p-4">
         <div className="text-sm font-medium text-neutral-700">Payment method (mock)</div>
         {paid ? (
-          <div className="mt-3 rounded-md bg-green-50 border border-green-200 text-green-800 text-sm p-3">
+          <div className="mt-3 rounded-md bg-success-bg border border-success text-success-ink text-sm p-3">
             Payment successful. Your subscription is activated (mock).
           </div>
         ) : (
@@ -300,29 +300,29 @@ function StepCheckout({
               </button>
             </div>
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-neutral-600">
-              <div className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <div className="flex items-center gap-2 text-success-accent">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <rect x="3" y="11" width="18" height="10" rx="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
                 SSL Secured
               </div>
-              <div className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <div className="flex items-center gap-2 text-success-accent">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <rect x="2" y="5" width="20" height="14" rx="2"/>
                   <path d="M2 10h20"/>
                 </svg>
                 PCI DSS (mock)
               </div>
-              <div className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <div className="flex items-center gap-2 text-success-accent">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M12 22s8-4 8-10V6l-8-4-8 4v6c0 6 8 10 8 10z"/>
                   <path d="m9 12 2 2 4-4"/>
                 </svg>
                 Privacy First
               </div>
-              <div className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <div className="flex items-center gap-2 text-success-accent">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <circle cx="12" cy="12" r="10"/>
                   <path d="M12 6v6l4 2"/>
                 </svg>
@@ -337,194 +337,196 @@ function StepCheckout({
   );
 }
 
-export default function GetStartedPage() {
-  const [step, setStep] = useState<Step>(1);
-  const [data, setData] = useState<PersonalInfo>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
-  const [selectedPlan, setSelectedPlan] = useState<string | null>("small");
-  const [addonAiPhone, setAddonAiPhone] = useState<boolean>(false);
-  const [checkoutLoading, setCheckoutLoading] = useState<boolean>(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [mockPaid, setMockPaid] = useState<boolean>(false);
-  const [billing, setBilling] = useState<BillingInfo>({
-    fullName: "",
-    company: "",
-    address1: "",
-    address2: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "",
-  });
-  // Animated reveal wrapper used for progressive sections
-  function StepBlock({ show, children }: { show: boolean; children: React.ReactNode }) {
-    return (
-      <div
-        className={`transition-all duration-300 ${show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
-        style={{ maxHeight: show ? undefined : 0, overflow: show ? undefined : "hidden" }}
-        aria-hidden={!show}
-      >
-        {children}
-      </div>
-    );
-  }
+// Removed duplicate/broken GetStartedPage definition block above. The valid definition starts below.
 
-  // Refs to scroll into view when moving forward/backward
-  const step1Ref = useRef<HTMLDivElement | null>(null);
-  const step2Ref = useRef<HTMLDivElement | null>(null);
-  const step3Ref = useRef<HTMLDivElement | null>(null);
-  const step4Ref = useRef<HTMLDivElement | null>(null);
+    export default function GetStartedPage() {
+      const [step, setStep] = useState<Step>(1);
+      const [data, setData] = useState<PersonalInfo>({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+      });
+      const [selectedPlan, setSelectedPlan] = useState<string | null>("small");
+      const [addonAiPhone, setAddonAiPhone] = useState<boolean>(false);
+      const [checkoutLoading, setCheckoutLoading] = useState<boolean>(false);
+      const [checkoutError, setCheckoutError] = useState<string | null>(null);
+      const [mockPaid, setMockPaid] = useState<boolean>(false);
+      const [billing, setBilling] = useState<BillingInfo>({
+        fullName: "",
+        company: "",
+        address1: "",
+        address2: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        country: "",
+      });
+      // Animated reveal wrapper used for progressive sections
+      function StepBlock({ show, children }: { show: boolean; children: React.ReactNode }) {
+        return (
+          <div
+            className={`transition-all duration-300 ${show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+            style={{ maxHeight: show ? undefined : 0, overflow: show ? undefined : "hidden" }}
+            aria-hidden={!show}
+          >
+            {children}
+          </div>
+        );
+      }
 
-  // Auto-scroll disabled per design: keep position stable between steps
-  useEffect(() => {
-    // no-op
-  }, [step]);
+      // Refs to scroll into view when moving forward/backward
+      const step1Ref = useRef<HTMLDivElement | null>(null);
+      const step2Ref = useRef<HTMLDivElement | null>(null);
+      const step3Ref = useRef<HTMLDivElement | null>(null);
+      const step4Ref = useRef<HTMLDivElement | null>(null);
 
-  const canProceedStep1 = useMemo(() => {
-    const emailOk = /\S+@\S+\.\S+/.test(data.email);
-    const nameOk = data.firstName.trim().length > 1 && data.lastName.trim().length > 1;
-    return emailOk && nameOk;
-  }, [data.email, data.firstName, data.lastName]);
+      // Auto-scroll disabled per design: keep position stable between steps
+      useEffect(() => {
+        // no-op
+      }, [step]);
 
-  function handleChange<K extends keyof PersonalInfo>(key: K, value: PersonalInfo[K]) {
-    setData((prev) => ({ ...prev, [key]: value }));
-  }
+      const canProceedStep1 = useMemo(() => {
+        const emailOk = /\S+@\S+\.\S+/.test(data.email);
+        const nameOk = data.firstName.trim().length > 1 && data.lastName.trim().length > 1;
+        return emailOk && nameOk;
+      }, [data.email, data.firstName, data.lastName]);
 
-  function handleNext() {
-    if (step === 1 && !canProceedStep1) return;
-    if (step === 2 && !selectedPlan) return;
-    setStep((s) => (Math.min(TOTAL_STEPS, (s + 1) as Step)) as Step);
-  }
+      function handleChange<K extends keyof PersonalInfo>(key: K, value: PersonalInfo[K]) {
+        setData((prev) => ({ ...prev, [key]: value }));
+      }
 
-  function handleBack() {
-    setStep((s) => (Math.max(1, (s - 1) as Step)) as Step);
-  }
+      function handleNext() {
+        if (step === 1 && !canProceedStep1) return;
+        if (step === 2 && !selectedPlan) return;
+        setStep((s) => (Math.min(TOTAL_STEPS, (s + 1) as Step)) as Step);
+      }
 
-  // Mock checkout kept here for potential future integration reference.
-  async function handleCheckout() {
-    if (!selectedPlan) return;
-    setCheckoutError(null);
-    setCheckoutLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setCheckoutLoading(false);
-    setMockPaid(true);
-  }
+      function handleBack() {
+        setStep((s) => (Math.max(1, (s - 1) as Step)) as Step);
+      }
 
-  function handleBillingChange<K extends keyof BillingInfo>(key: K, value: BillingInfo[K]) {
-    setBilling((prev) => ({ ...prev, [key]: value }));
-  }
+      // Mock checkout kept here for potential future integration reference.
+      async function handleCheckout() {
+        if (!selectedPlan) return;
+        setCheckoutError(null);
+        setCheckoutLoading(true);
+        await new Promise((r) => setTimeout(r, 1200));
+        setCheckoutLoading(false);
+        setMockPaid(true);
+      }
 
-  return (
-    <div className="py-10 md:py-16">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <header className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Get Started</h1>
-          <p className="mt-2 text-neutral-600">Complete a few quick steps to continue your account setup.</p>
-        </header>
-        <div className="md:grid md:grid-cols-[220px_1fr] md:gap-6">
-          {/* Left vertical progress */}
-          <aside className="hidden md:block">
-            <ProgressSidebar current={step} />
-          </aside>
+      function handleBillingChange<K extends keyof BillingInfo>(key: K, value: BillingInfo[K]) {
+        setBilling((prev) => ({ ...prev, [key]: value }));
+      }
 
-          {/* Right step cards */}
-          <div className="space-y-4">
-            {/* Step 1 */}
-            <details
-              ref={step1Ref as any}
-              open={step === 1}
-              className={classNames(
-                "relative rounded-xl border",
-                step > 1 ? "bg-green-50 border-green-200" : "bg-white border-neutral-200"
-              )}
-              onToggle={(e) => {
-                const el = e.currentTarget as HTMLDetailsElement;
-                if (el.open) setStep(1);
-              }}
-            >
-              {step > 1 && (
-                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />
-              )}
-              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-                <div>
-                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                    {step > 1 && (
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>
-                    )}
-                    <span>1. Personal info</span>
-                  </div>
+      return (
+        <div className="py-10 md:py-16">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <header className="mb-8">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Get Started</h1>
+              <p className="mt-2 text-neutral-600">Complete a few quick steps to continue your account setup.</p>
+            </header>
+            <div className="md:grid md:grid-cols-[220px_1fr] md:gap-6">
+              {/* Left vertical progress */}
+              <aside className="hidden md:block">
+                <ProgressSidebar current={step} />
+              </aside>
+
+              {/* Right step cards */}
+              <div className="space-y-4">
+                {/* Step 1 */}
+                <details
+                  ref={step1Ref as any}
+                  open={step === 1}
+                  className={classNames(
+                    "relative rounded-xl border",
+                    step > 1 ? "bg-success-bg border-success" : "bg-white border-neutral-200"
+                  )}
+                  onToggle={(e) => {
+                    const el = e.currentTarget as HTMLDetailsElement;
+                    if (el.open) setStep(1);
+                  }}
+                >
                   {step > 1 && (
-                    <div className="text-xs text-neutral-600 mt-0.5 truncate">{`${data.firstName} ${data.lastName}`.trim()} • {data.email || "—"}</div>
+                    <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />
                   )}
-                </div>
-                <div className="ml-auto flex items-center gap-3">
-                  <span className={classNames(
-                    "text-xs rounded-full px-2 py-0.5",
-                    step > 1 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700"
-                  )}>{step > 1 ? "Completed" : step === 1 ? "In progress" : "Locked"}</span>
-                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                </div>
-              </summary>
-              <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide">
-                  <StepPersonalInfo data={data} onChange={handleChange} />
-                  <div className="mt-4 flex items-center justify-end">
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      disabled={!canProceedStep1}
-                      className={classNames(
-                        "px-4 py-2 rounded-md text-white text-sm",
-                        !canProceedStep1 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                  <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                    <div>
+                      <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                        {step > 1 && (
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>
+                        )}
+                        <span>1. Personal info</span>
+                      </div>
+                      {step > 1 && (
+                        <div className="text-xs text-neutral-600 mt-0.5 truncate">{`${data.firstName} ${data.lastName}`.trim()} • {data.email || "—"}</div>
                       )}
-                    >
-                      Continue
-                    </button>
+                    </div>
+                    <div className="ml-auto flex items-center gap-3">
+                      <span className={classNames(
+                        "text-xs rounded-full px-2 py-0.5",
+                        step > 1 ? "bg-success-pill text-success-pill" : "bg-neutral-100 text-neutral-700"
+                      )}>{step > 1 ? "Completed" : step === 1 ? "In progress" : "Locked"}</span>
+                      <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                    </div>
+                  </summary>
+                  <div className="accordion border-t border-neutral-200">
+                    <div className="accordion-content p-4 sm:p-5 fade-slide">
+                      <StepPersonalInfo data={data} onChange={handleChange} />
+                      <div className="mt-4 flex items-center justify-end">
+                        <button
+                          type="button"
+                          onClick={handleNext}
+                          disabled={!canProceedStep1}
+                          className={classNames(
+                            "px-4 py-2 rounded-md text-white text-sm",
+                            !canProceedStep1 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                          )}
+                        >
+                          Continue
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </details>
+                </details>
 
-            {/* Step 2 */}
-            <details
-              ref={step2Ref as any}
-              open={step === 2}
-              className={classNames(
-                "relative rounded-xl border",
-                step > 2 ? "bg-green-50 border-green-200" : step >= 2 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-              )}
-              onToggle={(e) => {
-                const el = e.currentTarget as HTMLDetailsElement;
-                if (el.open && step >= 2) setStep(2);
-                if (step < 2) {
-                  // prevent opening if locked
-                  el.open = false;
-                }
-              }}
-            >
-              {step > 2 && (
-                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />
-              )}
-              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-                <div>
-                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                    {step > 2 && (
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>
-                    )}
-                    <span>2. Package</span>
-                  </div>
-                  {step > 2 && (
-                    <div className="text-xs text-neutral-600 mt-0.5 truncate">{PLANS.find(p=>p.id===selectedPlan!)?.name || "—"}</div>
+                {/* Step 2 */}
+                <details
+                  ref={step2Ref as any}
+                  open={step === 2}
+                  className={classNames(
+                    "relative rounded-xl border",
+                    step > 2 ? "bg-success-bg border-success" : step >= 2 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
                   )}
+                  onToggle={(e) => {
+                    const el = e.currentTarget as HTMLDetailsElement;
+                    if (el.open && step >= 2) setStep(2);
+                    if (step < 2) {
+                      // prevent opening if locked
+                      el.open = false;
+                    }
+                  }}
+                >
+                  {step > 2 && (
+                    <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />
+                  )}
+                  <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                    <div>
+                      <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                        {step > 2 && (
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>
+                        )}
+                        <span>2. Package</span>
+                      </div>
+                      {step > 2 && (
+                        <div className="text-xs text-neutral-600 mt-0.5 truncate">{PLANS.find(p=>p.id===selectedPlan!)?.name || "—"}</div>
+                      )}
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                   <span className={classNames(
                     "text-xs rounded-full px-2 py-0.5",
-                    step > 2 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700"
+                    step > 2 ? "bg-success-pill text-success-pill" : "bg-neutral-100 text-neutral-700"
                   )}>{step > 2 ? "Completed" : step === 2 ? "In progress" : "Locked"}</span>
                   <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                 </div>
@@ -571,7 +573,7 @@ export default function GetStartedPage() {
               open={step === 3}
               className={classNames(
                 "relative rounded-xl border",
-                step > 3 ? "bg-green-50 border-green-200" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+                step > 3 ? "bg-success-bg border-success" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
               onToggle={(e) => {
                 const el = e.currentTarget as HTMLDetailsElement;
@@ -580,13 +582,13 @@ export default function GetStartedPage() {
               }}
             >
               {step > 3 && (
-                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />
+                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />
               )}
               <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
                 <div>
                   <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
                     {step > 3 && (
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>
                     )}
                     <span>3. Summary</span>
                   </div>
@@ -597,7 +599,7 @@ export default function GetStartedPage() {
                 <div className="ml-auto flex items-center gap-3">
                   <span className={classNames(
                     "text-xs rounded-full px-2 py-0.5",
-                    step > 3 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700"
+                    step > 3 ? "bg-success-pill text-success-pill" : "bg-neutral-100 text-neutral-700"
                   )}>{step > 3 ? "Completed" : step === 3 ? "In progress" : "Locked"}</span>
                   <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                 </div>
@@ -717,7 +719,7 @@ function ProgressSidebar({ current }: { current: number }) {
       <div className="absolute left-2 top-0 bottom-0 w-[2px] bg-neutral-200 rounded" aria-hidden />
       {/* Progress */}
       <div
-        className="absolute left-2 w-[2px] bg-[#1a73e8] rounded transition-all"
+        className="absolute left-2 w-[2px] bg-success-accent rounded transition-all"
         style={{ top: 0, height: `${(Math.max(1, current) - 1) / (TOTAL_STEPS - 1) * 100}%` }}
         aria-hidden
       />
@@ -730,7 +732,7 @@ function ProgressSidebar({ current }: { current: number }) {
               <span
                 className={classNames(
                   "mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px]",
-                  done ? "bg-[#1a73e8] border-[#1a73e8] text-white" : active ? "border-[#1a73e8] text-[#1a73e8]" : "border-neutral-300 text-neutral-500"
+                  done ? "bg-success-accent border-success text-white" : active ? "border-success text-success-accent" : "border-neutral-300 text-neutral-500"
                 )}
                 aria-hidden
               >
@@ -782,7 +784,7 @@ function StepPackageSelection({
               )}
             >
               {p.recommended && (
-                <span className="absolute -top-2 left-4 inline-flex items-center rounded-full bg-[#1a73e8] text-white px-2 py-0.5 text-[10px] uppercase tracking-wide shadow">
+                <span className="absolute -top-2 left-4 inline-flex items-center rounded-full bg-success-accent text-white px-2 py-0.5 text-[10px] uppercase tracking-wide shadow">
                   Most popular
                 </span>
               )}

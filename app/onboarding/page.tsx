@@ -323,6 +323,10 @@ export default function OnboardingPage() {
   const [step5Analyzing, setStep5Analyzing] = useState(false);
   const [step5Progress, setStep5Progress] = useState(0);
   const [step5Logs, setStep5Logs] = useState<string[]>([]);
+  // Keep interval id to guarantee cleanup across re-renders and unmount
+  const step5TimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  // Fallback timeout to guarantee completion in case intervals are throttled
+  const step5TimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Step orchestration
   const [step, setStep] = useState(1);
@@ -340,6 +344,18 @@ export default function OnboardingPage() {
   const canGoStep6 = step5Done;
   const canGoStep7 = step6Done; // proceed to areas
   const canGoStep8 = step7Done && isTypeSpecificValid(siteType, typeSpecific);
+
+  // Steps metadata for sidebar
+  const steps = [
+    { id: 1, label: "Site type", completed: step1Done },
+    { id: 2, label: "Category", completed: step2Done },
+    { id: 3, label: "Name", completed: step3Done },
+    { id: 4, label: "Existing site", completed: step4Done },
+    { id: 5, label: "Business & contact", completed: step5Done },
+    { id: 6, label: "Services", completed: step6Done },
+    { id: 7, label: "Service areas", completed: step7Done },
+    { id: 8, label: "Type-specific", completed: canGoStep8 },
+  ];
 
   // Minimal nudge scrolling: only scroll enough so the element is slightly in view
   // Removed auto-scroll helper
@@ -449,9 +465,19 @@ export default function OnboardingPage() {
   // Simulated real-time analysis for Step 5 (Business & Contact)
   function startStep5Analysis() {
     if (step5Analyzing) return;
+    console.debug("[Step5] start analysis");
     setStep5Analyzing(true);
     setStep5Progress(0);
     setStep5Logs([]);
+    // clear any stale timer just in case
+    if (step5TimerRef.current) {
+      clearInterval(step5TimerRef.current as any);
+      step5TimerRef.current = null;
+    }
+    if (step5TimeoutRef.current) {
+      clearTimeout(step5TimeoutRef.current as any);
+      step5TimeoutRef.current = null;
+    }
     const messages = [
       "Validating contact details",
       "Checking preferred contact method",
@@ -467,17 +493,74 @@ export default function OnboardingPage() {
       i += 1;
       const p = Math.min(100, Math.round((i * tick) / (tick * 12) * 100));
       setStep5Progress(p);
-      // emit log lines at rough intervals
-      if (p >= (step5Logs.length + 1) * perMsg && step5Logs.length < messages.length) {
-        setStep5Logs((prev) => [...prev, messages[prev.length]]);
-      }
+      setStep5Logs((prev) => {
+        if (p >= (prev.length + 1) * perMsg && prev.length < messages.length) {
+          const nextMsg = messages[prev.length];
+          console.debug("[Step5] log:", nextMsg, "p=", p);
+          return [...prev, nextMsg];
+        }
+        return prev;
+      });
       if (p >= 100) {
+        console.debug("[Step5] complete -> advance to step 6");
         clearInterval(id);
+        step5TimerRef.current = null;
+        if (step5TimeoutRef.current) {
+          clearTimeout(step5TimeoutRef.current as any);
+          step5TimeoutRef.current = null;
+        }
         setStep5Analyzing(false);
-        setStep(6);
+        // small delay so UI reflects completion before advancing
+        setTimeout(() => setStep(6), 100);
       }
     }, tick);
+    step5TimerRef.current = id as any;
+
+    // Safety: force-complete after ~6 seconds in case tab throttling stalls the interval
+    step5TimeoutRef.current = setTimeout(() => {
+      console.debug("[Step5] timeout fallback -> force completion");
+      if (step5TimerRef.current) {
+        clearInterval(step5TimerRef.current as any);
+        step5TimerRef.current = null;
+      }
+      step5TimeoutRef.current = null;
+      setStep5Progress(100);
+      setStep5Analyzing(false);
+      setStep(6);
+    }, 6000);
   }
+
+  // Ensure interval is cleared if user navigates away or component unmounts
+  useEffect(() => {
+    if (step !== 5 && step5TimerRef.current) {
+      clearInterval(step5TimerRef.current as any);
+      step5TimerRef.current = null;
+      setStep5Analyzing(false);
+      console.debug("[Step5] cleaned up timer due to step change");
+    }
+    if (step !== 5 && step5TimeoutRef.current) {
+      clearTimeout(step5TimeoutRef.current as any);
+      step5TimeoutRef.current = null;
+    }
+    return () => {
+      if (step5TimerRef.current) {
+        clearInterval(step5TimerRef.current as any);
+        step5TimerRef.current = null;
+        console.debug("[Step5] cleanup on unmount");
+      }
+      if (step5TimeoutRef.current) {
+        clearTimeout(step5TimeoutRef.current as any);
+        step5TimeoutRef.current = null;
+      }
+    };
+  }, [step]);
+
+  // Guard: if progress hits 100% while still on Step 5, ensure we advance
+  useEffect(() => {
+    if (step === 5 && step5Progress >= 100) {
+      setStep(6);
+    }
+  }, [step5Progress, step]);
 
   async function summarizeUrl() {
     if (!currentUrl) return;
@@ -631,6 +714,7 @@ export default function OnboardingPage() {
   // Small local component for a typewriter effect on generated text
   function Typewriter({ text }: { text: string }) {
     const [display, setDisplay] = useState("");
+
     useEffect(() => {
       setDisplay("");
       if (!text) return;
@@ -646,1076 +730,646 @@ export default function OnboardingPage() {
     return (
       <div className="mt-1 text-sm text-gray-700">
         <span className="whitespace-pre-wrap">{display}</span>
-        <span className="inline-block w-0.5 h-4 align-middle ml-0.5 bg-[#1a73e8] animate-pulse" />
+        <span className="inline-block w-0.5 h-4 align-middle ml-0.5 bg-success-accent animate-pulse" />
       </div>
     );
   }
+
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <h1 className="text-2xl font-semibold">Onboarding</h1>
       <p className="mt-1 text-sm text-gray-600">Follow the steps below to tell us about your site.</p>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <div className="mt-8 grid grid-cols-12 gap-8">
         {/* Sidebar */}
-        <aside className="hidden lg:block">
-          <ProgressSidebar current={step} done={{ s1: step1Done, s2: step2Done, s3: step3Done, s4: step4Done, s5: step5Done, s6: step6Done, s7: step7Done }} />
+        <aside className="hidden md:block md:col-span-4 md:sticky md:top-6">
+          <div className="relative pl-6">
+            <div className="absolute left-2 top-0 bottom-0 w-[2px] bg-neutral-200 rounded" aria-hidden />
+            <div
+              className="absolute left-2 w-[2px] bg-success-accent rounded transition-all"
+              style={{ top: 0, height: `${((Math.max(1, step) - 1) / (Math.max(1, steps.length - 1))) * 100}%` }}
+              aria-hidden
+            />
+            <ol className="space-y-6">
+              {steps.map((s) => {
+                const active = s.id === step;
+                const completed = s.completed || s.id < step;
+                return (
+                  <li key={s.id} className="flex items-start gap-3">
+                    <span
+                      className={classNames(
+                        "mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px]",
+                        completed ? "bg-success-accent border-success text-white" : active ? "border-success text-success-ink" : "border-neutral-300 text-neutral-500"
+                      )}
+                      aria-hidden
+                    >
+                      {completed ? "" : s.id}
+                    </span>
+                    <div>
+                      <div className={classNames("text-sm", completed ? "text-neutral-700" : active ? "text-neutral-900 font-medium" : "text-neutral-600")}>{s.label}</div>
+                      <div className="text-xs text-neutral-500">Step {s.id} of {steps.length}</div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
         </aside>
 
-        {/* Steps */}
-        <div className="space-y-4">
-          {/* Step 1 */}
-          <details
-            open={step === 1}
-            className={classNames(
-              "relative rounded-xl border",
-              step > 1 ? "bg-green-50 border-green-200" : "bg-white border-neutral-200"
-            )}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open) setStep(1);
-            }}
-          >
-            {step > 1 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 1 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>1. Type of site</span>
-                </div>
-                {step > 1 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{siteType}</div>}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 1 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 1 ? "Completed" : step === 1 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <label className="block text-sm font-medium">Type of site</label>
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {SITE_TYPES.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setSiteType(t)}
-                      className={classNames(
-                        "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                        siteType === t ? "border-black ring-1 ring-black bg-black/5" : "border-gray-300 hover:bg-neutral-50"
-                      )}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-                {siteType && (
-                  <div className="mt-2 text-xs text-gray-600">
-                    <div>Selected: {siteType}</div>
-                    {TYPE_HINTS[siteType] && (
-                      <div className="mt-1 text-[11px] text-gray-500">{TYPE_HINTS[siteType] as string}</div>
-                    )}
+        {/* Main content: Accordion (repo-matched) */}
+        <main className="col-span-12 md:col-span-8">
+          <div className="space-y-4">
+            {/* Step 1: Type of site */}
+            <details
+              open={step === 1}
+              className={classNames(
+                "relative rounded-xl border",
+                step > 1 ? "bg-success-bg border-success" : "bg-white border-neutral-200"
+              )}
+              onToggle={(e) => {
+                const el = e.currentTarget as HTMLDetailsElement;
+                if (el.open) setStep(1);
+              }}
+            >
+              {step > 1 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 1 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>1. Type of site</span>
                   </div>
-                )}
-                <div className="mt-4 flex justify-end">
-                  <button
-                    type="button"
-                    className={classNames(
-                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                      !canGoStep2 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
-                    )}
-                    disabled={!canGoStep2}
-                    onClick={() => setStep(2)}
-                  >
-                    Continue
-                  </button>
+                  {step > 1 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{siteType}</div>}
                 </div>
-              </div>
-            </div>
-          </details>
-          
-          {/* Step 2: Category/Industry */}
-          <details
-            open={step === 2}
-            className={classNames(
-              "relative rounded-xl border",
-              step > 2 ? "bg-green-50 border-green-200" : step >= 2 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-            )}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep2) setStep(2);
-              if (!canGoStep2) el.open = false;
-            }}
-          >
-            {step > 2 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 2 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>2. Category / Industry</span>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 1 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 1 ? "Completed" : step === 1 ? "In progress" : "Locked"}</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                 </div>
-                {step > 2 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{category}</div>}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 2 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 2 ? "Completed" : step === 2 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <label className="block text-sm font-medium">Select a category / industry</label>
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {categoriesFor(siteType).map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setCategory(c)}
-                      className={classNames(
-                        "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                        category === c ? "border-black ring-1 ring-black bg-black/5" : "border-gray-300 hover:bg-neutral-50"
-                      )}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-                {category && <div className="mt-2 text-xs text-gray-600">Selected: {category}</div>}
-                {/* Optional: keep only primary goal (no subcategory) to avoid micro-requests */}
-                <div className="mt-4 max-w-sm">
-                  <label className="block text-sm font-medium">Primary goal (optional)</label>
-                  <select value={primaryGoal} onChange={(e) => setPrimaryGoal(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black">
-                    <option value="">Select…</option>
-                    {PRIMARY_GOALS.map((g) => (<option key={g} value={g}>{g}</option>))}
-                  </select>
-                </div>
-                <div className="mt-4 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(1)}>Back</button>
-                  <button
-                    type="button"
-                    className={classNames(
-                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                      !canGoStep3 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
-                    )}
-                    disabled={!canGoStep3}
-                    onClick={() => setStep(3)}
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          {/* Step 3: Name */}
-          <details
-            open={step === 3}
-            className={classNames(
-              "relative rounded-xl border",
-              step > 3 ? "bg-green-50 border-green-200" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-            )}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep3) setStep(3);
-              if (!canGoStep3) el.open = false;
-            }}
-          >
-            {step > 3 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 3 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>3. Your site name</span>
-                </div>
-                {step > 3 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{name}</div>}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 3 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 3 ? "Completed" : step === 3 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <div className="max-w-md">
-                  <label className="block text-sm font-medium">Business or site name</label>
-                  <input
-                    ref={nameInputRef as any}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    onFocus={() => setNameFocused(true)}
-                    onBlur={() => setNameFocused(false)}
-                    placeholder="e.g. Acme Moving Co."
-                    className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
-                  />
-                  <div className="mt-2 text-xs text-neutral-600">Min 2 characters.</div>
-                </div>
-                <div className="mt-4 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(2)}>Back</button>
-                  <button
-                    type="button"
-                    className={classNames(
-                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                      !canGoStep4 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
-                    )}
-                    disabled={!canGoStep4}
-                    onClick={() => setStep(4)}
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          {/* Step 4: Website details */}
-          <details
-            open={step === 4}
-            className={classNames(
-              "relative rounded-xl border",
-              step > 4 ? "bg-green-50 border-green-200" : step >= 4 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-            )}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep4) setStep(4);
-              if (!canGoStep4) el.open = false;
-            }}
-          >
-            {step > 4 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 4 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>4. Website details</span>
-                </div>
-                {step > 4 && (
-                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
-                    {hasCurrent === "yes" ? (currentUrl || "Existing site provided") : hasCurrent === "no" ? "No current site" : ""}
-                  </div>
-                )}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 4 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 4 ? "Completed" : step === 4 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <label className="block text-sm font-medium">Do you have a current website?</label>
-                <div className="mt-2 flex gap-2">
-                  {(["yes","no"] as const).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setHasCurrent(v)}
-                      className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", hasCurrent === v ? "border-black ring-1 ring-black bg-black/5" : "border-gray-300 hover:bg-neutral-50")}
-                    >
-                      {v.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-
-                {hasCurrent === "yes" && (
-                  <div className="mt-4 grid gap-3 max-w-xl">
-                    <div>
-                      <label className="block text-sm font-medium">Website URL or domain</label>
-                      <input
-                        value={currentUrl}
-                        onChange={(e) => setCurrentUrl(e.target.value)}
-                        placeholder="example.com or https://example.com"
-                        className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
+              </summary>
+              <div className="accordion border-t border-neutral-200">
+                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                  <label className="block text-sm font-medium">Type of site</label>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {SITE_TYPES.map((t) => (
                       <button
+                        key={t}
                         type="button"
-                        className={classNames("rounded-md px-3 py-1.5 text-sm text-white", currentUrl ? "bg-black hover:bg-neutral-900" : "bg-neutral-300 cursor-not-allowed")}
-                        disabled={!currentUrl || searching}
-                        onClick={() => summarizeUrl()}
+                        onClick={() => setSiteType(t)}
+                        className={classNames(
+                          "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                          siteType === t ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50"
+                        )}
                       >
-                        {searching ? "Analyzing…" : "Analyze site"}
+                        {t}
                       </button>
-                      <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => { setSkipped(true); setSiteAdded(false); setSummary(null); setError(null); }}>Skip</button>
-                    </div>
-
-                    {error && <div className="text-sm text-red-600">{error}</div>}
-                    {notFound && <div className="text-sm text-neutral-600">No info found. You can skip or add details manually.</div>}
-                    {summary?.summary && (
-                      <div className="mt-2 rounded border border-neutral-200 bg-gray-50 p-3 text-sm text-neutral-800 whitespace-pre-wrap">
-                        {summary.summary}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {hasCurrent === "no" && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium">Brief description (optional)</label>
-                    <textarea
-                      value={manualDesc}
-                      onChange={(e) => setManualDesc(e.target.value)}
-                      placeholder="What will your new site be about?"
-                      className="mt-1 w-full max-w-xl rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
-                      rows={4}
-                    />
-                  </div>
-                )}
-
-                <div className="mt-4 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(3)}>Back</button>
-                  <button
-                    type="button"
-                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", !canGoStep5 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900")}
-                    disabled={!canGoStep5}
-                    onClick={() => setStep(5)}
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          {/* Step 5: Business & Contact */}
-          <details
-            open={step === 5}
-            className={classNames(
-              "relative rounded-xl border",
-              step > 5 ? "bg-green-50 border-green-200" : step >= 5 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-            )}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep5) setStep(5);
-              if (!canGoStep5) el.open = false;
-            }}
-          >
-            {step > 5 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 5 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>5. Business & Contact</span>
-                </div>
-                {step > 5 && (
-                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
-                    {[businessPhone || null, businessEmail || null].filter(Boolean).join(" • ") || "Contact preferences set"}
-                  </div>
-                )}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 5 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 5 ? "Completed" : step === 5 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium">Business phone</label>
-                    <input disabled={step5Analyzing} value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} placeholder="(555) 123-4567" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Business email</label>
-                    <input disabled={step5Analyzing} type="email" value={businessEmail} onChange={(e) => setBusinessEmail(e.target.value)} placeholder="hello@yourbusiness.com" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium">Preferred contact method</label>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {["email","phone","form","schedule"].map((m) => (
-                      <button disabled={step5Analyzing} key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black disabled:opacity-60", contactMethod === m ? "border-black ring-1 ring-black bg-black/5" : "border-gray-300 hover:bg-neutral-50")}>{m}</button>
                     ))}
                   </div>
-                </div>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium">Brand colors (select up to 2)</label>
-                    <div className="mt-2">
-                      <div className="grid grid-cols-8 gap-2">
-                        {PRESET_COLORS.map((c) => {
-                          const selected = primaryColors.includes(c);
-                          const atLimit = !selected && primaryColors.length >= 2;
-                          return (
-                            <button
-                              key={c}
-                              type="button"
-                              aria-pressed={selected}
-                              title={c}
-                              onClick={() => {
-                                setPrimaryColors((prev) => {
-                                  if (prev.includes(c)) return prev.filter((x) => x !== c);
-                                  if (prev.length >= 2) return prev; // enforce max 2
-                                  return [...prev, c];
-                                });
-                              }}
-                              className={classNames(
-                                "h-8 w-8 rounded-md border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                                selected ? "ring-2 ring-black border-black" : "border-gray-300",
-                                atLimit ? "opacity-50 cursor-not-allowed" : "hover:opacity-90",
-                                step5Analyzing ? "opacity-60 cursor-not-allowed" : ""
-                              )}
-                              style={{ backgroundColor: c }}
-                              disabled={atLimit || step5Analyzing}
-                            />
-                          );
-                        })}
-                      </div>
-                      <div className="mt-2 text-xs text-gray-600">
-                        {primaryColors.length === 0 ? "No color selected" : `Selected: ${primaryColors.join(", ")}`}
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Social links (optional)</label>
-                    <div className="mt-1 grid gap-2">
-                      <input disabled={step5Analyzing} value={socialX} onChange={(e) => setSocialX(e.target.value)} placeholder="X / Twitter URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
-                      <input disabled={step5Analyzing} value={socialLinkedIn} onChange={(e) => setSocialLinkedIn(e.target.value)} placeholder="LinkedIn URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
-                      <input disabled={step5Analyzing} value={socialInstagram} onChange={(e) => setSocialInstagram(e.target.value)} placeholder="Instagram URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
-                      <input disabled={step5Analyzing} value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)} placeholder="Facebook URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
-                    </div>
-                  </div>
-                </div>
-                {step5Analyzing && (
-                  <div className="mt-5 rounded-lg border border-neutral-200 bg-white p-4">
-                    <div className="text-sm font-medium text-neutral-800">Analyzing your preferences…</div>
-                    <div className="mt-2 h-2 w-full rounded bg-neutral-100">
-                      <div className="h-2 rounded bg-black transition-all" style={{ width: `${step5Progress}%` }} />
-                    </div>
-                    <ul className="mt-3 space-y-1 text-xs text-neutral-700">
-                      {step5Logs.map((l, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-black" />
-                          {l}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {/* Removed business address, time zone, SLA, booking tool, voice/tone, accessibility, uploads, and localization */}
-
-                <div className="mt-6 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(4)}>Back</button>
-                  <button
-                    type="button"
-                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", (!canGoStep6 || step5Analyzing) ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900")}
-                    disabled={!canGoStep6 || step5Analyzing}
-                    onClick={() => startStep5Analysis()}
-                  >
-                    {step5Analyzing ? "Analyzing…" : "Continue"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          {/* Step 6: Services */}
-          <details
-            open={step === 6}
-            className={classNames("relative rounded-xl border", step > 6 ? "bg-green-50 border-green-200" : step >= 6 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70")}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep6) setStep(6);
-              if (!canGoStep6) el.open = false;
-            }}
-          >
-            {step > 6 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 6 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>6. Services</span>
-                </div>
-                {step > 6 && (
-                  <div className="mt-0.5 max-w-[90vw] sm:max-w-[520px]">
-                    <div className="flex flex-wrap gap-1">
-                      {selectedServices.length === 0 ? (
-                        <span className="text-xs text-neutral-600">No services selected</span>
-                      ) : (
-                        <>
-                          {selectedServices.slice(0, 3).map((s) => (
-                            <span key={s} className="text-[10px] rounded-full bg-[#1a73e8]/10 text-[#1a73e8] px-2 py-0.5 border border-[#1a73e8]/20 break-words whitespace-normal">
-                              {s}
-                            </span>
-                          ))}
-                          {selectedServices.length > 3 && (
-                            <span className="text-[10px] rounded-full bg-neutral-100 text-neutral-700 px-2 py-0.5 border border-neutral-200">
-                              +{selectedServices.length - 3} more
-                            </span>
-                          )}
-                        </>
+                  {siteType && (
+                    <div className="mt-2 text-xs text-gray-600">
+                      <div>Selected: {siteType}</div>
+                      {TYPE_HINTS[siteType] && (
+                        <div className="mt-1 text-[11px] text-gray-500">{TYPE_HINTS[siteType] as string}</div>
                       )}
                     </div>
+                  )}
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="button"
+                      className={classNames(
+                        "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                        !canGoStep2 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                      )}
+                      disabled={!canGoStep2}
+                      onClick={() => setStep(2)}
+                    >
+                      Continue
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 6 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 6 ? "Completed" : step === 6 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+            </details>
+
+            {/* Step 2: Category/Industry */}
+            <details
+              open={step === 2}
+              className={classNames(
+                "relative rounded-xl border",
+                step > 2 ? "bg-success-bg border-success" : step >= 2 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => {
+                const el = e.currentTarget as HTMLDetailsElement;
+                if (el.open && canGoStep2) setStep(2);
+                if (!canGoStep2) el.open = false;
+              }}
+            >
+              {step > 2 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 2 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>2. Category / Industry</span>
+                  </div>
+                  {step > 2 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{category}</div>}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 2 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 2 ? "Completed" : step === 2 ? "In progress" : "Locked"}</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </div>
+              </summary>
+              <div className="accordion border-t border-neutral-200">
+                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                  <label className="block text-sm font-medium">Select a category / industry</label>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {categoriesFor(siteType).map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setCategory(c)}
+                        className={classNames(
+                          "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                          category === c ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50"
+                        )}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Optional primary goal */}
+                  <div className="mt-4 max-w-sm">
+                    <label className="block text-sm font-medium">Primary goal (optional)</label>
+                    <select value={primaryGoal} onChange={(e) => setPrimaryGoal(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success">
+                      <option value="">Select…</option>
+                      {PRIMARY_GOALS.map((g) => (<option key={g} value={g}>{g}</option>))}
+                    </select>
+                  </div>
+                  <div className="mt-4 flex justify-between">
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(1)}>Back</button>
+                    <button
+                      type="button"
+                      className={classNames(
+                        "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                        !canGoStep3 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                      )}
+                      disabled={!canGoStep3}
+                      onClick={() => setStep(3)}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
               </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                {step6Phase === "services" ? (
-                  <>
-                    <div className="grid gap-6 sm:grid-cols-2">
+            </details>
+
+            {/* Step 3: Name */}
+            <details
+              open={step === 3}
+              className={classNames(
+                "relative rounded-xl border",
+                step > 3 ? "bg-success-bg border-success" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => {
+                const el = e.currentTarget as HTMLDetailsElement;
+                if (el.open && canGoStep3) setStep(3);
+                if (!canGoStep3) el.open = false;
+              }}
+            >
+              {step > 3 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 3 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>3. Your site name</span>
+                  </div>
+                  {step > 3 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{name}</div>}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 3 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 3 ? "Completed" : step === 3 ? "In progress" : "Locked"}</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </div>
+              </summary>
+              <div className="accordion border-t border-neutral-200">
+                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                  <div className="max-w-md">
+                    <label className="block text-sm font-medium">Business or site name</label>
+                    <input
+                      ref={nameInputRef as any}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      onFocus={() => setNameFocused(true)}
+                      onBlur={() => setNameFocused(false)}
+                      placeholder="e.g. Acme Moving Co."
+                      className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                    />
+                    <div className="mt-2 text-xs text-neutral-600">Min 2 characters.</div>
+                  </div>
+                  <div className="mt-4 flex justify-between">
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(2)}>Back</button>
+                    <button
+                      type="button"
+                      className={classNames(
+                        "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                        !canGoStep4 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                      )}
+                      disabled={!canGoStep4}
+                      onClick={() => setStep(4)}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            {/* Step 4: Website details */}
+            <details
+              open={step === 4}
+              className={classNames(
+                "relative rounded-xl border",
+                step > 4 ? "bg-success-bg border-success" : step >= 4 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => {
+                const el = e.currentTarget as HTMLDetailsElement;
+                if (el.open && canGoStep4) setStep(4);
+                if (!canGoStep4) el.open = false;
+              }}
+            >
+              {step > 4 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 4 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>4. Website details</span>
+                  </div>
+                  {step > 4 && (
+                    <div className="text-xs text-neutral-600 mt-0.5 truncate">
+                      {hasCurrent === "yes" ? (currentUrl || "Existing site provided") : hasCurrent === "no" ? "No current site" : ""}
+                    </div>
+                  )}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 4 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 4 ? "Completed" : step === 4 ? "In progress" : "Locked"}</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </div>
+              </summary>
+              <div className="accordion border-t border-neutral-200">
+                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                  <label className="block text-sm font-medium">Do you have a current website?</label>
+                  <div className="mt-2 flex gap-2">
+                    {(["yes","no"] as const).map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setHasCurrent(v)}
+                        className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent", hasCurrent === v ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}
+                      >
+                        {v.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+
+                  {hasCurrent === "yes" && (
+                    <div className="mt-4 grid gap-3 max-w-xl">
                       <div>
-                        <label className="block text-sm font-medium">Services you provide</label>
-                        <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {servicesFor(siteType, category).map((s) => {
-                            const selected = selectedServices.includes(s);
+                        <label className="block text-sm font-medium">Website URL or domain</label>
+                        <input
+                          value={currentUrl}
+                          onChange={(e) => setCurrentUrl(e.target.value)}
+                          placeholder="example.com or https://example.com"
+                          className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className={classNames("rounded-md px-3 py-1.5 text-sm text-white", currentUrl ? "bg-success-accent hover:opacity-90" : "bg-neutral-300 cursor-not-allowed")}
+                          disabled={!currentUrl || searching}
+                          onClick={() => summarizeUrl()}
+                        >
+                          {searching ? "Analyzing…" : "Analyze site"}
+                        </button>
+                        <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => { setSkipped(true); setSiteAdded(false); setSummary(null); setError(null); }}>Skip</button>
+                      </div>
+
+                      {error && <div className="text-sm text-red-600">{error}</div>}
+                      {notFound && <div className="text-sm text-neutral-600">No info found. You can skip or add details manually.</div>}
+                      {summary?.summary && (
+                        <div className="mt-2 rounded border border-neutral-200 bg-gray-50 p-3 text-sm text-neutral-800 whitespace-pre-wrap">
+                          {summary.summary}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {hasCurrent === "no" && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium">Brief description (optional)</label>
+                      <textarea
+                        value={manualDesc}
+                        onChange={(e) => setManualDesc(e.target.value)}
+                        placeholder="What will your new site be about?"
+                        className="mt-1 w-full max-w-xl rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                        rows={4}
+                      />
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex justify-between">
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(3)}>Back</button>
+                    <button
+                      type="button"
+                      className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent", !canGoStep5 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")}
+                      disabled={!canGoStep5}
+                      onClick={() => setStep(5)}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            {/* Step 5: Business & Contact */}
+            <details
+              open={step === 5}
+              className={classNames(
+                "relative rounded-xl border",
+                step > 5 ? "bg-success-bg border-success" : step >= 5 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => {
+                const el = e.currentTarget as HTMLDetailsElement;
+                if (el.open && canGoStep5) setStep(5);
+                if (!canGoStep5) el.open = false;
+              }}
+            >
+              {step > 5 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 5 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>5. Business & Contact</span>
+                  </div>
+                  {step > 5 && (
+                    <div className="text-xs text-neutral-600 mt-0.5 truncate">
+                      {[businessPhone || null, businessEmail || null].filter(Boolean).join(" • ") || "Contact preferences set"}
+                    </div>
+                  )}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 5 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 5 ? "Completed" : step === 5 ? "In progress" : "Locked"}</span>
+                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                </div>
+              </summary>
+              <div className="accordion border-t border-neutral-200">
+                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium">Business phone</label>
+                      <input disabled={step5Analyzing} value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} placeholder="(555) 123-4567" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:opacity-60" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium">Business email</label>
+                      <input disabled={step5Analyzing} type="email" value={businessEmail} onChange={(e) => setBusinessEmail(e.target.value)} placeholder="hello@yourbusiness.com" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:opacity-60" />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium">Preferred contact method</label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {["email","phone","form","schedule"].map((m) => (
+                        <button disabled={step5Analyzing} key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent disabled:opacity-60", contactMethod === m ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}>{m}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium">Brand colors (select up to 2)</label>
+                      <div className="mt-2">
+                        <div className="grid grid-cols-8 gap-2">
+                          {PRESET_COLORS.map((c) => {
+                            const selected = primaryColors.includes(c);
+                            const atLimit = !selected && primaryColors.length >= 2;
                             return (
                               <button
-                                key={s}
+                                key={c}
                                 type="button"
-                                onClick={() => setSelectedServices((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])}
-                                className={classNames(
-                                  "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                                  selected ? "border-black ring-1 ring-black bg-black/5" : "border-gray-300 hover:bg-neutral-50"
-                                )}
-                              >
-                                {s}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <div className="mt-3 flex gap-2">
-                          <input
-                            value={newService}
-                            onChange={(e) => setNewService(e.target.value)}
-                            placeholder="Add a custom service"
-                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const v = newService.trim();
-                              if (!v) return;
-                              setSelectedServices((prev) => (prev.includes(v) ? prev : [...prev, v]));
-                              setNewService("");
-                            }}
-                            className="rounded-md bg-black px-3 py-2 text-sm text-white transition-colors hover:bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        {selectedServices.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {selectedServices.map((s) => (
-                              <span key={s} className="inline-flex items-center gap-1 rounded-full bg-[#1a73e8]/10 text-[#1a73e8] px-2 py-1 text-xs border border-[#1a73e8]/30">
-                                {s}
-                                <button type="button" aria-label={`Remove ${s}`} className="ml-1 text-black hover:text-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-black rounded" onClick={() => setSelectedServices((prev) => prev.filter((x) => x !== s))}>
-                                  ×
-                                </button>
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-4 flex justify-between">
-                      <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(5)}>Back</button>
-                      <button
-                        type="button"
-                        className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", !canGoStep7 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900")}
-                        disabled={!canGoStep7}
-                        onClick={() => setStep6Phase("hours")}
-                      >
-                        Continue
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium">Business hours</label>
-                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {[
-                          { key: "standard", title: "Standard hours", desc: "Typical weekdays/weekends" },
-                          { key: "24_7", title: "Open 24/7", desc: "Always available" },
-                          { key: "appointment", title: "By appointment only", desc: "Contact to schedule" },
-                          { key: "custom", title: "Custom schedule", desc: "Specify your own" },
-                        ].map((opt) => {
-                          const k = opt.key as typeof businessHoursMode;
-                          const selected = businessHoursMode === k;
-                          return (
-                            <button
-                              key={k}
-                              type="button"
-                              onClick={() => {
-                                setBusinessHoursMode(k);
-                                if (k === "24_7") setBusinessHours("24/7");
-                                else if (k === "appointment") setBusinessHours("By appointment only");
-                                else if (k === "standard") setBusinessHours("");
-                              }}
-                              className={classNames(
-                                "rounded-md border p-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                                selected ? "border-black ring-1 ring-black bg-black/5" : "border-gray-300 hover:bg-neutral-50"
-                              )}
-                            >
-                              <div className="text-sm font-medium">{opt.title}</div>
-                              <div className="text-xs text-neutral-600">{opt.desc}</div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {businessHoursMode === "custom" && (
-                        <div className="mt-3">
-                          <label className="block text-sm font-medium">Custom schedule</label>
-                          <textarea
-                            rows={4}
-                            value={businessHours}
-                            onChange={(e) => setBusinessHours(e.target.value)}
-                            placeholder="e.g. Mon–Fri 9am–5pm; Sat 10am–2pm; Sun closed"
-                            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
-                          />
-                          <div className="mt-1 text-xs text-gray-500">Optional. You can refine this later.</div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-4 flex justify-between">
-                      <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep6Phase("services")}>Back</button>
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black bg-black hover:bg-neutral-900"
-                        onClick={() => setStep(7)}
-                      >
-                        Continue
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </details>
-
-          {/* Step 7: Service areas */}
-          <details
-            open={step === 7}
-            className={classNames(
-              "relative rounded-xl border",
-              step > 7 ? "bg-green-50 border-green-200" : step >= 7 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-            )}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep7) setStep(7);
-              if (!canGoStep7) el.open = false;
-            }}
-          >
-            {step > 7 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 7 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
-                  <span>7. Service areas</span>
-                </div>
-                {step > 7 && (
-                  <div className="mt-0.5 max-w-[90vw] sm:max-w-[520px]">
-                    <div className="flex flex-wrap gap-1">
-                      {cities.length === 0 ? (
-                        <span className="text-xs text-neutral-600">No locations added</span>
-                      ) : (
-                        <>
-                          {cities.slice(0, 3).map((c, idx) => (
-                            <span key={`${c.name}-${idx}`} className="text-[10px] rounded-full bg-neutral-100 text-neutral-700 px-2 py-0.5 border border-neutral-200 break-words whitespace-normal">
-                              {c.name} ({toDisplayDistance(c.radiusKm)}{distanceUnit})
-                            </span>
-                          ))}
-                          {cities.length > 3 && (
-                            <span className="text-[10px] rounded-full bg-neutral-100 text-neutral-700 px-2 py-0.5 border border-neutral-200">
-                              +{cities.length - 3} more
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 7 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 7 ? "Completed" : step === 7 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                {/* Removed delivery mode, coverage type, travel fee; keep core service areas only */}
-                <div className="grid gap-4 sm:grid-cols-2 mt-4">
-                  <div className="min-w-0">
-                    <label className="block text-sm font-medium">Country</label>
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
-                    >
-                      <option value="">Select country…</option>
-                      {COUNTRIES.map(c => (
-                        <option key={c.code} value={c.code}>{c.name}</option>
-                      ))}
-                    </select>
-                    <div className="mt-1 text-xs text-gray-500">Selecting a country helps us suggest locations in your region.</div>
-                    <div className="mt-3">
-                      <span className="block text-sm font-medium mb-1">Units</span>
-                      <div className="inline-flex rounded-md border border-gray-300 overflow-hidden">
-                        <button type="button" className={`px-3 py-1.5 text-sm ${distanceUnit === 'km' ? 'bg-black text-white' : 'bg-white text-neutral-700'}`} onClick={() => setDistanceUnit('km')}>km</button>
-                        <button type="button" className={`px-3 py-1.5 text-sm border-l border-gray-300 ${distanceUnit === 'mi' ? 'bg-black text-white' : 'bg-white text-neutral-700'}`} onClick={() => setDistanceUnit('mi')}>mi</button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <label className="block text-sm font-medium">Add city/area</label>
-                    <div className="mt-1 flex items-stretch gap-2 min-w-0">
-                      <input
-                        value={cityQuery}
-                        onChange={(e) => setCityQuery(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); runCitySearch(); } }}
-                        placeholder="Type a city or area"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="none"
-                        spellCheck={false}
-                        name="location-entry"
-                        className="flex-1 min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
-                      />
-                      <button
-                        type="button"
-                        onClick={runCitySearch}
-                        disabled={!cityQuery.trim() || isCitySearching}
-                        className={classNames(
-                          "shrink-0 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                          !cityQuery.trim() || isCitySearching ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
-                        )}
-                        aria-label="Search city"
-                      >
-                        {isCitySearching ? "Searching…" : "Search"}
-                      </button>
-                    </div>
-                    <div className="mt-1 text-xs text-gray-500">Click Search to see suggestions for the city or area you entered.</div>
-                    {citySuggestions.length > 0 && (
-                      <div className="mt-2 rounded-md border border-gray-200 bg-white shadow-sm overflow-hidden max-w-full">
-                        <ul className="max-h-48 overflow-auto py-2 space-y-2">
-                          {citySuggestions.map((sug, idx) => {
-                            const parts = sug.display_name.split(',');
-                            const title = parts[0]?.trim() || sug.display_name;
-                            const subtitle = parts.slice(1).join(',').trim();
-                            return (
-                              <li key={`${sug.lat}-${sug.lon}-${idx}`} className="px-2">
-                                <button
-                                  type="button"
-                                  className="w-full min-w-0 text-left rounded-md border border-gray-200 px-3 py-2 hover:border-neutral-400 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-                                  onClick={() => {
-                                    const name = title;
-                                    const newCity = { name, displayName: sug.display_name, lat: parseFloat(sug.lat), lon: parseFloat(sug.lon), radiusKm: 25 };
-                                    setCities((prev) => {
-                                      const exists = prev.some(c => Math.abs(c.lat - newCity.lat) < 0.0001 && Math.abs(c.lon - newCity.lon) < 0.0001);
-                                      return exists ? prev : [...prev, newCity];
-                                    });
-                                    setCityQuery("");
-                                    setCitySuggestions([]);
-                                  }}
-                                >
-                                  <div className="flex items-start justify-between gap-3 min-w-0">
-                                    <div className="min-w-0 max-w-full">
-                                      <div className="text-sm font-medium text-neutral-900 truncate">{title}</div>
-                                      {subtitle && (
-                                        <div className="text-xs text-neutral-600 truncate">{subtitle}</div>
-                                      )}
-                                    </div>
-                                    <span className="ml-auto shrink-0 inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-700 border border-neutral-200">Add</span>
-                                  </div>
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {cities.length > 0 && (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {cities.map((c, i) => (
-                      <div key={`${c.lat}-${c.lon}-${i}`} className="rounded-md border border-gray-200 p-3 min-w-0">
-                        <div className="flex items-center justify-between min-w-0">
-                          <div>
-                            <div className="text-sm font-medium">{c.name}</div>
-                            <div className="text-xs text-gray-600 truncate max-w-[70ch]">{c.displayName}</div>
-                          </div>
-                          <button
-                            type="button"
-                            className="text-xs text-red-600 hover:underline"
-                            onClick={() => setCities(prev => prev.filter((_, idx) => idx !== i))}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                        <div className="mt-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-2 min-w-0">
-                            <label className="block text-sm font-medium">Service radius</label>
-                            <div className="flex items-center gap-2 text-xs text-neutral-700">
-                              <span className="whitespace-nowrap">{toDisplayDistance(c.radiusKm)}{distanceUnit}</span>
-                              <input
-                                type="number"
-                                inputMode="numeric"
-                                min={distanceUnit === 'km' ? 1 : 1}
-                                max={distanceUnit === 'km' ? 200 : 125}
-                                step={distanceUnit === 'km' ? 1 : 1}
-                                value={toDisplayDistance(c.radiusKm)}
-                                onChange={(e) => {
-                                  const raw = Number(e.target.value || 0);
-                                  const clamped = Math.max(1, Math.min(raw, distanceUnit === 'km' ? 200 : 125));
-                                  const km = fromDisplayDistance(clamped);
-                                  setCities(prev => prev.map((cc, idx) => idx === i ? { ...cc, radiusKm: km } : cc));
+                                aria-pressed={selected}
+                                title={c}
+                                onClick={() => {
+                                  setPrimaryColors((prev) => {
+                                    if (prev.includes(c)) return prev.filter((x) => x !== c);
+                                    if (prev.length >= 2) return prev; // enforce max 2
+                                    return [...prev, c];
+                                  });
                                 }}
-                                className="w-24 shrink-0 rounded border border-gray-300 px-2 py-1"
+                                className={classNames(
+                                  "h-8 w-8 rounded-md border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                                  selected ? "ring-2 ring-success border-success" : "border-gray-300",
+                                  atLimit ? "opacity-50 cursor-not-allowed" : "hover:opacity-90",
+                                  step5Analyzing ? "opacity-60 cursor-not-allowed" : ""
+                                )}
+                                style={{ backgroundColor: c }}
+                                disabled={atLimit || step5Analyzing}
                               />
-                            </div>
-                          </div>
-                          <input
-                            type="range"
-                            min={distanceUnit === 'km' ? 1 : 1}
-                            max={distanceUnit === 'km' ? 200 : 125}
-                            step={distanceUnit === 'km' ? 1 : 1}
-                            value={toDisplayDistance(c.radiusKm)}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              const km = fromDisplayDistance(val);
-                              setCities(prev => prev.map((cc, idx) => idx === i ? { ...cc, radiusKm: km } : cc));
-                            }}
-                            className="mt-2 w-full"
-                          />
+                            );
+                          })}
                         </div>
-                        {/* Map preview removed as requested; radius control retained */}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="mt-4 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(6)}>Back</button>
-                  <button
-                    type="button"
-                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", !canGoStep8 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900")}
-                    disabled={!canGoStep8}
-                    onClick={() => setStep(8)}
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            </div>
-          </details>
-
-          {/* Step 8: Brand assets (optional) & Finish */}
-          <details
-            open={step === 8}
-            className={classNames("relative rounded-xl border", step >= 8 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70")}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep8) setStep(8);
-              if (!canGoStep8) el.open = false;
-            }}
-          >
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  <span>8. Brand assets (optional)</span>
-                </div>
-                {canGoStep8 && <div className="text-xs text-neutral-600 mt-0.5 truncate">Add a logo and any brand images (optional). You can change these later.</div>}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">{step === 8 ? "In progress" : step > 8 ? "Completed" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                {/* Upload UI */}
-                <div className="grid gap-6 sm:grid-cols-2">
-                  {/* Logo uploader */}
-                  <div>
-                    <label className="block text-sm font-medium">Logo (SVG or PNG)</label>
-                    <div
-                      className="mt-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-6 text-center hover:bg-neutral-50 transition-colors"
-                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        if (!e.dataTransfer?.files?.length) return;
-                        const f = e.dataTransfer.files[0];
-                        if (f) setLogoFile(f);
-                      }}
-                    >
-                      <svg className="h-10 w-10 text-[#1a73e8]" viewBox="0 0 24 24" fill="none" aria-hidden>
-                        <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <rect x="3" y="12" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                      </svg>
-                      <div className="mt-2 text-sm text-neutral-700">
-                        Drag & drop logo here, or
-                        <label className="mx-1 inline-flex cursor-pointer text-black underline">
-                          <input
-                            type="file"
-                            accept="image/svg+xml,image/png,image/x-png"
-                            className="hidden"
-                            onChange={(e) => { const f = e.target.files?.[0]; if (f) setLogoFile(f); }}
-                          />
-                          browse
-                        </label>
-                      </div>
-                      <div className="mt-1 text-xs text-neutral-500">Recommended: square, transparent background.</div>
-                      {logoFile && (
-                        <div className="mt-3 w-full rounded border border-gray-200 bg-gray-50 p-2 text-left text-xs text-neutral-700">
-                          <div className="flex items-center justify-between">
-                            <span className="truncate max-w-[70%]">{logoFile.name} ({Math.round(logoFile.size/1024)} KB)</span>
-                            <button type="button" className="text-red-600 hover:underline" onClick={() => setLogoFile(null)}>Remove</button>
-                          </div>
+                        <div className="mt-2 text-xs text-gray-600">
+                          {primaryColors.length === 0 ? "No color selected" : `Selected: ${primaryColors.join(", ")}`}
                         </div>
-                      )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium">Social links (optional)</label>
+                      <div className="mt-1 grid gap-2">
+                        <input disabled={step5Analyzing} value={socialX} onChange={(e) => setSocialX(e.target.value)} placeholder="X / Twitter URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:opacity-60" />
+                        <input disabled={step5Analyzing} value={socialLinkedIn} onChange={(e) => setSocialLinkedIn(e.target.value)} placeholder="LinkedIn URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:opacity-60" />
+                        <input disabled={step5Analyzing} value={socialInstagram} onChange={(e) => setSocialInstagram(e.target.value)} placeholder="Instagram URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:opacity-60" />
+                        <input disabled={step5Analyzing} value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)} placeholder="Facebook URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:opacity-60" />
+                      </div>
                     </div>
                   </div>
-
-                  {/* Brand images / assets uploader */}
-                  <div>
-                    <label className="block text-sm font-medium">Brand images / assets</label>
-                    <div
-                      className="mt-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-6 text-center hover:bg-[#1a73e8]/5 transition-colors"
-                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const files = Array.from(e.dataTransfer?.files || []);
-                        if (files.length) setAssetFiles((prev) => [...prev, ...files]);
-                      }}
-                    >
-                      <svg className="h-10 w-10 text-[#1a73e8]" viewBox="0 0 24 24" fill="none" aria-hidden>
-                        <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <rect x="3" y="12" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                      </svg>
-                      <div className="mt-2 text-sm text-neutral-700">
-                        Drag & drop files here, or
-                        <label className="mx-1 inline-flex cursor-pointer text-black underline">
-                          <input
-                            type="file"
-                            multiple
-                            accept="image/*,.pdf,.zip"
-                            className="hidden"
-                            onChange={(e) => {
-                              const files = Array.from(e.target.files || []);
-                              if (files.length) setAssetFiles((prev) => [...prev, ...files]);
-                            }}
-                          />
-                          browse
-                        </label>
-                      </div>
-                      <div className="mt-1 text-xs text-neutral-500">Images, PDFs, or a ZIP. Optional.</div>
-                      {assetFiles.length > 0 && (
-                        <div className="mt-3 w-full rounded border border-gray-200 bg-gray-50 p-2 text-left text-xs text-neutral-700">
-                          <ul className="space-y-1">
-                            {assetFiles.map((f, i) => (
-                              <li key={`${f.name}-${i}`} className="flex items-center justify-between">
-                                <span className="truncate max-w-[70%]">{f.name} ({Math.round(f.size/1024)} KB)</span>
-                                <button type="button" className="text-red-600 hover:underline" onClick={() => setAssetFiles((prev) => prev.filter((_, idx) => idx !== i))}>Remove</button>
+                  {step5Analyzing && (
+                    <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4">
+                      {/* Mobile: collapsible logs, no progress bar */}
+                      <div className="sm:hidden">
+                        <details open className="group">
+                          <summary className="flex items-center justify-between cursor-pointer text-[13px] font-medium text-neutral-800">
+                            <span>Analyzing your preferences…</span>
+                            <span className="ml-2 text-[11px] text-neutral-500">{step5Progress}%</span>
+                          </summary>
+                          <ul className="mt-2 max-h-40 overflow-y-auto pr-1 space-y-1 text-[11px] text-neutral-700">
+                            {step5Logs.map((l, idx) => (
+                              <li key={idx} className="flex items-center gap-2">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
+                                {l}
                               </li>
                             ))}
                           </ul>
+                        </details>
+                      </div>
+
+                      {/* Tablet/Desktop: show progress bar and logs */}
+                      <div className="hidden sm:block">
+                        <div className="text-sm font-medium text-neutral-800">Analyzing your preferences…</div>
+                        <div className="mt-2 h-2 w-full rounded bg-neutral-100">
+                          <div className="h-2 rounded bg-success-accent transition-all" style={{ width: `${step5Progress}%` }} />
                         </div>
-                      )}
+                        <ul className="mt-3 max-h-40 overflow-y-auto pr-1 space-y-1 text-xs text-neutral-700">
+                          {step5Logs.map((l, idx) => (
+                            <li key={idx} className="flex items-center gap-2">
+                              <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
+                              {l}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
+                  )}
+
+                  <div className="mt-6 flex justify-between">
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(4)}>Back</button>
+                    <button
+                      type="button"
+                      className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent", (!canGoStep6 || step5Analyzing) ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")}
+                      disabled={!canGoStep6 || step5Analyzing}
+                      onClick={() => startStep5Analysis()}
+                    >
+                      {step5Analyzing ? "Analyzing…" : "Continue"}
+                    </button>
                   </div>
                 </div>
+              </div>
+            </details>
+          </div>
 
-                {/* Actions */}
-                <div ref={actionsRef} className="mt-6 flex items-center justify-between">
-                  <div className="text-xs text-gray-500">Review & save your onboarding info.</div>
-                  <button
-                    className={classNames(
-                      "rounded-md px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
-                      !canGoStep8 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+          {/* Step 6 */}
+          {step === 6 && (
+            <section className="rounded-lg border border-neutral-200 bg-white p-5">
+              <h2 className="text-base font-semibold">Step 6 · Services</h2>
+              <p className="mt-1 text-sm text-neutral-600">Select the services you offer.</p>
+              <div className="mt-4 space-y-2">
+                {servicesFor(siteType, category).map((svc) => (
+                  <label key={svc} className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" className="accent-success-accent" checked={selectedServices.includes(svc)} onChange={(e) => {
+                      if (e.target.checked) setSelectedServices([...selectedServices, svc]);
+                      else setSelectedServices(selectedServices.filter((s) => s !== svc));
+                    }} />
+                    {svc}
+                  </label>
+                ))}
+              </div>
+              <div className="mt-3 flex gap-2">
+                <input
+                  type="text"
+                  className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent"
+                  placeholder="Add a custom service"
+                  value={newService}
+                  onChange={(e) => setNewService(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => { const v = newService.trim(); if (v && !selectedServices.includes(v)) { setSelectedServices([...selectedServices, v]); setNewService(""); } }}
+                  className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="mt-5">
+                <button
+                  type="button"
+                  onClick={() => canGoStep7 && setStep(7)}
+                  disabled={!canGoStep7}
+                  className={classNames(
+                    "inline-flex items-center rounded-md px-3 py-2 text-sm font-medium",
+                    !canGoStep7 ? "bg-neutral-200 text-neutral-500 cursor-not-allowed" : "bg-success-accent text-white hover:opacity-90"
+                  )}
+                >
+                  Continue
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* Step 7 */}
+          {step === 7 && (
+            <section className="rounded-lg border border-neutral-200 bg-white p-5">
+              <h2 className="text-base font-semibold">Step 7 · Service areas</h2>
+              <p className="mt-1 text-sm text-neutral-600">Add at least one area where you operate.</p>
+              <div className="mt-3 flex gap-2">
+                <input
+                  type="text"
+                  className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent"
+                  placeholder="City or area name"
+                  value={cityQuery}
+                  onChange={(e) => setCityQuery(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => { const q = cityQuery.trim(); if (q) { setCities([...cities, { name: q, displayName: q, lat: 0, lon: 0, radiusKm: 10 }]); setCityQuery(""); } }}
+                  className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90"
+                >
+                  Add area
+                </button>
+              </div>
+              <ul className="mt-4 space-y-2 text-sm">
+                {cities.map((c, idx) => (
+                  <li key={`${c.name}-${idx}`} className="flex items-center justify-between rounded border border-neutral-200 px-3 py-2">
+                    <span>{c.displayName} • {toDisplayDistance(c.radiusKm)} {distanceUnit}</span>
+                    <button type="button" className="text-xs underline" onClick={() => setCities(cities.filter((_, i) => i !== idx))}>Remove</button>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5">
+                <button
+                  type="button"
+                  onClick={() => canGoStep8 && setStep(8)}
+                  disabled={!canGoStep8}
+                  className={classNames(
+                    "inline-flex items-center rounded-md px-3 py-2 text-sm font-medium",
+                    !canGoStep8 ? "bg-neutral-200 text-neutral-500 cursor-not-allowed" : "bg-success-accent text-white hover:opacity-90"
+                  )}
+                >
+                  Continue
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* Step 8 */}
+          {step === 8 && (
+            <section className="rounded-lg border border-neutral-200 bg-white p-5">
+              <h2 className="text-base font-semibold">Step 8 · Type-specific details</h2>
+              <p className="mt-1 text-sm text-neutral-600">Answer any additional questions for your site type.</p>
+              <div className="mt-4 space-y-4">
+                {typeQuestionsFor(siteType).map((q) => (
+                  <div key={q.key}>
+                    <label className="block text-sm font-medium">{q.label}</label>
+                    {q.kind === 'text' && (
+                      <input type="text" className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent" value={typeSpecific[q.key] || ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value })} />
                     )}
-                    disabled={!canGoStep8}
-                    onClick={() => {
-                      const payload = {
-                        siteType,
-                        category,
-                        primaryGoal,
-                        name,
-                        hasCurrent,
-                        currentUrl: hasCurrent === "yes" ? currentUrl : "",
-                        description: manualDesc,
-                        autoSummary: summary,
-                        siteAdded,
-                        skipped,
-                        businessPhone,
-                        businessEmail,
-                        contactMethod,
-                        businessHours,
-                        primaryColors,
-                        social: { x: socialX, linkedIn: socialLinkedIn, instagram: socialInstagram, facebook: socialFacebook },
-                        services: selectedServices,
-                        serviceAreas: cities,
-                        typeSpecific: { type: siteType, data: typeSpecific },
-                        uploads: {
-                          logo: logoFile ? { name: logoFile.name, size: logoFile.size, type: logoFile.type } : null,
-                          favicon: faviconFile ? { name: faviconFile.name, size: faviconFile.size, type: faviconFile.type } : null,
-                          assets: assetFiles.map((f) => ({ name: f.name, size: f.size, type: f.type })),
-                        },
-                      };
-                      alert(`Saved!\n${JSON.stringify(payload, null, 2)}`);
-                    }}
-                  >
-                    Save and finish
-                  </button>
-                </div>
+                    {q.kind === 'number' && (
+                      <input type="number" className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent" value={typeof typeSpecific[q.key] === 'number' ? typeSpecific[q.key] : ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: Number(e.target.value) })} />
+                    )}
+                    {q.kind === 'select' && (
+                      <select className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent" value={typeSpecific[q.key] || ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value })}>
+                        <option value="">Select…</option>
+                        {q.options.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    )}
+                    {q.kind === 'chips' && (
+                      <input type="text" placeholder={q.hint || 'Comma-separated'} className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent" value={(typeSpecific[q.key] || []).join(', ')} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} />
+                    )}
+                  </div>
+                ))}
               </div>
-            </div>
-          </details>
-        </div>
+              <div className="mt-5">
+                <button type="button" className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90">Finish</button>
+              </div>
+            </section>
+          )}
+        </main>
       </div>
-    </div>
-  );
-}
-
-// Minimal vertical progress sidebar to mirror get-started
-function ProgressSidebar({ current, done }: { current: number; done: { s1: boolean; s2: boolean; s3: boolean; s4: boolean; s5: boolean; s6: boolean; s7: boolean } }) {
-  const steps = [
-    { id: 1, label: "Type", completed: done.s1 },
-    { id: 2, label: "Category", completed: done.s2 },
-    { id: 3, label: "Name", completed: done.s3 },
-    { id: 4, label: "Website details", completed: done.s4 },
-    { id: 5, label: "Business & Contact", completed: done.s5 },
-    { id: 6, label: "Services", completed: done.s6 },
-    { id: 7, label: "Service areas", completed: done.s7 },
-    { id: 8, label: "Assets", completed: false },
-  ];
-  const total = steps.length;
-  return (
-    <div className="relative pl-6">
-      {/* Vertical line */}
-      <div className="absolute left-2 top-0 bottom-0 w-[2px] bg-neutral-200 rounded" aria-hidden />
-      {/* Progress */}
-      <div
-        className="absolute left-2 w-[2px] bg-[#1a73e8] rounded transition-all"
-        style={{ top: 0, height: `${((Math.max(1, current) - 1) / (Math.max(1, total - 1))) * 100}%` }}
-        aria-hidden
-      />
-      <ol className="space-y-6">
-        {steps.map((s) => {
-          const active = s.id === current;
-          const completed = s.completed || s.id < current;
-          return (
-            <li key={s.id} className="flex items-start gap-3">
-              <span
-                className={classNames(
-                  "mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px]",
-                  completed ? "bg-[#1a73e8] border-[#1a73e8] text-white" : active ? "border-[#1a73e8] text-[#1a73e8]" : "border-neutral-300 text-neutral-500"
-                )}
-                aria-hidden
-              >
-                {completed ? "✓" : s.id}
-              </span>
-              <div>
-                <div className={classNames("text-sm", completed ? "text-neutral-700" : active ? "text-neutral-900 font-medium" : "text-neutral-600")}>{s.label}</div>
-                <div className="text-xs text-neutral-500">Step {s.id} of {total}</div>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
     </div>
   );
 }

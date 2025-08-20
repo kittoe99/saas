@@ -9,6 +9,13 @@
   --accent: #d97759;      /* warm accent for links */
   --background: var(--bg-page);
   --foreground: #171717;
+  /* Accent-derived success tokens (Option B) */
+  --success-accent: var(--accent);
+  /* Use CSS color-mix for subtle tints; falls back gracefully in older browsers */
+  --success-bg: color-mix(in srgb, var(--accent) 10%, #ffffff);
+  --success-border: color-mix(in srgb, var(--accent) 30%, #ffffff);
+  --success-pill-bg: color-mix(in srgb, var(--accent) 15%, #ffffff);
+  --success-pill-text: color-mix(in srgb, var(--accent) 80%, #000000);
 }
 
 @theme inline {
@@ -135,6 +142,15 @@ details[open] .fade-slide {
 .hover\:bg-panel-hover:hover { background-color: var(--panel-hover) !important; }
 .border-soft { border-color: var(--border) !important; }
 .text-accent { color: var(--accent) !important; }
+
+/* Success (accent-based) utilities */
+.bg-success-bg { background-color: var(--success-bg) !important; }
+.border-success { border-color: var(--success-border) !important; }
+.bg-success-accent { background-color: var(--success-accent) !important; }
+.text-success-accent { color: var(--success-accent) !important; }
+.text-success-ink { color: var(--success-accent) !important; }
+.bg-success-pill { background-color: var(--success-pill-bg) !important; }
+.text-success-pill { color: var(--success-pill-text) !important; }
 
 /* Optional helpers for convenience */
 .border-on-page { border-color: var(--background) !important; }

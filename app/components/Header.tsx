@@ -80,7 +80,7 @@ export default function Header() {
             {/* Overview */}
             <a
               href="#overview"
-              className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+              className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               Overview
             </a>
@@ -98,7 +98,7 @@ export default function Header() {
                 type="button"
                 aria-haspopup="true"
                 aria-expanded={featuresOpen}
-                className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8] inline-flex items-center gap-1"
+                className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent inline-flex items-center gap-1"
                 onClick={() => setFeaturesOpen((v) => !v)}
               >
                 <span>Features</span>
@@ -110,19 +110,19 @@ export default function Header() {
               {featuresOpen && (
                 <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-[min(90vw,40rem)]" onMouseEnter={cancelFeaturesClose} onMouseLeave={scheduleFeaturesClose}>
                   <div className="rounded-xl border border-soft bg-panel shadow-xl p-4 grid grid-cols-2 md:grid-cols-2 gap-3 text-neutral-900">
-                    <a href="#features-website" className="rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                    <a href="#features-website" className="rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                       <div className="text-sm font-medium">Website</div>
                       <div className="mt-1 text-xs text-neutral-800">Design + hosting + updates included.</div>
                     </a>
-                    <a href="#features-sales" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                    <a href="#features-sales" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                       <div className="text-sm font-medium">Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
                       <div className="mt-1 text-xs text-neutral-800">Funnels, forms, and workflows.</div>
                     </a>
-                    <a href="#features-ai" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                    <a href="#features-ai" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                       <div className="text-sm font-medium">Artificial Intelligence <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
                       <div className="mt-1 text-xs text-neutral-800">Content, insights, and assistance.</div>
                     </a>
-                    <a href="#features-payments" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                    <a href="#features-payments" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                       <div className="text-sm font-medium">Payments <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
                       <div className="mt-1 text-xs text-neutral-800">Subscriptions and one‑time purchases.</div>
                     </a>
@@ -133,7 +133,7 @@ export default function Header() {
             {/* Showcase */}
             <Link
               href="/showcase"
-              className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+              className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               Showcase
             </Link>
@@ -151,7 +151,7 @@ export default function Header() {
                 type="button"
                 aria-haspopup="true"
                 aria-expanded={toolsOpen}
-                className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8] inline-flex items-center gap-1"
+                className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent inline-flex items-center gap-1"
                 onClick={() => setToolsOpen((v) => !v)}
               >
                 <span>Tools</span>
@@ -161,26 +161,26 @@ export default function Header() {
               </button>
 
               {toolsOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-[min(90vw,44rem)]" onMouseEnter={cancelToolsClose} onMouseLeave={scheduleToolsClose}>
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w_[min(90vw,44rem)]" onMouseEnter={cancelToolsClose} onMouseLeave={scheduleToolsClose}>
                   <div className="rounded-xl border border-soft bg-panel shadow-xl p-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-neutral-900">
                     {/* Columnized tool links */}
-                    <a href="#tools-ai-website-builder" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                    <a href="#tools-ai-website-builder" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                       <div className="text-sm font-medium">Ai Website Builder <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
                       <div className="mt-1 text-xs text-neutral-800">Generate and launch sites with AI assistance.</div>
                     </a>
-                    <a href="#tools-ai-agents" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                    <a href="#tools-ai-agents" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                       <div className="text-sm font-medium">Ai Agents <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
                       <div className="mt-1 text-xs text-neutral-800">Automate support and operations with agents.</div>
                     </a>
-                    <a href="#tools-sales" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                    <a href="#tools-sales" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                       <div className="text-sm font-medium">Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
                       <div className="mt-1 text-xs text-neutral-800">Funnels, workflows, and lead capture.</div>
                     </a>
-                    <a href="#tools-payments" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                    <a href="#tools-payments" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                       <div className="text-sm font-medium">Payment Processing <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
                       <div className="mt-1 text-xs text-neutral-800">Subscriptions and one‑time payments.</div>
                     </a>
-                    <a href="#tools-custom-ai" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]">
+                    <a href="#tools-custom-ai" className="relative rounded-lg p-3 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                       <div className="text-sm font-medium">Custom Ai solution <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
                       <div className="mt-1 text-xs text-neutral-800">Tailored AI workflows for your business.</div>
                     </a>
@@ -192,14 +192,14 @@ export default function Header() {
             <button
               type="button"
               onClick={() => router.push("/blog")}
-              className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+              className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               News
             </button>
             {/* Contact */}
             <Link
               href="/contact"
-              className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+              className="px-2 py-2 rounded-md hover:bg-panel-hover hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               Contact
             </Link>
@@ -209,7 +209,7 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-2 lg:gap-3">
             <a
               href="/signup"
-              className="px-3 lg:px-4 py-2 rounded-md border border-black text-black bg-white inline-flex items-center gap-2 text-sm lg:text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              className="px-3 lg:px-4 py-2 rounded-md border border-success text-success-ink bg-transparent inline-flex items-center gap-2 text-sm lg:text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               <span>Get Started Today</span>
               <svg
@@ -224,7 +224,7 @@ export default function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </a>
-            <a href="/login" className="px-3 lg:px-4 py-2 rounded-md bg-black text-white text-sm lg:text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-black">
+            <a href="/login" className="px-3 lg:px-4 py-2 rounded-md bg-success-accent text-white text-sm lg:text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
               Login
             </a>
           </div>
@@ -265,7 +265,7 @@ export default function Header() {
               {/* Overview */}
               <a
                 href="#overview"
-                className="block px-4 py-4 text-base hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-4 text-base hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                 onClick={() => setOpen(false)}
               >
                 Overview
@@ -281,14 +281,13 @@ export default function Header() {
                   <a href="#features-website" className="block px-6 py-2 hover:bg-panel-hover" onClick={() => setOpen(false)}>Website</a>
                   <a href="#features-sales" className="block px-6 py-2 hover:bg-panel-hover" onClick={() => setOpen(false)}>Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
                   <a href="#features-ai" className="block px-6 py-2 hover:bg-panel-hover" onClick={() => setOpen(false)}>Artificial Intelligence <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
-                  <a href="#features-payments" className="block px-6 py-2 hover:bg-panel-hover" onClick={() => setOpen(false)}>Payments <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
                 </div>
               </details>
               <div className="h-px bg-neutral-100" />
               {/* Showcase */}
               <Link
                 href="/showcase"
-                className="block px-4 py-4 text-base hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-4 text-base hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                 onClick={() => setOpen(false)}
               >
                 Showcase
@@ -301,18 +300,18 @@ export default function Header() {
                   <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                 </summary>
                 <div className="pb-3">
-                  <a href="#tools-ai-website-builder" className="block px-6 py-2 hover:bg-panel-hover" onClick={() => setOpen(false)}>Ai Website Builder <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
-                  <a href="#tools-ai-agents" className="block px-6 py-2 hover:bg-panel-hover" onClick={() => setOpen(false)}>Ai Agents <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
-                  <a href="#tools-sales" className="block px-6 py-2 hover:bg-panel-hover" onClick={() => setOpen(false)}>Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
-                  <a href="#tools-payments" className="block px-6 py-2 hover:bg-panel-hover" onClick={() => setOpen(false)}>Payment Processing <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
-                  <a href="#tools-custom-ai" className="block px-6 py-2 hover:bg-panel-hover" onClick={() => setOpen(false)}>Custom Ai solution <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
+                  <a href="#tools-ai-website-builder" className="block px-6 py-2 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent" onClick={() => setOpen(false)}>Ai Website Builder <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
+                  <a href="#tools-ai-agents" className="block px-6 py-2 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent" onClick={() => setOpen(false)}>Ai Agents <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
+                  <a href="#tools-sales" className="block px-6 py-2 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent" onClick={() => setOpen(false)}>Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
+                  <a href="#tools-payments" className="block px-6 py-2 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent" onClick={() => setOpen(false)}>Payment Processing <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
+                  <a href="#tools-custom-ai" className="block px-6 py-2 hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent" onClick={() => setOpen(false)}>Custom Ai solution <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></a>
                 </div>
               </details>
               <div className="h-px bg-neutral-100" />
               {/* News */}
               <Link
                 href="/blog"
-                className="block px-4 py-4 text-base hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-4 text-base hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                 onClick={() => setOpen(false)}
               >
                 News
@@ -321,7 +320,7 @@ export default function Header() {
               {/* Contact */}
               <Link
                 href="/contact"
-                className="block px-4 py-4 text-base hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+                className="block px-4 py-4 text-base hover:bg-panel-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                 onClick={() => setOpen(false)}
               >
                 Contact
@@ -329,7 +328,7 @@ export default function Header() {
               <div className="p-3.5 flex flex-col gap-2 bg-panel">
                 <a
                   href="/signup"
-                  className="w-full px-4 py-2.5 rounded-md border border-black text-black bg-white inline-flex items-center justify-center gap-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                  className="w-full px-4 py-2.5 rounded-md border border-success text-success-ink bg-transparent inline-flex items-center justify-center gap-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                   onClick={() => setOpen(false)}
                 >
                   <span>Get Started Today</span>
@@ -347,7 +346,7 @@ export default function Header() {
                 </a>
                 <a
                   href="/login"
-                  className="w-full px-4 py-2.5 rounded-md bg-black text-white text-base text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                  className="w-full px-4 py-2.5 rounded-md bg-success-accent text-white text-base text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                   onClick={() => setOpen(false)}
                 >
                   Login
