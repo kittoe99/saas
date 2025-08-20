@@ -319,6 +319,10 @@ export default function OnboardingPage() {
   const [cities, setCities] = useState<Array<{ name: string; displayName: string; lat: number; lon: number; radiusKm: number }>>([]);
   const [distanceUnit, setDistanceUnit] = useState<"km" | "mi">("km");
   const [isCitySearching, setIsCitySearching] = useState(false);
+  // Step 5 analyzing UX
+  const [step5Analyzing, setStep5Analyzing] = useState(false);
+  const [step5Progress, setStep5Progress] = useState(0);
+  const [step5Logs, setStep5Logs] = useState<string[]>([]);
 
   // Step orchestration
   const [step, setStep] = useState(1);
@@ -441,6 +445,39 @@ export default function OnboardingPage() {
   // Helpers for unit conversion (store internally in km)
   const toDisplayDistance = (km: number) => distanceUnit === "km" ? km : Math.round(km * 0.621371);
   const fromDisplayDistance = (val: number) => distanceUnit === "km" ? val : Math.round(val / 0.621371);
+
+  // Simulated real-time analysis for Step 5 (Business & Contact)
+  function startStep5Analysis() {
+    if (step5Analyzing) return;
+    setStep5Analyzing(true);
+    setStep5Progress(0);
+    setStep5Logs([]);
+    const messages = [
+      "Validating contact details",
+      "Checking preferred contact method",
+      "Reviewing brand colors",
+      "Collecting social links",
+      "Preparing next step"
+    ];
+    let i = 0;
+    const total = 100;
+    const tick = 350; // ms per tick
+    const perMsg = Math.floor(total / (messages.length + 1));
+    const id = setInterval(() => {
+      i += 1;
+      const p = Math.min(100, Math.round((i * tick) / (tick * 12) * 100));
+      setStep5Progress(p);
+      // emit log lines at rough intervals
+      if (p >= (step5Logs.length + 1) * perMsg && step5Logs.length < messages.length) {
+        setStep5Logs((prev) => [...prev, messages[prev.length]]);
+      }
+      if (p >= 100) {
+        clearInterval(id);
+        setStep5Analyzing(false);
+        setStep(6);
+      }
+    }, tick);
+  }
 
   async function summarizeUrl() {
     if (!currentUrl) return;
@@ -972,18 +1009,18 @@ export default function OnboardingPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-sm font-medium">Business phone</label>
-                    <input value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} placeholder="(555) 123-4567" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black" />
+                    <input disabled={step5Analyzing} value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} placeholder="(555) 123-4567" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium">Business email</label>
-                    <input type="email" value={businessEmail} onChange={(e) => setBusinessEmail(e.target.value)} placeholder="hello@yourbusiness.com" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black" />
+                    <input disabled={step5Analyzing} type="email" value={businessEmail} onChange={(e) => setBusinessEmail(e.target.value)} placeholder="hello@yourbusiness.com" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
                   </div>
                 </div>
                 <div className="mt-4">
                   <label className="block text-sm font-medium">Preferred contact method</label>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {["email","phone","form","schedule"].map((m) => (
-                      <button key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", contactMethod === m ? "border-black ring-1 ring-black bg-black/5" : "border-gray-300 hover:bg-neutral-50")}>{m}</button>
+                      <button disabled={step5Analyzing} key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black disabled:opacity-60", contactMethod === m ? "border-black ring-1 ring-black bg-black/5" : "border-gray-300 hover:bg-neutral-50")}>{m}</button>
                     ))}
                   </div>
                 </div>
@@ -1011,10 +1048,11 @@ export default function OnboardingPage() {
                               className={classNames(
                                 "h-8 w-8 rounded-md border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
                                 selected ? "ring-2 ring-black border-black" : "border-gray-300",
-                                atLimit ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
+                                atLimit ? "opacity-50 cursor-not-allowed" : "hover:opacity-90",
+                                step5Analyzing ? "opacity-60 cursor-not-allowed" : ""
                               )}
                               style={{ backgroundColor: c }}
-                              disabled={atLimit}
+                              disabled={atLimit || step5Analyzing}
                             />
                           );
                         })}
@@ -1027,24 +1065,40 @@ export default function OnboardingPage() {
                   <div>
                     <label className="block text-sm font-medium">Social links (optional)</label>
                     <div className="mt-1 grid gap-2">
-                      <input value={socialX} onChange={(e) => setSocialX(e.target.value)} placeholder="X / Twitter URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black" />
-                      <input value={socialLinkedIn} onChange={(e) => setSocialLinkedIn(e.target.value)} placeholder="LinkedIn URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black" />
-                      <input value={socialInstagram} onChange={(e) => setSocialInstagram(e.target.value)} placeholder="Instagram URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black" />
-                      <input value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)} placeholder="Facebook URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black" />
+                      <input disabled={step5Analyzing} value={socialX} onChange={(e) => setSocialX(e.target.value)} placeholder="X / Twitter URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
+                      <input disabled={step5Analyzing} value={socialLinkedIn} onChange={(e) => setSocialLinkedIn(e.target.value)} placeholder="LinkedIn URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
+                      <input disabled={step5Analyzing} value={socialInstagram} onChange={(e) => setSocialInstagram(e.target.value)} placeholder="Instagram URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
+                      <input disabled={step5Analyzing} value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)} placeholder="Facebook URL" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black disabled:opacity-60" />
                     </div>
                   </div>
                 </div>
+                {step5Analyzing && (
+                  <div className="mt-5 rounded-lg border border-neutral-200 bg-white p-4">
+                    <div className="text-sm font-medium text-neutral-800">Analyzing your preferences…</div>
+                    <div className="mt-2 h-2 w-full rounded bg-neutral-100">
+                      <div className="h-2 rounded bg-black transition-all" style={{ width: `${step5Progress}%` }} />
+                    </div>
+                    <ul className="mt-3 space-y-1 text-xs text-neutral-700">
+                      {step5Logs.map((l, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-black" />
+                          {l}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 {/* Removed business address, time zone, SLA, booking tool, voice/tone, accessibility, uploads, and localization */}
 
                 <div className="mt-6 flex justify-between">
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(4)}>Back</button>
                   <button
                     type="button"
-                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", !canGoStep6 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900")}
-                    disabled={!canGoStep6}
-                    onClick={() => setStep(6)}
+                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", (!canGoStep6 || step5Analyzing) ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900")}
+                    disabled={!canGoStep6 || step5Analyzing}
+                    onClick={() => startStep5Analysis()}
                   >
-                    Continue
+                    {step5Analyzing ? "Analyzing…" : "Continue"}
                   </button>
                 </div>
               </div>
