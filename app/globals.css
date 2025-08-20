@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+:root {
+  /* Lighten background ~40% towards white: #faf6ec -> #fcfaf4 */
+  --background: #fcfaf4;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility: hide horizontal scrollbar where needed (e.g., tabs/nav on mobile) */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* Typewriter caret blink */
+@keyframes type-caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.type-caret {
+  display: inline-block;
+  width: 1ch; /* keeps space while blinking */
+  border-right: 2px solid currentColor;
+  margin-left: 2px;
+  animation: type-caret-blink 1s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .type-caret { animation: none; }
+}
+
+/* Mobile menu subtle entry animation */
+@keyframes slide-fade-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-mobile-menu {
+  animation: slide-fade-down 180ms ease-out;
+}
+
+/* Rotate chevrons when <details> is open */
+details[open] > summary .chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-mobile-menu { animation: none; }
+}
+
+/* Accordion: smooth open/close for <details> content used on Get started */
+details .accordion {
+  overflow: hidden;
+}
+
+details .accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms ease, opacity 220ms ease, transform 220ms ease;
+}
+
+details[open] .accordion-content {
+  grid-template-rows: 1fr;
+}
+
+/* Ensure children can collapse within grid row */
+.accordion-content > * {
+  min-height: 0; /* critical for grid 0fr -> 1fr trick */
+}
+
+/* Subtle fade/slide for inner content */
+.fade-slide {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+details[open] .fade-slide {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  details .accordion-content { transition: none; }
+  .fade-slide { opacity: 1; transform: none; }
+}
+
+/* Border-match utilities: make container borders equal to their background color */
+/* Default: page background */
+.border-match { border-color: var(--background) !important; }
+/* Common explicit backgrounds */
+.bg-white.border-match { border-color: #ffffff !important; }
+/* Escape Tailwind arbitrary color class for warm background */
+.bg-\[\#faf6ec\].border-match { border-color: #faf6ec !important; }
+
+/* Optional helpers for convenience */
+.border-on-page { border-color: var(--background) !important; }
+.border-on-white { border-color: #ffffff !important; }
+.border-on-warm { border-color: #faf6ec !important; }
+
+/* Global container border reset: hide borders on typical containers */
+div.border:not(.keep-border),
+section.border:not(.keep-border),
+article.border:not(.keep-border),
+header.border:not(.keep-border),
+footer.border:not(.keep-border),
+aside.border:not(.keep-border),
+nav.border:not(.keep-border),
+main.border:not(.keep-border),
+form.border:not(.keep-border),
+fieldset.border:not(.keep-border),
+details.border:not(.keep-border),
+summary.border:not(.keep-border),
+figure.border:not(.keep-border),
+ul.border:not(.keep-border),
+li.border:not(.keep-border) {
+  border-color: transparent !important;
+}
+
+/* NOTE: Avoid broad universal overrides to prevent affecting buttons/links */
+
+/* Navigation menus: remove borders on nav containers by default (not links/buttons) */
+nav.border:not(.keep-border) { border-color: transparent !important; }
+nav > div.border:not(.keep-border),
+nav > section.border:not(.keep-border),
+nav > ul.border:not(.keep-border),
+nav > li.border:not(.keep-border),
+nav > aside.border:not(.keep-border),
+nav > article.border:not(.keep-border) {
+  border-color: transparent !important;
+}
+
+/* Remove nav/header bottom shadow and border */
+header,
+header > nav,
+nav {
+  box-shadow: none !important;
+  border-bottom: 0 !important;
+}
