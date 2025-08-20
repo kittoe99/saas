@@ -768,6 +768,174 @@ export default function OnboardingPage() {
             </div>
           </details>
 
+          {/* Step 3: Name */}
+          <details
+            open={step === 3}
+            className={classNames(
+              "relative rounded-xl border",
+              step > 3 ? "bg-green-50 border-green-200" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+            )}
+            onToggle={(e) => {
+              const el = e.currentTarget as HTMLDetailsElement;
+              if (el.open && canGoStep3) setStep(3);
+              if (!canGoStep3) el.open = false;
+            }}
+          >
+            {step > 3 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
+            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                  {step > 3 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
+                  <span>3. Your site name</span>
+                </div>
+                {step > 3 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{name}</div>}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 3 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 3 ? "Completed" : step === 3 ? "In progress" : "Locked"}</span>
+                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+              </div>
+            </summary>
+            <div className="accordion border-t border-neutral-200">
+              <div className="accordion-content p-4 sm:p-5 fade-slide">
+                <div className="max-w-md">
+                  <label className="block text-sm font-medium">Business or site name</label>
+                  <input
+                    ref={nameInputRef as any}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onFocus={() => setNameFocused(true)}
+                    onBlur={() => setNameFocused(false)}
+                    placeholder="e.g. Acme Moving Co."
+                    className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
+                  />
+                  <div className="mt-2 text-xs text-neutral-600">Min 2 characters.</div>
+                </div>
+                <div className="mt-4 flex justify-between">
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(2)}>Back</button>
+                  <button
+                    type="button"
+                    className={classNames(
+                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black",
+                      !canGoStep4 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                    )}
+                    disabled={!canGoStep4}
+                    onClick={() => setStep(4)}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* Step 4: Website details */}
+          <details
+            open={step === 4}
+            className={classNames(
+              "relative rounded-xl border",
+              step > 4 ? "bg-green-50 border-green-200" : step >= 4 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+            )}
+            onToggle={(e) => {
+              const el = e.currentTarget as HTMLDetailsElement;
+              if (el.open && canGoStep4) setStep(4);
+              if (!canGoStep4) el.open = false;
+            }}
+          >
+            {step > 4 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-green-400" />}
+            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                  {step > 4 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-[11px]">✓</span>}
+                  <span>4. Website details</span>
+                </div>
+                {step > 4 && (
+                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
+                    {hasCurrent === "yes" ? (currentUrl || "Existing site provided") : hasCurrent === "no" ? "No current site" : ""}
+                  </div>
+                )}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 4 ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-700")}>{step > 4 ? "Completed" : step === 4 ? "In progress" : "Locked"}</span>
+                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+              </div>
+            </summary>
+            <div className="accordion border-t border-neutral-200">
+              <div className="accordion-content p-4 sm:p-5 fade-slide">
+                <label className="block text-sm font-medium">Do you have a current website?</label>
+                <div className="mt-2 flex gap-2">
+                  {(["yes","no"] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setHasCurrent(v)}
+                      className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", hasCurrent === v ? "border-black ring-1 ring-black bg-black/5" : "border-gray-300 hover:bg-neutral-50")}
+                    >
+                      {v.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+
+                {hasCurrent === "yes" && (
+                  <div className="mt-4 grid gap-3 max-w-xl">
+                    <div>
+                      <label className="block text-sm font-medium">Website URL or domain</label>
+                      <input
+                        value={currentUrl}
+                        onChange={(e) => setCurrentUrl(e.target.value)}
+                        placeholder="example.com or https://example.com"
+                        className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className={classNames("rounded-md px-3 py-1.5 text-sm text-white", currentUrl ? "bg-black hover:bg-neutral-900" : "bg-neutral-300 cursor-not-allowed")}
+                        disabled={!currentUrl || searching}
+                        onClick={() => summarizeUrl()}
+                      >
+                        {searching ? "Analyzing…" : "Analyze site"}
+                      </button>
+                      <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => { setSkipped(true); setSiteAdded(false); setSummary(null); setError(null); }}>Skip</button>
+                    </div>
+
+                    {error && <div className="text-sm text-red-600">{error}</div>}
+                    {notFound && <div className="text-sm text-neutral-600">No info found. You can skip or add details manually.</div>}
+                    {summary?.summary && (
+                      <div className="mt-2 rounded border border-neutral-200 bg-gray-50 p-3 text-sm text-neutral-800 whitespace-pre-wrap">
+                        {summary.summary}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {hasCurrent === "no" && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium">Brief description (optional)</label>
+                    <textarea
+                      value={manualDesc}
+                      onChange={(e) => setManualDesc(e.target.value)}
+                      placeholder="What will your new site be about?"
+                      className="mt-1 w-full max-w-xl rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-black/30 focus:border-black"
+                      rows={4}
+                    />
+                  </div>
+                )}
+
+                <div className="mt-4 flex justify-between">
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(3)}>Back</button>
+                  <button
+                    type="button"
+                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black", !canGoStep5 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900")}
+                    disabled={!canGoStep5}
+                    onClick={() => setStep(5)}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
+
           {/* Step 5: Business & Contact */}
           <details
             open={step === 5}

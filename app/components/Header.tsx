@@ -258,7 +258,7 @@ export default function Header() {
         {open && (
           <>
             {/* Backdrop overlay */}
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-40" onClick={() => setOpen(false)} />
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-40 md:hidden" onClick={() => setOpen(false)} />
             {/* Dropdown sheet */}
             <div className="absolute left-0 right-0 top-full z-50 md:hidden">
               <nav className="mx-3 sm:mx-4 mt-2 flex flex-col rounded-xl border border-soft bg-panel text-neutral-900 shadow-lg overflow-hidden animate-mobile-menu">
