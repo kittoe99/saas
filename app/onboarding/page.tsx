@@ -343,7 +343,7 @@ export default function OnboardingPage() {
   const canGoStep5 = step4Done;
   const canGoStep6 = step5Done;
   const canGoStep7 = step6Done; // proceed to areas
-  const canGoStep8 = step7Done && isTypeSpecificValid(siteType, typeSpecific);
+  const canFinish = step7Done && isTypeSpecificValid(siteType, typeSpecific);
 
   // Steps metadata for sidebar
   const steps = [
@@ -352,9 +352,8 @@ export default function OnboardingPage() {
     { id: 3, label: "Name", completed: step3Done },
     { id: 4, label: "Existing site", completed: step4Done },
     { id: 5, label: "Business & contact", completed: step5Done },
-    { id: 6, label: "Services", completed: step6Done },
+    { id: 6, label: "Services & details", completed: step6Done },
     { id: 7, label: "Service areas", completed: step7Done },
-    { id: 8, label: "Type-specific", completed: canGoStep8 },
   ];
 
   // Minimal nudge scrolling: only scroll enough so the element is slightly in view
@@ -1241,133 +1240,380 @@ export default function OnboardingPage() {
             </details>
           </div>
 
-          {/* Step 6 */}
-          {step === 6 && (
-            <section className="rounded-lg border border-neutral-200 bg-white p-5">
-              <h2 className="text-base font-semibold">Step 6 · Services</h2>
-              <p className="mt-1 text-sm text-neutral-600">Select the services you offer.</p>
-              <div className="mt-4 space-y-2">
-                {servicesFor(siteType, category).map((svc) => (
-                  <label key={svc} className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" className="accent-success-accent" checked={selectedServices.includes(svc)} onChange={(e) => {
-                      if (e.target.checked) setSelectedServices([...selectedServices, svc]);
-                      else setSelectedServices(selectedServices.filter((s) => s !== svc));
-                    }} />
-                    {svc}
-                  </label>
-                ))}
+          {/* Step 6: Services & details */}
+          <details
+            open={step === 6}
+            className={classNames(
+              "relative rounded-xl border",
+              step > 6 ? "bg-success-bg border-success" : step >= 6 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+            )}
+            onToggle={(e) => {
+              const el = e.currentTarget as HTMLDetailsElement;
+              if (el.open && canGoStep6) setStep(6);
+              if (!canGoStep6) el.open = false;
+            }}
+          >
+            {step > 6 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                  {step > 6 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                  <span>6. Services & details</span>
+                </div>
+                {step > 6 && (
+                  <div className="text-xs text-neutral-600 mt-0.5 truncate">{selectedServices.length} service{selectedServices.length === 1 ? "" : "s"}</div>
+                )}
               </div>
-              <div className="mt-3 flex gap-2">
-                <input
-                  type="text"
-                  className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent"
-                  placeholder="Add a custom service"
-                  value={newService}
-                  onChange={(e) => setNewService(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => { const v = newService.trim(); if (v && !selectedServices.includes(v)) { setSelectedServices([...selectedServices, v]); setNewService(""); } }}
-                  className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90"
-                >
-                  Add
-                </button>
+              <div className="ml-auto flex items-center gap-3">
+                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 6 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 6 ? "Completed" : step === 6 ? "In progress" : "Locked"}</span>
+                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
               </div>
-              <div className="mt-5">
-                <button
-                  type="button"
-                  onClick={() => canGoStep7 && setStep(7)}
-                  disabled={!canGoStep7}
-                  className={classNames(
-                    "inline-flex items-center rounded-md px-3 py-2 text-sm font-medium",
-                    !canGoStep7 ? "bg-neutral-200 text-neutral-500 cursor-not-allowed" : "bg-success-accent text-white hover:opacity-90"
-                  )}
-                >
-                  Continue
-                </button>
-              </div>
-            </section>
-          )}
+            </summary>
+            <div className="accordion border-t border-neutral-200">
+              <div className="accordion-content p-4 sm:p-5 fade-slide">
+                {/* Services as chip toggles */}
+                <div>
+                  <label className="block text-sm font-medium">Services</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {servicesFor(siteType, category).map((svc) => {
+                      const active = selectedServices.includes(svc);
+                      return (
+                        <button
+                          key={svc}
+                          type="button"
+                          onClick={() => {
+                            if (active) setSelectedServices(selectedServices.filter((s) => s !== svc));
+                            else setSelectedServices([...selectedServices, svc]);
+                          }}
+                          className={classNames(
+                            "inline-flex items-center rounded-full border px-3 py-1.5 text-sm transition",
+                            active
+                              ? "bg-success-accent text-white border-success-accent shadow-sm"
+                              : "bg-white text-neutral-800 border-neutral-300 hover:bg-neutral-50"
+                          )}
+                        >
+                          {active && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-white" />}
+                          {svc}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <input
+                      type="text"
+                      className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent"
+                      placeholder="Add a custom service"
+                      value={newService}
+                      onChange={(e) => setNewService(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { const v = newService.trim(); if (v && !selectedServices.includes(v)) { setSelectedServices([...selectedServices, v]); setNewService(""); } }}
+                      className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
 
-          {/* Step 7 */}
-          {step === 7 && (
-            <section className="rounded-lg border border-neutral-200 bg-white p-5">
-              <h2 className="text-base font-semibold">Step 7 · Service areas</h2>
-              <p className="mt-1 text-sm text-neutral-600">Add at least one area where you operate.</p>
-              <div className="mt-3 flex gap-2">
-                <input
-                  type="text"
-                  className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent"
-                  placeholder="City or area name"
-                  value={cityQuery}
-                  onChange={(e) => setCityQuery(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => { const q = cityQuery.trim(); if (q) { setCities([...cities, { name: q, displayName: q, lat: 0, lon: 0, radiusKm: 10 }]); setCityQuery(""); } }}
-                  className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90"
-                >
-                  Add area
-                </button>
-              </div>
-              <ul className="mt-4 space-y-2 text-sm">
-                {cities.map((c, idx) => (
-                  <li key={`${c.name}-${idx}`} className="flex items-center justify-between rounded border border-neutral-200 px-3 py-2">
-                    <span>{c.displayName} • {toDisplayDistance(c.radiusKm)} {distanceUnit}</span>
-                    <button type="button" className="text-xs underline" onClick={() => setCities(cities.filter((_, i) => i !== idx))}>Remove</button>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-5">
-                <button
-                  type="button"
-                  onClick={() => canGoStep8 && setStep(8)}
-                  disabled={!canGoStep8}
-                  className={classNames(
-                    "inline-flex items-center rounded-md px-3 py-2 text-sm font-medium",
-                    !canGoStep8 ? "bg-neutral-200 text-neutral-500 cursor-not-allowed" : "bg-success-accent text-white hover:opacity-90"
-                  )}
-                >
-                  Continue
-                </button>
-              </div>
-            </section>
-          )}
+                {/* Business hours */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium">Business hours</label>
+                  <div className="mt-1 inline-flex rounded-md border border-neutral-300 p-0.5">
+                    {([
+                      { key: "services", label: "Standard", mode: "standard" },
+                      { key: "24_7", label: "24/7", mode: "24_7" },
+                      { key: "appointment", label: "Appointment", mode: "appointment" },
+                      { key: "custom", label: "Custom", mode: "custom" },
+                    ] as const).map((opt) => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => {
+                          setBusinessHoursMode(opt.mode as any);
+                          let text = businessHours;
+                          if (opt.mode === "standard") text = "Mon–Fri 9am–5pm";
+                          if (opt.mode === "24_7") text = "Open 24/7";
+                          if (opt.mode === "appointment") text = "By appointment only";
+                          setBusinessHours(text);
+                          setTypeSpecific((prev) => ({
+                            ...prev,
+                            businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
+                          }));
+                        }}
+                        className={classNames(
+                          "px-2.5 py-1 text-sm rounded",
+                          businessHoursMode === (opt.mode as any) ? "bg-success-accent text-white" : "text-neutral-700 hover:bg-neutral-100"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
 
-          {/* Step 8 */}
-          {step === 8 && (
-            <section className="rounded-lg border border-neutral-200 bg-white p-5">
-              <h2 className="text-base font-semibold">Step 8 · Type-specific details</h2>
-              <p className="mt-1 text-sm text-neutral-600">Answer any additional questions for your site type.</p>
-              <div className="mt-4 space-y-4">
-                {typeQuestionsFor(siteType).map((q) => (
-                  <div key={q.key}>
-                    <label className="block text-sm font-medium">{q.label}</label>
-                    {q.kind === 'text' && (
-                      <input type="text" className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent" value={typeSpecific[q.key] || ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value })} />
-                    )}
-                    {q.kind === 'number' && (
-                      <input type="number" className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent" value={typeof typeSpecific[q.key] === 'number' ? typeSpecific[q.key] : ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: Number(e.target.value) })} />
-                    )}
-                    {q.kind === 'select' && (
-                      <select className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent" value={typeSpecific[q.key] || ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value })}>
-                        <option value="">Select…</option>
-                        {q.options.map((opt) => (
-                          <option key={opt} value={opt}>{opt}</option>
+                  {businessHoursMode === "standard" && (
+                    <div className="mt-2">
+                      <label className="text-xs text-neutral-600">Quick presets</label>
+                      <select
+                        className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                        value={businessHours}
+                        onChange={(e) => {
+                          const text = e.target.value;
+                          setBusinessHours(text);
+                          setTypeSpecific((prev) => ({
+                            ...prev,
+                            businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
+                          }));
+                        }}
+                      >
+                        {["Mon–Fri 9am–5pm","Mon–Fri 8am–6pm","Mon–Sat 9am–6pm","Tue–Sat 10am–7pm"].map((p) => (
+                          <option key={p} value={p}>{p}</option>
                         ))}
                       </select>
+                    </div>
+                  )}
+
+                  {businessHoursMode === "custom" && (
+                    <div className="mt-2">
+                      <label className="text-xs text-neutral-600">Enter custom hours (one per line)</label>
+                      <textarea
+                        rows={4}
+                        className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                        placeholder={"e.g.\nMon: 9am–5pm\nTue: 9am–5pm\nWed: 9am–1pm\nSat–Sun: Closed"}
+                        value={businessHours}
+                        onChange={(e) => {
+                          const text = e.target.value;
+                          setBusinessHours(text);
+                          setTypeSpecific((prev) => ({
+                            ...prev,
+                            businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
+                          }));
+                        }}
+                      />
+                      <div className="mt-1 text-[11px] text-neutral-500">Tip: Use line breaks for each day or range.</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Type-specific details */}
+                <div className="mt-6 space-y-4">
+                  <label className="block text-sm font-medium">Type-specific details</label>
+                  {typeQuestionsFor(siteType).map((q) => (
+                    <div key={q.key}>
+                      <label className="block text-xs font-medium text-neutral-700">{q.label}</label>
+                      {q.kind === 'text' && (
+                        <input type="text" className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" value={typeSpecific[q.key] || ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value })} />
+                      )}
+                      {q.kind === 'number' && (
+                        <input type="number" className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" value={typeof typeSpecific[q.key] === 'number' ? typeSpecific[q.key] : ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: Number(e.target.value) })} />
+                      )}
+                      {q.kind === 'select' && (
+                        <select className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" value={typeSpecific[q.key] || ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value })}>
+                          <option value="">Select…</option>
+                          {q.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      )}
+                      {q.kind === 'chips' && (
+                        <input type="text" placeholder={q.hint || 'Comma-separated'} className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" value={(typeSpecific[q.key] || []).join(', ')} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex justify-between">
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(5)}>Back</button>
+                  <button
+                    type="button"
+                    onClick={() => canGoStep7 && setStep(7)}
+                    disabled={!canGoStep7}
+                    className={classNames(
+                      "inline-flex items-center rounded-md px-4 py-2 text-sm font-medium",
+                      !canGoStep7 ? "bg-neutral-200 text-neutral-500 cursor-not-allowed" : "bg-success-accent text-white hover:opacity-90"
                     )}
-                    {q.kind === 'chips' && (
-                      <input type="text" placeholder={q.hint || 'Comma-separated'} className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent" value={(typeSpecific[q.key] || []).join(', ')} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} />
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* Step 7: Service areas */}
+          <details
+            open={step === 7}
+            className={classNames(
+              "relative rounded-xl border",
+              step > 7 ? "bg-success-bg border-success" : step >= 7 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+            )}
+            onToggle={(e) => {
+              const el = e.currentTarget as HTMLDetailsElement;
+              if (el.open && canGoStep7) setStep(7);
+              if (!canGoStep7) el.open = false;
+            }}
+          >
+            {step > 7 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                  {step > 7 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                  <span>7. Service areas</span>
+                </div>
+                {step > 7 && (
+                  <div className="text-xs text-neutral-600 mt-0.5 truncate">{cities.length} area{cities.length === 1 ? "" : "s"} • {distanceUnit.toUpperCase()}</div>
+                )}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 7 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 7 ? "Completed" : step === 7 ? "In progress" : "Locked"}</span>
+                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+              </div>
+            </summary>
+            <div className="accordion border-t border-neutral-200">
+              <div className="accordion-content p-4 sm:p-5 fade-slide">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+                  <div className="min-w-[180px]">
+                    <label className="block text-sm font-medium">Country (optional)</label>
+                    <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success">
+                      <option value="">All countries</option>
+                      {COUNTRIES.map((c) => (
+                        <option key={c.code} value={c.code}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium">City or area</label>
+                    <div className="mt-1 flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent"
+                        placeholder="Start typing a city..."
+                        value={cityQuery}
+                        onChange={(e) => setCityQuery(e.target.value)}
+                      />
+                      <button type="button" className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90 w-full sm:w-auto" onClick={() => runCitySearch()} disabled={isCitySearching}>
+                        {isCitySearching ? "Searching…" : "Search"}
+                      </button>
+                    </div>
+                    {citySuggestions.length > 0 && (
+                      <ul className="mt-2 max-h-40 overflow-y-auto rounded border border-neutral-200 bg-white text-sm shadow">
+                        {citySuggestions.map((sug, i) => (
+                          <li key={`${sug.display_name}-${i}`} className="flex items-center justify-between px-3 py-2 hover:bg-neutral-50">
+                            <span className="truncate pr-2">{sug.display_name}</span>
+                            <button
+                              type="button"
+                              className="text-xs text-success-ink hover:underline"
+                              onClick={() => {
+                                setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
+                                setCitySuggestions([]);
+                                setCityQuery("");
+                              }}
+                            >
+                              Add
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </div>
-                ))}
+                  <div className="sm:col-span-1">
+                    <label className="block text-sm font-medium">Units</label>
+                    <div className="mt-1 inline-flex rounded-md border border-neutral-300 p-0.5">
+                      {(["km","mi"] as const).map((u) => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => setDistanceUnit(u)}
+                          className={classNames("px-2 py-1 text-sm rounded", distanceUnit === u ? "bg-success-accent text-white" : "text-neutral-700 hover:bg-neutral-100")}
+                        >
+                          {u.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {cities.length === 0 ? (
+                  <div className="mt-4 rounded-lg border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-success-bg text-success-ink">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 4.97 6.06 12.39 6.32 12.68.37.41 1.01.41 1.38 0C12.94 21.39 19 13.97 19 9a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z"/></svg>
+                      </span>
+                      <div className="font-medium text-neutral-700">No service areas yet</div>
+                    </div>
+                    <div className="mt-1 text-xs">Search a city or address above and click Add to include it. Then adjust the radius.</div>
+                  </div>
+                ) : (
+                  <ul className="mt-4 space-y-3 text-sm">
+                    {cities.map((c, idx) => {
+                      const geocoded = (c.lat !== 0 || c.lon !== 0);
+                      return (
+                        <li key={`${c.name}-${idx}`} className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3 shadow-sm transition-colors hover:bg-neutral-50">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-success-bg text-success-ink">
+                                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 4.97 6.06 12.39 6.32 12.68.37.41 1.01.41 1.38 0C12.94 21.39 19 13.97 19 9a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z"/></svg>
+                              </span>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <div className="font-medium truncate">{c.displayName}</div>
+                                  <span className={classNames("inline-flex items-center rounded-full px-2 py-0.5 text-[11px] border", geocoded ? "bg-success-bg text-success-ink border-success-border" : "bg-neutral-100 text-neutral-700 border-neutral-200")}>{geocoded ? "Geocoded" : "Not geocoded"}</span>
+                                </div>
+                                <div className="mt-0.5 text-[11px] text-neutral-500 truncate">
+                                  {geocoded ? <>Lat {Number(c.lat).toFixed(4)}, Lon {Number(c.lon).toFixed(4)}</> : "Add via Search to enable radius"}
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="text-xs text-neutral-600 hover:text-neutral-800 hover:underline shrink-0"
+                              onClick={() => setCities(cities.filter((_, i) => i !== idx))}
+                              aria-label={`Remove ${c.displayName}`}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          {geocoded ? (
+                            <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                              <label className="text-xs text-neutral-600">Radius</label>
+                              <input
+                                type="range"
+                                min={1}
+                                max={100}
+                                value={toDisplayDistance(c.radiusKm)}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(val) } : ci));
+                                }}
+                                className="w-full sm:flex-1"
+                              />
+                              <span className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700">
+                                {toDisplayDistance(c.radiusKm)} {distanceUnit}
+                              </span>
+                            </div>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+
+                <div className="mt-5 flex justify-between">
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(6)}>Back</button>
+                  <button
+                    type="button"
+                    disabled={!canFinish}
+                    className={classNames(
+                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                      !canFinish ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                    )}
+                  >
+                    Finish
+                  </button>
+                </div>
               </div>
-              <div className="mt-5">
-                <button type="button" className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90">Finish</button>
-              </div>
-            </section>
-          )}
+            </div>
+          </details>
         </main>
       </div>
     </div>
