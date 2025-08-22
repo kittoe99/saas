@@ -327,6 +327,11 @@ export default function OnboardingPage() {
   const step5TimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
   // Fallback timeout to guarantee completion in case intervals are throttled
   const step5TimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Step 4 analyzing UX (for searching)
+  const [step4Progress, setStep4Progress] = useState(0);
+  const [step4Logs, setStep4Logs] = useState<string[]>([]);
+  const step4TimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const step4TimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Step orchestration
   const [step, setStep] = useState(1);
@@ -433,6 +438,76 @@ export default function OnboardingPage() {
   const [searchedCount, setSearchedCount] = useState<number | null>(null);
   const [searchedPreview, setSearchedPreview] = useState<Array<{ index: number; title: string; url: string; snippet?: string }>>([]);
   const [showSources, setShowSources] = useState(false);
+
+  // Basic text sanitizer for LLM output: normalize bullets, quotes, spaces, and strip markdown markers
+  function sanitizeText(input: string): string {
+    if (!input) return "";
+    let t = input
+      .replace(/\u00A0/g, " ") // nbsp -> space
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
+      .replace(/[•·]/g, "- ")
+      .replace(/^[*]\s+/gm, "- ")
+      .replace(/[\t\r]+/g, " ")
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/__(.*?)__/g, "$1")
+      .replace(/`(.*?)`/g, "$1")
+      .replace(/\s+\[\d+\]\s*/g, " ") // inline citations
+      .replace(/\s{2,}/g, " ");
+    return t.trim();
+  }
+
+  // Drive Step 4 analyzing progress while searching
+  useEffect(() => {
+    // clear any existing timers
+    if (!searching) {
+      if (step4TimerRef.current) { clearInterval(step4TimerRef.current as any); step4TimerRef.current = null; }
+      if (step4TimeoutRef.current) { clearTimeout(step4TimeoutRef.current as any); step4TimeoutRef.current = null; }
+      setStep4Progress((p) => (p < 100 ? 100 : p));
+      return;
+    }
+    // starting a new search
+    setStep4Progress(0);
+    setStep4Logs([]);
+    const messages = [
+      "Searching website",
+      "Crawling pages",
+      "Extracting content",
+      "Ranking relevance",
+      "Summarizing findings",
+    ];
+    const tick = 350;
+    let i = 0;
+    const perMsgPct = Math.floor(100 / (messages.length + 1));
+    const id = setInterval(() => {
+      i += 1;
+      // progress eases to 100 but may be force-completed by timeout below
+      const p = Math.min(100, Math.round((i * tick) / (tick * 14) * 100));
+      setStep4Progress(p);
+      setStep4Logs((prev) => {
+        if (p >= (prev.length + 1) * perMsgPct && prev.length < messages.length) {
+          return [...prev, messages[prev.length]];
+        }
+        return prev;
+      });
+      if (p >= 100) {
+        clearInterval(id);
+        step4TimerRef.current = null;
+        if (step4TimeoutRef.current) { clearTimeout(step4TimeoutRef.current as any); step4TimeoutRef.current = null; }
+      }
+    }, tick);
+    step4TimerRef.current = id as any;
+    // Safety timeout in case of throttling
+    step4TimeoutRef.current = setTimeout(() => {
+      if (step4TimerRef.current) { clearInterval(step4TimerRef.current as any); step4TimerRef.current = null; }
+      step4TimeoutRef.current = null;
+      setStep4Progress(100);
+    }, 8000);
+    return () => {
+      if (step4TimerRef.current) { clearInterval(step4TimerRef.current as any); step4TimerRef.current = null; }
+      if (step4TimeoutRef.current) { clearTimeout(step4TimeoutRef.current as any); step4TimeoutRef.current = null; }
+    };
+  }, [searching]);
 
   // Manual city suggestions search (only on user action)
   async function runCitySearch() {
@@ -556,10 +631,10 @@ export default function OnboardingPage() {
 
   // Guard: if progress hits 100% while still on Step 5, ensure we advance
   useEffect(() => {
-    if (step === 5 && step5Progress >= 100) {
+    if (step === 5 && step5Analyzing && step5Progress >= 100) {
       setStep(6);
     }
-  }, [step5Progress, step]);
+  }, [step5Progress, step, step5Analyzing]);
 
   async function summarizeUrl() {
     if (!currentUrl) return;
@@ -613,8 +688,14 @@ export default function OnboardingPage() {
             try {
               const json = first.slice("__SEARCH__".length);
               const info = JSON.parse(json || '{}');
-              if (typeof info?.count === 'number') setSearchedCount(info.count);
-              if (Array.isArray(info?.results)) setSearchedPreview(info.results);
+              if (Array.isArray(info?.results)) {
+                const limited = info.results.slice(0, 4);
+                setSearchedPreview(limited);
+                // Prefer to show how many we're showing
+                setSearchedCount(limited.length);
+              } else if (typeof info?.count === 'number') {
+                setSearchedCount(Math.min(4, info.count));
+              }
             } catch {}
             searchHeaderHandled = true; buffered = rest; progressed = true; continue;
           }
@@ -626,9 +707,11 @@ export default function OnboardingPage() {
         // Incrementally render narrative once headers are consumed
         if (searchHeaderHandled && metaHeaderHandled) {
           if (buffered.length > live.length) {
-            const partial = buffered
-              .replace(/\s*\[[0-9]+\]\s*$/g, "") // trim dangling citation at the very end of the stream
-              .trim();
+            const partial = sanitizeText(
+              buffered
+                .replace(/\s*\[[0-9]+\]\s*$/g, "") // trim dangling citation at end of the stream
+                .trim()
+            );
             live = partial;
             setSummary({
               summary: live,
@@ -641,7 +724,7 @@ export default function OnboardingPage() {
         }
       }
       // Post-process: strip 'References' section and inline [n] citations
-      let narrative = buffered.trim();
+      let narrative = sanitizeText(buffered.trim());
       const refIdx = narrative.toLowerCase().indexOf("\nreferences");
       if (refIdx > -1) narrative = narrative.slice(0, refIdx).trim();
       // If output contains bullets, preserve bullet structure
@@ -650,7 +733,7 @@ export default function OnboardingPage() {
       const bulletLines = rawLines
         .map((l) => l.trim())
         .filter((l) => bulletRegex.test(l))
-        .map((l) => l.replace(/^[-•\*]\s+/, "").replace(/\s*\[\d+\]\s*$/g, "").trim())
+        .map((l) => sanitizeText(l.replace(/^[-•\*]\s+/, "").replace(/\s*\[\d+\]\s*$/g, "").trim()))
         .filter(Boolean);
       const hasBullets = bulletLines.length > 0;
       // capture any intro paragraph lines before the first bullet
@@ -672,7 +755,7 @@ export default function OnboardingPage() {
         narrative = limited.map((b) => `- ${b}`).join("\n");
       } else {
         // No bullets: clean citations and whitespace and ensure punctuation
-        narrative = narrative.replace(/\s*\[\d+\]/g, "").replace(/\s+/g, " ").trim();
+        narrative = sanitizeText(narrative.replace(/\s*\[\d+\]/g, "")).replace(/\s+/g, " ").trim();
         if (!/[.!?]$/.test(narrative) && narrative.length > 0) narrative += ".";
         // Constrain to 3–6 sentences and remove accidental repeats
         if (narrative) {
@@ -732,6 +815,42 @@ export default function OnboardingPage() {
         <span className="inline-block w-0.5 h-4 align-middle ml-0.5 bg-success-accent animate-pulse" />
       </div>
     );
+  }
+
+  // Styled renderer for summary text: pretty bullets with bold labels and citation stripping
+  function RenderSummary({ text }: { text: string }) {
+    if (!text) return null;
+    const cleaned = text.replace(/\s*\[\d+\]\s*/g, " ");
+    const lines = cleaned.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const bulletLines = lines.filter((l) => /^[-•\*]\s+/.test(l));
+    if (bulletLines.length > 0) {
+      const items = bulletLines.map((l) => l.replace(/^[-•\*]\s+/, "").trim());
+      return (
+        <ul className="mt-2 space-y-2">
+          {items.map((t, i) => {
+            const idx = t.indexOf(":");
+            const hasLabel = idx > 0 && idx < 40;
+            const label = hasLabel ? t.slice(0, idx) : "";
+            const rest = hasLabel ? t.slice(idx + 1).trim() : t;
+            return (
+              <li key={i} className="flex items-start gap-2">
+                <span className="mt-1 inline-flex h-2.5 w-2.5 flex-shrink-0 rounded-full bg-success-accent" />
+                <div className="text-sm text-neutral-800">
+                  {hasLabel ? (
+                    <>
+                      <span className="font-semibold">{label}:</span> {rest}
+                    </>
+                  ) : (
+                    <span>{rest}</span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+    return <Typewriter text={cleaned} />;
   }
 
 
@@ -1031,10 +1150,11 @@ export default function OnboardingPage() {
                       <div>
                         <label className="block text-sm font-medium">Website URL or domain</label>
                         <input
+                          disabled={searching}
                           value={currentUrl}
                           onChange={(e) => setCurrentUrl(e.target.value)}
                           placeholder="example.com or https://example.com"
-                          className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                          className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:opacity-60"
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -1049,11 +1169,79 @@ export default function OnboardingPage() {
                         <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => { setSkipped(true); setSiteAdded(false); setSummary(null); setError(null); }}>Skip</button>
                       </div>
 
-                      {error && <div className="text-sm text-red-600">{error}</div>}
-                      {notFound && <div className="text-sm text-neutral-600">No info found. You can skip or add details manually.</div>}
-                      {summary?.summary && (
-                        <div className="mt-2 rounded border border-neutral-200 bg-gray-50 p-3 text-sm text-neutral-800 whitespace-pre-wrap">
-                          {summary.summary}
+                      {/* Analyzing panel (progress + logs) */}
+                      {searching && (
+                        <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4">
+                          {/* Mobile collapsible */}
+                          <div className="sm:hidden">
+                            <details open className="group">
+                              <summary className="flex items-center justify-between cursor-pointer text-[13px] font-medium text-neutral-800">
+                                <span>Analyzing your website…</span>
+                                <span className="ml-2 text-[11px] text-neutral-500">{step4Progress}%</span>
+                              </summary>
+                              <ul className="mt-2 max-h-40 overflow-y-auto pr-1 space-y-1 text-[11px] text-neutral-700">
+                                {step4Logs.map((l, idx) => (
+                                  <li key={idx} className="flex items-center gap-2">
+                                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
+                                    {l}
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          </div>
+                          {/* Desktop */}
+                          <div className="hidden sm:block">
+                            <div className="text-sm font-medium text-neutral-800">Analyzing your website…</div>
+                            <div className="mt-2 h-2 w-full rounded bg-neutral-100">
+                              <div className="h-2 rounded bg-success-accent transition-all" style={{ width: `${step4Progress}%` }} />
+                            </div>
+                            <ul className="mt-3 max-h-40 overflow-y-auto pr-1 space-y-1 text-xs text-neutral-700">
+                              {step4Logs.map((l, idx) => (
+                                <li key={idx} className="flex items-center gap-2">
+                                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
+                                  {l}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
+                      {notFound && <div className="mt-2 text-sm text-neutral-600">No info found. You can skip or add details manually.</div>}
+
+                      {/* Results header: count + sources toggle */}
+                      {!searching && (searchedCount !== null || searchedPreview.length > 0) && (
+                        <div className="mt-4 flex items-center justify-between">
+                          <div className="inline-flex items-center gap-2 text-xs">
+                            <span className="rounded-full bg-success-bg text-success-ink px-2 py-0.5">{searchedCount ?? searchedPreview.length} results shown</span>
+                          </div>
+                          <button type="button" className="text-xs text-neutral-700 hover:underline" onClick={() => setShowSources((v) => !v)}>
+                            {showSources ? "Hide sources" : "Show sources"}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Sources preview */}
+                      {!searching && showSources && searchedPreview.length > 0 && (
+                        <div className="mt-2 rounded-lg border border-neutral-200 bg-white">
+                          <ul className="divide-y divide-neutral-100">
+                            {searchedPreview.slice(0, 4).map((r) => (
+                              <li key={r.index} className="p-3">
+                                <div className="text-[13px] font-medium text-neutral-800 truncate">{sanitizeText(r.title || r.url)}</div>
+                                <div className="text-[11px] text-neutral-500 truncate">{r.url}</div>
+                                {r.snippet && <div className="mt-1 text-[12px] text-neutral-700 line-clamp-2">{sanitizeText(r.snippet)}</div>}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Summary with improved design */}
+                      {summary?.summary && !searching && (
+                        <div className="mt-3 rounded-lg border border-neutral-200 bg-gray-50 p-3 sm:p-4">
+                          <div className="text-sm font-medium text-neutral-800">Summary</div>
+                          <RenderSummary text={summary.summary} />
                         </div>
                       )}
                     </div>
@@ -1548,9 +1736,9 @@ export default function OnboardingPage() {
                     {cities.map((c, idx) => {
                       const geocoded = (c.lat !== 0 || c.lon !== 0);
                       return (
-                        <li key={`${c.name}-${idx}`} className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3 shadow-sm transition-colors hover:bg-neutral-50">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-3 min-w-0">
+                        <li key={`${c.name}-${idx}`} className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3 shadow-sm transition-colors hover:bg-neutral-50 min-w-0">
+                          <div className="flex items-start gap-3 flex-wrap">
+                            <div className="flex items-start gap-3 min-w-0 flex-1 order-1">
                               <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-success-bg text-success-ink">
                                 <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 4.97 6.06 12.39 6.32 12.68.37.41 1.01.41 1.38 0C12.94 21.39 19 13.97 19 9a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z"/></svg>
                               </span>
@@ -1566,7 +1754,7 @@ export default function OnboardingPage() {
                             </div>
                             <button
                               type="button"
-                              className="text-xs text-neutral-600 hover:text-neutral-800 hover:underline shrink-0"
+                              className="text-xs text-neutral-600 hover:text-neutral-800 hover:underline shrink-0 self-start order-2 sm:order-none sm:ml-auto"
                               onClick={() => setCities(cities.filter((_, i) => i !== idx))}
                               aria-label={`Remove ${c.displayName}`}
                             >
@@ -1574,8 +1762,8 @@ export default function OnboardingPage() {
                             </button>
                           </div>
                           {geocoded ? (
-                            <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3">
-                              <label className="text-xs text-neutral-600">Radius</label>
+                            <div className="mt-3 grid w-full min-w-0 grid-cols-1 sm:grid-cols-12 items-center gap-3">
+                              <label className="text-xs text-neutral-600 sm:col-span-2">Radius</label>
                               <input
                                 type="range"
                                 min={1}
@@ -1585,9 +1773,9 @@ export default function OnboardingPage() {
                                   const val = Number(e.target.value);
                                   setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(val) } : ci));
                                 }}
-                                className="w-full sm:flex-1"
+                                className="w-full min-w-0 max-w-full sm:col-span-9"
                               />
-                              <span className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700">
+                              <span className="inline-flex self-start sm:self-auto mt-1 sm:mt-0 sm:col-span-1 sm:justify-self-end items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700 whitespace-nowrap">
                                 {toDisplayDistance(c.radiusKm)} {distanceUnit}
                               </span>
                             </div>
