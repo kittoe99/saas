@@ -68,34 +68,57 @@ export default function Home() {
   }, [typedText, isDeleting, phraseIndex, isReduced]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Pick the most visible entry
-        let topEntry: IntersectionObserverEntry | null = null;
-        for (const e of entries) {
-          if (!topEntry || e.intersectionRatio > topEntry.intersectionRatio) {
-            topEntry = e;
-          }
-        }
-        if (topEntry && topEntry.isIntersecting) {
-          const id = topEntry.target.getAttribute("id") as SectionId | null;
-          if (id && (SECTION_IDS as readonly string[]).includes(id)) setActiveId(id);
-        }
-      },
-      {
-        // Activate when a section enters the middle band of the viewport
-        root: null,
-        rootMargin: "-25% 0px -65% 0px",
-        threshold: [0.15, 0.4, 0.8],
-      }
-    );
-
+    // Real-time scroll spy: pick the section closest to a viewport center band
     const elements = SECTION_IDS
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
-    elements.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    if (elements.length === 0) return;
+
+    let ticking = false;
+
+    const computeActive = () => {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      // Choose a center band around ~35% of the viewport (aligns with sticky tabs position)
+      const centerY = vh * 0.35;
+      let bestId: SectionId | null = null;
+      let bestDist = Number.POSITIVE_INFINITY;
+
+      for (const el of elements) {
+        const rect = el.getBoundingClientRect();
+        // Distance from section top to our center line
+        const dist = Math.abs(rect.top - centerY);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestId = (el.getAttribute("id") as SectionId) ?? null;
+        }
+      }
+
+      if (bestId && bestId !== activeId) {
+        setActiveId(bestId);
+      }
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(() => {
+          computeActive();
+          ticking = false;
+        });
+      }
+    };
+
+    // Initialize and bind
+    computeActive();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll as EventListener);
+      window.removeEventListener("resize", onScroll as EventListener);
+    };
+  }, [activeId]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="py-10 md:py-16">
       {/* Hero */}
