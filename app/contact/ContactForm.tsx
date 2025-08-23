@@ -43,16 +43,16 @@ export default function ContactForm() {
   }
 
   return (
-    <div className="md:col-span-2 rounded-xl border border-neutral-200 bg-white p-5 sm:p-6">
+    <div className="md:col-span-2 rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-soft shadow-hover">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-neutral-700">Name</label>
-            <input id="name" name="name" type="text" required className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/30 focus:border-black" placeholder="Jane Doe" />
+            <input id="name" name="name" type="text" required className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/30 focus:border-black shadow-sm" placeholder="Jane Doe" />
           </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-neutral-700">Email</label>
-            <input id="email" name="email" type="email" required className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/30 focus:border-black" placeholder="jane@example.com" />
+            <input id="email" name="email" type="email" required className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/30 focus:border-black shadow-sm" placeholder="jane@example.com" />
           </div>
         </div>
         <div>
@@ -61,7 +61,7 @@ export default function ContactForm() {
             id="subject"
             name="subject"
             defaultValue=""
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-black/30 focus:border-black bg-white"
+            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-black/30 focus:border-black bg-white shadow-sm"
             required
           >
             <option value="" disabled hidden>
@@ -76,7 +76,7 @@ export default function ContactForm() {
         </div>
         <div>
           <label htmlFor="message" className="block text-sm font-medium text-neutral-700">Message</label>
-          <textarea id="message" name="message" rows={6} required className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/30 focus:border-black" placeholder="Write your message here..." />
+          <textarea id="message" name="message" rows={6} required className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/30 focus:border-black shadow-sm" placeholder="Write your message here..." />
         </div>
         {success && (
           <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">

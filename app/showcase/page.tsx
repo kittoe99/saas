@@ -45,7 +45,7 @@ export default function ShowcasePage() {
             <a
               key={s.title}
               href={s.href}
-              className="group rounded-xl border border-neutral-200 bg-white overflow-hidden transition-shadow duration-300 hover:shadow-lg"
+              className="group rounded-xl border border-neutral-200 bg-white overflow-hidden transition-shadow duration-300 shadow-soft shadow-hover"
             >
               <div className="relative h-48 sm:h-56 md:h-60 bg-neutral-200">
                 <img
@@ -82,7 +82,7 @@ export default function ShowcasePage() {
         </div>
 
         <div className="mt-8 md:mt-10 flex justify-center">
-          <Link href="/contact" className="px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white inline-flex items-center gap-2">
+          <Link href="/contact" className="px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white inline-flex items-center gap-2 shadow-soft shadow-hover">
             <span>Start your project</span>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

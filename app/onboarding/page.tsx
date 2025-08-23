@@ -902,7 +902,7 @@ export default function OnboardingPage() {
             <details
               open={step === 1}
               className={classNames(
-                "relative rounded-xl border",
+                "relative rounded-xl border shadow-soft shadow-hover",
                 step > 1 ? "bg-success-bg border-success" : "bg-white border-neutral-200"
               )}
               onToggle={(e) => {
@@ -934,7 +934,7 @@ export default function OnboardingPage() {
                         type="button"
                         onClick={() => setSiteType(t)}
                         className={classNames(
-                          "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                          "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover",
                           siteType === t ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50"
                         )}
                       >
@@ -971,7 +971,7 @@ export default function OnboardingPage() {
             <details
               open={step === 2}
               className={classNames(
-                "relative rounded-xl border",
+                "relative rounded-xl border shadow-soft shadow-hover",
                 step > 2 ? "bg-success-bg border-success" : step >= 2 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
               onToggle={(e) => {
@@ -1004,7 +1004,7 @@ export default function OnboardingPage() {
                         type="button"
                         onClick={() => setCategory(c)}
                         className={classNames(
-                          "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                          "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover",
                           category === c ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50"
                         )}
                       >
@@ -1042,7 +1042,7 @@ export default function OnboardingPage() {
             <details
               open={step === 3}
               className={classNames(
-                "relative rounded-xl border",
+                "relative rounded-xl border shadow-soft shadow-hover",
                 step > 3 ? "bg-success-bg border-success" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
               onToggle={(e) => {
@@ -1102,7 +1102,7 @@ export default function OnboardingPage() {
             <details
               open={step === 4}
               className={classNames(
-                "relative rounded-xl border",
+                "relative rounded-xl border shadow-soft shadow-hover",
                 step > 4 ? "bg-success-bg border-success" : step >= 4 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
               onToggle={(e) => {
@@ -1138,7 +1138,7 @@ export default function OnboardingPage() {
                         key={v}
                         type="button"
                         onClick={() => setHasCurrent(v)}
-                        className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent", hasCurrent === v ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}
+                        className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover", hasCurrent === v ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}
                       >
                         {v.toUpperCase()}
                       </button>
@@ -1171,7 +1171,7 @@ export default function OnboardingPage() {
 
                       {/* Analyzing panel (progress + logs) */}
                       {searching && (
-                        <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4">
+                        <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft">
                           {/* Mobile collapsible */}
                           <div className="sm:hidden">
                             <details open className="group">
@@ -1224,7 +1224,7 @@ export default function OnboardingPage() {
 
                       {/* Sources preview */}
                       {!searching && showSources && searchedPreview.length > 0 && (
-                        <div className="mt-2 rounded-lg border border-neutral-200 bg-white">
+                        <div className="mt-2 rounded-lg border border-neutral-200 bg-white shadow-soft">
                           <ul className="divide-y divide-neutral-100">
                             {searchedPreview.slice(0, 4).map((r) => (
                               <li key={r.index} className="p-3">
@@ -1239,7 +1239,7 @@ export default function OnboardingPage() {
 
                       {/* Summary with improved design */}
                       {summary?.summary && !searching && (
-                        <div className="mt-3 rounded-lg border border-neutral-200 bg-gray-50 p-3 sm:p-4">
+                        <div className="mt-3 rounded-lg border border-neutral-200 bg-gray-50 p-3 sm:p-4 shadow-soft">
                           <div className="text-sm font-medium text-neutral-800">Summary</div>
                           <RenderSummary text={summary.summary} />
                         </div>
@@ -1279,7 +1279,7 @@ export default function OnboardingPage() {
             <details
               open={step === 5}
               className={classNames(
-                "relative rounded-xl border",
+                "relative rounded-xl border shadow-soft shadow-hover",
                 step > 5 ? "bg-success-bg border-success" : step >= 5 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
               onToggle={(e) => {
@@ -1322,7 +1322,7 @@ export default function OnboardingPage() {
                     <label className="block text-sm font-medium">Preferred contact method</label>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {["email","phone","form","schedule"].map((m) => (
-                        <button disabled={step5Analyzing} key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent disabled:opacity-60", contactMethod === m ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}>{m}</button>
+                        <button disabled={step5Analyzing} key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent disabled:opacity-60 shadow-soft shadow-hover", contactMethod === m ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}>{m}</button>
                       ))}
                     </div>
                   </div>
@@ -1375,7 +1375,7 @@ export default function OnboardingPage() {
                     </div>
                   </div>
                   {step5Analyzing && (
-                    <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4">
+                    <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft">
                       {/* Mobile: collapsible logs, no progress bar */}
                       <div className="sm:hidden">
                         <details open className="group">
@@ -1432,7 +1432,7 @@ export default function OnboardingPage() {
           <details
             open={step === 6}
             className={classNames(
-              "relative rounded-xl border",
+              "relative rounded-xl border shadow-soft shadow-hover",
               step > 6 ? "bg-success-bg border-success" : step >= 6 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
             )}
             onToggle={(e) => {
@@ -1632,7 +1632,7 @@ export default function OnboardingPage() {
           <details
             open={step === 7}
             className={classNames(
-              "relative rounded-xl border",
+              "relative rounded-xl border shadow-soft shadow-hover",
               step > 7 ? "bg-success-bg border-success" : step >= 7 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
             )}
             onToggle={(e) => {
@@ -1722,7 +1722,7 @@ export default function OnboardingPage() {
                 </div>
 
                 {cities.length === 0 ? (
-                  <div className="mt-4 rounded-lg border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600">
+                  <div className="mt-4 rounded-lg border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600 shadow-soft">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-success-bg text-success-ink">
                         <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 4.97 6.06 12.39 6.32 12.68.37.41 1.01.41 1.38 0C12.94 21.39 19 13.97 19 9a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z"/></svg>
@@ -1736,7 +1736,7 @@ export default function OnboardingPage() {
                     {cities.map((c, idx) => {
                       const geocoded = (c.lat !== 0 || c.lon !== 0);
                       return (
-                        <li key={`${c.name}-${idx}`} className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3 shadow-sm transition-colors hover:bg-neutral-50 min-w-0">
+                        <li key={`${c.name}-${idx}`} className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3 shadow-soft shadow-hover transition-colors hover:bg-neutral-50 min-w-0">
                           <div className="flex items-start gap-3 flex-wrap">
                             <div className="flex items-start gap-3 min-w-0 flex-1 order-1">
                               <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-success-bg text-success-ink">

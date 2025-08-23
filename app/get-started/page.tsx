@@ -76,7 +76,7 @@ function StepSummary({
 
       {/* Summary */}
       <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2 rounded-xl border border-neutral-200 p-4">
+        <div className="md:col-span-2 rounded-xl border border-neutral-200 p-4 shadow-soft">
           <div className="text-sm font-medium text-neutral-700">Order summary</div>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex items-start justify-between">
@@ -96,7 +96,7 @@ function StepSummary({
           </dl>
         </div>
 
-        <div className="rounded-xl border border-neutral-200 p-4 bg-neutral-50">
+        <div className="rounded-xl border border-neutral-200 p-4 bg-neutral-50 shadow-soft">
           <div className="text-sm font-medium text-neutral-700">Billing details</div>
           <div className="mt-3 text-sm text-neutral-700">
             <div>{personal.firstName} {personal.lastName}</div>
@@ -153,7 +153,7 @@ function StepCheckout({
 
       <div className="mt-5 space-y-4">
         {/* Order summary (collapsible) */}
-        <div className="rounded-xl border border-neutral-200">
+        <div className="rounded-xl border border-neutral-200 shadow-soft shadow-hover">
           <button
             type="button"
             onClick={() => setShowDetails((v) => !v)}
@@ -187,7 +187,7 @@ function StepCheckout({
         </div>
 
         {/* Billing form (editable) */}
-        <form className="rounded-xl border border-neutral-200 p-4 bg-white" autoComplete="on" onSubmit={(e) => e.preventDefault()}>
+        <form className="rounded-xl border border-neutral-200 p-4 bg-white shadow-soft" autoComplete="on" onSubmit={(e) => e.preventDefault()}>
           <div className="text-sm font-medium text-neutral-700">Billing information</div>
           <div className="mt-3 grid grid-cols-1 gap-3">
             <Field label="Full name" required>
@@ -251,7 +251,7 @@ function StepCheckout({
 
       {/* Card details (mock, Stripe-like UI) */}
       {showCard && (
-      <div className="mt-5 rounded-xl border border-neutral-200 p-4">
+      <div className="mt-5 rounded-xl border border-neutral-200 p-4 shadow-soft">
         <div className="text-sm font-medium text-neutral-700">Payment method (mock)</div>
         {paid ? (
           <div className="mt-3 rounded-md bg-success-bg border border-success text-success-ink text-sm p-3">
@@ -440,7 +440,7 @@ function StepCheckout({
                   ref={step1Ref as any}
                   open={step === 1}
                   className={classNames(
-                    "relative rounded-xl border",
+                    "relative rounded-xl border shadow-soft shadow-hover",
                     step > 1 ? "bg-success-bg border-success" : "bg-white border-neutral-200"
                   )}
                   onToggle={(e) => {
@@ -496,7 +496,7 @@ function StepCheckout({
                   ref={step2Ref as any}
                   open={step === 2}
                   className={classNames(
-                    "relative rounded-xl border",
+                    "relative rounded-xl border shadow-soft shadow-hover",
                     step > 2 ? "bg-success-bg border-success" : step >= 2 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
                   )}
                   onToggle={(e) => {
@@ -547,7 +547,7 @@ function StepCheckout({
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50"
+                      className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50 shadow-soft shadow-hover"
                     >
                       Back
                     </button>
@@ -572,7 +572,7 @@ function StepCheckout({
               ref={step3Ref as any}
               open={step === 3}
               className={classNames(
-                "relative rounded-xl border",
+                "relative rounded-xl border shadow-soft shadow-hover",
                 step > 3 ? "bg-success-bg border-success" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
               onToggle={(e) => {
@@ -637,7 +637,7 @@ function StepCheckout({
             <details
               ref={step4Ref as any}
               open={step === 4}
-              className={classNames("rounded-xl border bg-white", step >= 4 ? "border-neutral-200" : "border-neutral-100 opacity-70")}
+              className={classNames("rounded-xl border bg-white shadow-soft shadow-hover", step >= 4 ? "border-neutral-200" : "border-neutral-100 opacity-70")}
               onToggle={(e) => {
                 const el = e.currentTarget as HTMLDetailsElement;
                 if (el.open && step >= 4) setStep(4);
@@ -697,7 +697,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={classNames(
-        "w-full rounded-md border px-3 py-2 text-sm outline-none",
+        "w-full rounded-md border px-3 py-2 text-sm outline-none shadow-sm",
         "border-neutral-300 placeholder-neutral-400",
         "focus:ring-2 focus:ring-black/30 focus:border-black",
         props.className || ""
@@ -777,7 +777,7 @@ function StepPackageSelection({
               type="button"
               onClick={() => onSelect(p.id)}
               className={classNames(
-                "relative text-left w-full p-4 rounded-xl border bg-white transition",
+                "relative text-left w-full p-4 rounded-xl border bg-white transition shadow-soft shadow-hover",
                 active
                   ? "border-black ring-2 ring-black/20"
                   : "border-neutral-200 hover:border-neutral-300"

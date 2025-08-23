@@ -197,3 +197,138 @@ nav {
   box-shadow: none !important;
   border-bottom: 0 !important;
 }
+
+/* Shadow utilities for containers (forms, cards, lists) */
+/* Subtle, warm-tinted drop shadows that work with the palette */
+.shadow-soft {
+  box-shadow:
+    0 1px 1px rgba(17, 17, 17, 0.02),
+    0 2px 6px rgba(17, 17, 17, 0.04);
+}
+
+.shadow-elevated {
+  box-shadow:
+    0 1px 1px rgba(17, 17, 17, 0.03),
+    0 6px 16px rgba(17, 17, 17, 0.06),
+    0 12px 24px rgba(17, 17, 17, 0.04);
+}
+
+/* Hover utility: now elevated across all states (default, hover, focus, active) */
+.shadow-hover {
+  box-shadow:
+    0 2px 4px rgba(17, 17, 17, 0.04),
+    0 8px 18px rgba(17, 17, 17, 0.06);
+}
+.shadow-hover:hover,
+.shadow-hover:focus,
+.shadow-hover:focus-visible,
+.shadow-hover:active {
+  box-shadow:
+    0 2px 4px rgba(17, 17, 17, 0.04),
+    0 8px 18px rgba(17, 17, 17, 0.06);
+}
+
+/* Compose helpers */
+.shadow-card { box-shadow: 0 1px 1px rgba(17,17,17,0.02), 0 4px 10px rgba(17,17,17,0.05); }
+.shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(17,17,17,0.05); }
+
+/* Button shadows: apply a consistent feel across the site */
+button,
+[role="button"],
+.button,
+.btn {
+  /* default subtle elevation */
+  box-shadow:
+    0 1px 1px rgba(17, 17, 17, 0.02),
+    0 2px 6px rgba(17, 17, 17, 0.04);
+  transition: box-shadow 160ms ease, transform 120ms ease;
+}
+
+button:hover,
+button:focus,
+button:focus-visible,
+button:active,
+[role="button"]:hover,
+[role="button"]:focus,
+[role="button"]:focus-visible,
+[role="button"]:active,
+.button:hover,
+.button:focus,
+.button:focus-visible,
+.button:active,
+.btn:hover,
+.btn:focus,
+.btn:focus-visible,
+.btn:active {
+  /* elevated shadow on interaction */
+  box-shadow:
+    0 2px 4px rgba(17, 17, 17, 0.04),
+    0 8px 18px rgba(17, 17, 17, 0.06);
+}
+
+button:active,
+[role="button"]:active,
+.button:active,
+.btn:active {
+  transform: translateY(0.5px);
+}
+
+/* Utility class to opt-out when needed */
+.no-btn-shadow {
+  box-shadow: none !important;
+}
+
+/* Dark mode tuning: reduce spread/opacity for softer look */
+@media (prefers-color-scheme: dark) {
+  .shadow-soft {
+    box-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.20),
+      0 2px 6px rgba(0, 0, 0, 0.28);
+  }
+  .shadow-elevated {
+    box-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.22),
+      0 6px 16px rgba(0, 0, 0, 0.32),
+      0 12px 24px rgba(0, 0, 0, 0.26);
+  }
+  .shadow-hover,
+  .shadow-hover:hover,
+  .shadow-hover:focus,
+  .shadow-hover:focus-visible,
+  .shadow-hover:active {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.26),
+      0 8px 18px rgba(0, 0, 0, 0.30);
+  }
+  .shadow-card { box-shadow: 0 1px 1px rgba(0,0,0,0.22), 0 4px 10px rgba(0,0,0,0.30); }
+  .shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(0,0,0,0.28); }
+  /* Dark mode button shadows */
+  button,
+  [role="button"],
+  .button,
+  .btn {
+    box-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.20),
+      0 2px 6px rgba(0, 0, 0, 0.28);
+  }
+  button:hover,
+  button:focus,
+  button:focus-visible,
+  button:active,
+  [role="button"]:hover,
+  [role="button"]:focus,
+  [role="button"]:focus-visible,
+  [role="button"]:active,
+  .button:hover,
+  .button:focus,
+  .button:focus-visible,
+  .button:active,
+  .btn:hover,
+  .btn:focus,
+  .btn:focus-visible,
+  .btn:active {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.26),
+      0 8px 18px rgba(0, 0, 0, 0.30);
+  }
+}

@@ -86,7 +86,7 @@ function VerifyEmailInner() {
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4 pt-6">
-      <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-6">
+      <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-6 shadow-soft">
         <div className="flex flex-col items-center text-center space-y-3">
           {viewMode === "verify" ? (
             <>
@@ -135,7 +135,7 @@ function VerifyEmailInner() {
               </button>
               <button
                 onClick={() => setViewMode("exists")}
-                className="inline-flex items-center justify-center rounded-md border border-neutral-300 text-neutral-800 px-4 py-2 text-sm hover:bg-neutral-50"
+                className="inline-flex items-center justify-center rounded-md border border-neutral-300 text-neutral-800 px-4 py-2 text-sm hover:bg-neutral-50 shadow-soft shadow-hover"
               >
                 I already have an account
               </button>
@@ -163,7 +163,7 @@ function VerifyEmailInner() {
                     }
                   }}
                   disabled={!email || loading}
-                  className="inline-flex items-center justify-center rounded-md border border-neutral-300 text-neutral-800 px-4 py-2 text-sm hover:bg-neutral-50 disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-md border border-neutral-300 text-neutral-800 px-4 py-2 text-sm hover:bg-neutral-50 disabled:opacity-60 shadow-soft shadow-hover"
                 >
                   Reset password
                 </button>

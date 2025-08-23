@@ -20,7 +20,7 @@ export default function ContactPage() {
           <ContactForm />
 
           {/* Sidebar */}
-          <aside className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6">
+          <aside className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-soft shadow-hover">
             <h2 className="text-base font-semibold tracking-tight">Contact details</h2>
             <dl className="mt-3 space-y-3 text-sm text-neutral-700">
               <div className="flex items-start gap-2">
