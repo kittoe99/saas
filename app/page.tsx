@@ -70,7 +70,7 @@ function ShowcaseSection() {
       {/* Filter tabs (match sticky section tabs) */}
       <div className="mt-3 flex justify-center">
         <div
-          className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1 sm:gap-1.5 rounded-full bg-white px-1.5 py-1 text-[11px] sm:text-xs text-neutral-800 whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
+          className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1 sm:gap-1.5 rounded-full bg-white px-1.5 py-1 text-base sm:text-xs text-neutral-800 whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
           role="tablist"
           aria-label="Showcase filters"
         >
@@ -288,7 +288,7 @@ export default function Home() {
       <div className="sticky top-16 md:top-20 z-30 mt-14">
         <div className="flex justify-center">
           <div
-            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full bg-white px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
+            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full bg-white px-2 py-2 text-base sm:text-base md:text-lg text-neutral-800 whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
             role="tablist"
             aria-label="Section tabs"
           >
