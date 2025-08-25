@@ -935,7 +935,7 @@ export default function OnboardingPage() {
                         onClick={() => setSiteType(t)}
                         className={classNames(
                           "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover",
-                          siteType === t ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50"
+                          siteType === t ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50"
                         )}
                       >
                         {t}
@@ -1005,7 +1005,7 @@ export default function OnboardingPage() {
                         onClick={() => setCategory(c)}
                         className={classNames(
                           "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover",
-                          category === c ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50"
+                          category === c ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50"
                         )}
                       >
                         {c}
@@ -1138,7 +1138,7 @@ export default function OnboardingPage() {
                         key={v}
                         type="button"
                         onClick={() => setHasCurrent(v)}
-                        className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover", hasCurrent === v ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}
+                        className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover", hasCurrent === v ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50")}
                       >
                         {v.toUpperCase()}
                       </button>
