@@ -1,5 +1,6 @@
 "use client";
 import VectorArt from "./components/VectorArt";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 // Words to animate in the hero headline
@@ -11,6 +12,40 @@ const PHRASES = [
 ] as const;
 
 const SECTION_IDS = ["create", "design", "features", "testimonial", "faq"] as const;
+
+// Showcase teaser (optimized images)
+const SHOWCASE_TEASER = [
+  {
+    title: "Aurora Fitness",
+    category: "Wellness",
+    src: "https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    title: "Summit Outdoors",
+    category: "Outdoors",
+    src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    title: "Bluegrain Coffee Co.",
+    category: "Hospitality",
+    src: "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    title: "Northstar Consulting",
+    category: "Professional Services",
+    src: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    title: "Crescent Studio",
+    category: "Creative",
+    src: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    title: "Evergreen Nonprofit",
+    category: "Nonprofit",
+    src: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop",
+  },
+] as const;
 
 export default function Home() {
   type SectionId = typeof SECTION_IDS[number];
@@ -171,6 +206,48 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Showcase teaser */}
+      <section id="showcase" className="scroll-mt-24 mt-12 md:mt-16">
+        <div className="max-w-6xl mx-auto px-4">
+        <header className="mb-3 md:mb-4 text-center">
+          <div className="text-xs uppercase tracking-wider text-neutral-500">Showcase</div>
+          <h2 className="mt-1 text-[17px] md:text-xl font-semibold tracking-tight">Selected work</h2>
+          <p className="mt-1 text-xs text-neutral-600 max-w-2xl mx-auto">Fast and responsive websites.</p>
+        </header>
+        <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fit,minmax(160px,200px))] justify-center">
+          {SHOWCASE_TEASER.map((s) => (
+            <a key={s.title} href="/showcase" className="group rounded-md border border-soft bg-panel overflow-hidden transition-all duration-300 shadow-soft hover:shadow-md hover:border-success-accent/30">
+              <div className="relative h-24 sm:h-24 md:h-28 bg-neutral-200">
+                <Image
+                  src={s.src}
+                  alt={s.title}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  priority={false}
+                  className="object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-[1.03]"
+                />
+                {/* subtle overlay on hover */}
+                <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
+              </div>
+              <div className="p-2.5">
+                {/* Hide category for tighter layout or make it tiny if desired */}
+                {/* <div className="text-[10px] uppercase tracking-wide text-neutral-500">{s.category}</div> */}
+                <div className="text-[13px] font-medium text-neutral-900 truncate transition-colors duration-200 group-hover:text-success-ink" title={s.title}>
+                  {s.title}
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+        <div className="mt-4 md:mt-6 flex justify-center">
+          <a href="/showcase" className="px-2.5 py-1.5 rounded-md border border-success text-success-ink bg-white text-xs inline-flex items-center gap-1.5 transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft">
+            <span>Explore showcase</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+          </a>
+        </div>
+        </div>
+      </section>
       {/* Centered tabs that scroll to sections (sticky + active highlighting) */}
       <div className="sticky top-16 md:top-20 z-30 mt-14">
         <div className="flex justify-center">
@@ -235,40 +312,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Design */}
-      <section id="design" className="scroll-mt-24 mt-20 md:mt-28">
-        <header className="mb-6 md:mb-8 text-center">
-          <div className="text-xs uppercase tracking-wider text-neutral-500">Design</div>
-          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight">Thoughtful, consistent design system</h2>
-          <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">Clean layouts, reusable components, and clear hierarchy ensure a polished experience across every page.</p>
-        </header>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
-          <div className="group p-5 rounded-xl border border-soft bg-panel transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Clean, modern layouts preview" />
-            </div>
-            <div className="text-sm font-medium text-neutral-500">Design</div>
-            <h3 className="mt-2 text-lg font-semibold">Clean, modern layouts</h3>
-            <p className="mt-2 text-sm text-neutral-600">Professional design tailored to your brand with clear hierarchy and polished details.</p>
-          </div>
-          <div className="group p-5 rounded-xl border border-soft bg-panel transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <VectorArt variant="team" className="absolute inset-0 h-full w-full" aria-label="Monthly content improvements preview" />
-            </div>
-            <div className="text-sm font-medium text-neutral-500">Content</div>
-            <h3 className="mt-2 text-lg font-semibold">Monthly improvements</h3>
-            <p className="mt-2 text-sm text-neutral-600">We handle ongoing tweaks and updates so the site stays fresh and accurate.</p>
-          </div>
-          <div className="group p-5 rounded-xl border border-soft bg-panel transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
-              <VectorArt variant="components" className="absolute inset-0 h-full w-full" aria-label="Reusable components preview" />
-            </div>
-            <div className="text-sm font-medium text-neutral-500">Components</div>
-            <h3 className="mt-2 text-lg font-semibold">Reusable sections</h3>
-            <p className="mt-2 text-sm text-neutral-600">Thoughtful building blocks that make pages consistent and easy to extend.</p>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Features */}
       <section id="features" className="scroll-mt-24 mt-20 md:mt-28">

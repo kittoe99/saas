@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
     // You can still run `npm run lint` locally to check.
     ignoreDuringBuilds: true,
   },
+  images: {
+    domains: ["images.unsplash.com"],
+  },
 };
 
 export default nextConfig;

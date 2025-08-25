@@ -45,7 +45,7 @@ export default function ShowcasePage() {
             <a
               key={s.title}
               href={s.href}
-              className="group rounded-xl border border-neutral-200 bg-white overflow-hidden transition-shadow duration-300 shadow-soft shadow-hover"
+              className="group rounded-xl border border-soft bg-panel overflow-hidden transition-all duration-300 shadow-soft shadow-hover hover:-translate-y-0.5 hover:border-success-accent/30"
             >
               <div className="relative h-48 sm:h-56 md:h-60 bg-neutral-200">
                 <img
@@ -70,7 +70,7 @@ export default function ShowcasePage() {
               <div className="p-4">
                 <div className="text-xs uppercase tracking-wide text-neutral-500">{s.category}</div>
                 <div className="mt-1 text-base font-semibold text-neutral-900">{s.title}</div>
-                <div className="mt-2 inline-flex items-center gap-1 text-sm text-[#1a73e8]">
+                <div className="mt-2 inline-flex items-center gap-1 text-sm text-success-ink">
                   <span>View project</span>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -82,7 +82,7 @@ export default function ShowcasePage() {
         </div>
 
         <div className="mt-8 md:mt-10 flex justify-center">
-          <Link href="/contact" className="px-4 py-2.5 rounded-md border border-[#1a73e8] text-[#1a73e8] bg-white inline-flex items-center gap-2 shadow-soft shadow-hover">
+          <Link href="/contact" className="px-4 py-2.5 rounded-md border border-success text-success-ink bg-white inline-flex items-center gap-2 transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover">
             <span>Start your project</span>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
