@@ -67,24 +67,31 @@ function ShowcaseSection() {
   );
   return (
     <div>
-      {/* Filter tabs (compact, no scroll, wraps, white container) */}
-      <div className="mt-2 flex justify-center">
-        <div className="flex flex-wrap justify-center gap-1.5 rounded-full bg-transparent px-2 py-2 shadow-soft">
+      {/* Filter tabs (match sticky section tabs) */}
+      <div className="mt-3 flex justify-center">
+        <div
+          className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1 sm:gap-1.5 rounded-full bg-white px-1.5 py-1 text-[11px] sm:text-xs text-neutral-800 whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
+          role="tablist"
+          aria-label="Showcase filters"
+        >
           {SHOWCASE_TABS.map((tab) => {
             const isActive = category === tab;
             return (
-              <button
+              <a
                 key={tab}
-                type="button"
-                onClick={() => setCategory(tab)}
-                className={(isActive
-                  ? "border-success text-success-ink bg-white"
-                  : "border-neutral-200 text-neutral-700 hover:text-success-ink hover:border-success-accent/50 hover:bg-success-accent/5") +
-                  " text-[11px] leading-none px-2.5 py-1 rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"}
-                aria-pressed={isActive}
+                href="#"
+                onClick={(e) => { e.preventDefault(); setCategory(tab); }}
+                className={
+                  (isActive
+                    ? "border-[color:var(--panel)] text-success-ink bg-panel font-medium"
+                    : "border-transparent text-neutral-800 hover:text-success-ink hover:bg-success-accent/10") +
+                  " px-2 sm:px-2.5 py-[3px] rounded-full border outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-success-accent focus-visible:ring-offset-[color:var(--panel)] transition-all duration-200 snap-start"
+                }
+                role="tab"
+                aria-selected={isActive}
               >
                 {tab}
-              </button>
+              </a>
             );
           })}
         </div>
@@ -92,7 +99,7 @@ function ShowcaseSection() {
       {/* Grid limited to 3 columns on md+ */}
       <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
         {items.map((s) => (
-          <a key={s.title} href="/showcase" className="group rounded-md border border-neutral-200 bg-white overflow-hidden transition-all duration-300 shadow-soft hover:shadow-md hover:border-success-accent/30">
+          <a key={s.title} href="/showcase" className="group rounded-md border border-neutral-200 bg-white overflow-hidden transition-all duration-300 hover:border-success-accent/30">
             <div className="relative h-24 sm:h-24 md:h-28 bg-neutral-200">
               <Image
                 src={s.src}
@@ -281,7 +288,7 @@ export default function Home() {
       <div className="sticky top-16 md:top-20 z-30 mt-14">
         <div className="flex justify-center">
           <div
-            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full bg-white px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-soft shadow-hover whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
+            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full bg-white px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
             role="tablist"
             aria-label="Section tabs"
           >
@@ -294,9 +301,9 @@ export default function Home() {
                     href={`#${id}`}
                     className={
                       (isActive
-                        ? "border-[color:var(--panel)] text-success-ink bg-panel font-medium shadow-soft"
+                        ? "border-[color:var(--panel)] text-success-ink bg-panel font-medium"
                         : "border-transparent text-neutral-800 hover:text-success-ink hover:bg-success-accent/10") +
-                      " px-3 sm:px-4 py-1.5 rounded-full border outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent focus-visible:ring-offset-[color:var(--panel)] transition-all duration-200 hover:shadow-soft snap-start"
+                      " px-3 sm:px-4 py-1.5 rounded-full border outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent focus-visible:ring-offset-[color:var(--panel)] transition-all duration-200 snap-start"
                     }
                     aria-current={isActive ? "true" : undefined}
                     role="tab"

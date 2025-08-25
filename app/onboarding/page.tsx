@@ -115,6 +115,8 @@ const CATEGORY_SERVICES: Record<string, string[]> = {
   Electronics: ["Phone repair services", "Computer repair services", "Screen replacement", "Battery replacement", "Device diagnostics"],
 };
 
+ 
+
 function servicesFor(siteType: SiteType | null, category: string): string[] {
   const cat = CATEGORY_SERVICES[category] || [];
   if (cat.length) return cat;
@@ -997,20 +999,26 @@ export default function OnboardingPage() {
               <div className="accordion border-t border-neutral-200">
                 <div className="accordion-content p-4 sm:p-5 fade-slide">
                   <label className="block text-sm font-medium">Select a category / industry</label>
-                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {categoriesFor(siteType).map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setCategory(c)}
-                        className={classNames(
-                          "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover",
-                          category === c ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50"
-                        )}
-                      >
-                        {c}
-                      </button>
-                    ))}
+                  <div className="mt-3">
+                    <div className="inline-flex max-w-full flex-wrap gap-1.5 sm:gap-2 rounded-full bg-white px-2 py-1.5 text-xs sm:text-[13px] text-neutral-800 whitespace-normal">
+                      {categoriesFor(siteType).map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setCategory(c)}
+                          className={classNames(
+                            category === c
+                              ? "border-[color:var(--panel)] text-success-ink bg-panel font-medium"
+                              : "border-transparent text-neutral-800 hover:text-success-ink hover:bg-success-accent/10",
+                            "px-2.5 sm:px-3 py-1 rounded-full border outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent focus-visible:ring-offset-[color:var(--panel)] transition-all duration-200"
+                          )}
+                          aria-pressed={category === c}
+                          aria-selected={category === c}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   {/* Optional primary goal */}
                   <div className="mt-4 max-w-sm">
