@@ -82,7 +82,7 @@ export default function ShowcasePage() {
         </div>
 
         <div className="mt-8 md:mt-10 flex justify-center">
-          <Link href="/contact" className="px-4 py-2.5 rounded-md border border-success text-success-ink bg-white inline-flex items-center gap-2 transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover">
+          <Link href="/contact" className="px-4 py-2.5 rounded-md border border-white text-success-ink bg-white inline-flex items-center gap-2 transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover">
             <span>Start your project</span>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

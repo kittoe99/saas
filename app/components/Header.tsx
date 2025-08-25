@@ -209,7 +209,7 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-2 lg:gap-3">
             <a
               href="/signup"
-              className="px-3 lg:px-4 py-2 rounded-md border border-success text-success-ink bg-white inline-flex items-center gap-2 text-sm lg:text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent hover:bg-neutral-50 shadow-soft"
+              className="px-3 lg:px-4 py-2 rounded-md border border-white text-success-ink bg-white inline-flex items-center gap-2 text-sm lg:text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent hover:bg-neutral-50 shadow-soft"
             >
               <span>Get Started Today</span>
               <svg
@@ -328,7 +328,7 @@ export default function Header() {
               <div className="p-3.5 flex flex-col gap-2 bg-panel">
                 <a
                   href="/signup"
-                  className="w-full px-4 py-2.5 rounded-md border border-success text-success-ink bg-white inline-flex items-center justify-center gap-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent hover:bg-neutral-50 shadow-soft"
+                  className="w-full px-4 py-2.5 rounded-md border border-white text-success-ink bg-white inline-flex items-center justify-center gap-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent hover:bg-neutral-50 shadow-soft"
                   onClick={() => setOpen(false)}
                 >
                   <span>Get Started Today</span>

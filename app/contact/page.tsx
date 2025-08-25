@@ -46,7 +46,7 @@ export default function ContactPage() {
               </div>
             </dl>
             <div className="mt-5 grid gap-3">
-              <a href="/#faq" className="inline-flex items-center justify-center px-4 py-2.5 rounded-md border border-success text-success-ink bg-white text-sm gap-2 transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent">
+              <a href="/#faq" className="inline-flex items-center justify-center px-4 py-2.5 rounded-md border border-white text-success-ink bg-white text-sm gap-2 transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent">
                 <span>See common questions</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
               </a>

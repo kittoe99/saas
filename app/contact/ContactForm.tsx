@@ -43,7 +43,7 @@ export default function ContactForm() {
   }
 
   return (
-    <div className="md:col-span-2 rounded-xl border border-soft bg-panel p-5 sm:p-6 shadow-soft shadow-hover">
+    <div className="md:col-span-2 rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-soft shadow-hover">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>

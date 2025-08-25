@@ -51,16 +51,16 @@ export default function RootLayout({
             </div>
             <div className="md:flex md:items-end md:justify-between gap-8">
               <div className="md:max-w-md">
-                <div className="rounded-md border border-[#d9d1b9] bg-[#f7f3e6] p-4 text-neutral-900">
+                <div className="rounded-md border border-neutral-200 bg-white p-4 text-neutral-900 shadow-soft">
                   <div className="text-lg font-medium">Stay in the loop</div>
                   <p className="mt-1 text-sm text-neutral-700">Occasional updates on new features and tips. No spam.</p>
                   <div className="mt-4 flex flex-col sm:flex-row gap-3">
                     <input
                       type="email"
                       placeholder="Enter your email"
-                      className="flex-1 min-w-0 px-3 py-2 rounded-md border border-[#d9d1b9] bg-transparent focus:bg-[#f7f3e6] outline-none w-full text-neutral-900 placeholder:text-neutral-500 focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f3e6]"
+                      className="flex-1 min-w-0 px-3 py-2 rounded-md border border-neutral-300 bg-white outline-none w-full text-neutral-900 placeholder:text-neutral-500 focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white shadow-sm"
                     />
-                    <button className="px-4 py-2 rounded-md bg-success-accent text-white w-full sm:w-auto transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f3e6]">Subscribe</button>
+                    <button className="px-4 py-2 rounded-md bg-success-accent text-white w-full sm:w-auto transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">Subscribe</button>
                   </div>
                 </div>
               </div>
