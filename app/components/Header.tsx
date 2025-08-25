@@ -58,7 +58,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-page shadow-sm">
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
         {/* Top row */}
         <div className="flex items-center justify-between gap-3">
           <Link href="/" aria-label="hinn.io home" className="flex items-center gap-2">

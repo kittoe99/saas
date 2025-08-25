@@ -62,7 +62,7 @@ export default function BlogPage() {
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section className="border-b border-neutral-200 bg-neutral-50">
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-10 sm:py-14">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-10 sm:py-14">
           <div className="max-w-3xl">
             <span className="inline-block text-xs tracking-wide uppercase text-neutral-500">Blog</span>
             <h1 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-900">
@@ -81,7 +81,7 @@ export default function BlogPage() {
       </section>
 
       {/* Featured */}
-      <section className="max-w-6xl mx-auto px-3 sm:px-4 py-10">
+      <section className="max-w-5xl mx-auto px-3 sm:px-4 py-10">
         <div className="grid md:grid-cols-5 gap-6 items-start">
           <div className="md:col-span-3 rounded-xl border border-neutral-200 p-5 bg-white">
             <div className="text-xs uppercase tracking-wide text-[#1a73e8]">Featured</div>
@@ -124,7 +124,7 @@ export default function BlogPage() {
       </section>
 
       {/* Posts grid */}
-      <section className="max-w-6xl mx-auto px-3 sm:px-4 pb-10">
+      <section className="max-w-5xl mx-auto px-3 sm:px-4 pb-10">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {posts.map((p) => (
             <article key={p.id} className="rounded-xl border border-neutral-200 bg-white p-4 hover:shadow-sm transition-shadow">
@@ -141,7 +141,7 @@ export default function BlogPage() {
 
       {/* CTA */}
       <section className="border-t border-neutral-200 bg-neutral-50">
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-10">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-10">
           <div className="rounded-xl border border-neutral-200 bg-white p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h4 className="text-base sm:text-lg font-semibold text-neutral-900">Have a project in mind?</h4>

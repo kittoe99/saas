@@ -11,7 +11,7 @@ const PHRASES = [
   "priority support",
 ] as const;
 
-const SECTION_IDS = ["create", "features", "faq"] as const;
+const SECTION_IDS = ["showcase", "create", "features", "faq"] as const;
 
 // Showcase teaser (optimized images)
 const SHOWCASE_TEASER = [
@@ -46,6 +46,76 @@ const SHOWCASE_TEASER = [
     src: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop",
   },
 ] as const;
+
+type ShowcaseCategory = typeof SHOWCASE_TEASER[number]["category"];
+const SHOWCASE_TABS: ("All" | ShowcaseCategory)[] = [
+  "All",
+  "Wellness",
+  "Outdoors",
+  "Hospitality",
+  "Professional Services",
+  "Creative",
+  "Nonprofit",
+];
+
+// Local component to render tabs + grid with filtering, limited to 3 columns on md+
+function ShowcaseSection() {
+  const [category, setCategory] = useState<"All" | ShowcaseCategory>("All");
+  const items = useMemo(
+    () => SHOWCASE_TEASER.filter((s) => category === "All" || s.category === category),
+    [category]
+  );
+  return (
+    <div>
+      {/* Filter tabs (compact, no scroll, wraps, white container) */}
+      <div className="mt-2 flex justify-center">
+        <div className="flex flex-wrap justify-center gap-1.5 rounded-full bg-transparent px-2 py-2 shadow-soft">
+          {SHOWCASE_TABS.map((tab) => {
+            const isActive = category === tab;
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setCategory(tab)}
+                className={(isActive
+                  ? "border-success text-success-ink bg-white"
+                  : "border-neutral-200 text-neutral-700 hover:text-success-ink hover:border-success-accent/50 hover:bg-success-accent/5") +
+                  " text-[11px] leading-none px-2.5 py-1 rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"}
+                aria-pressed={isActive}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {/* Grid limited to 3 columns on md+ */}
+      <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
+        {items.map((s) => (
+          <a key={s.title} href="/showcase" className="group rounded-md border border-neutral-200 bg-white overflow-hidden transition-all duration-300 shadow-soft hover:shadow-md hover:border-success-accent/30">
+            <div className="relative h-24 sm:h-24 md:h-28 bg-neutral-200">
+              <Image
+                src={s.src}
+                alt={s.title}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                priority={false}
+                className="object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-[1.03]"
+              />
+              {/* subtle overlay on hover */}
+              <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
+            </div>
+            <div className="p-2.5">
+              <div className="text-[13px] font-medium text-neutral-900 truncate transition-colors duration-200 group-hover:text-success-ink" title={s.title}>
+                {s.title}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   type SectionId = typeof SECTION_IDS[number];
@@ -157,7 +227,7 @@ export default function Home() {
   return (
     <div className="py-10 md:py-16">
       {/* Hero */}
-      <section className="relative grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-soft bg-panel shadow-soft shadow-hover">
+      <section className="relative grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-neutral-200 bg-white shadow-soft shadow-hover">
         {/* Soft background accent */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-[radial-gradient(1200px_600px_at_10%_-10%,rgba(26,115,232,0.06),transparent_60%),radial-gradient(1000px_500px_at_90%_110%,rgba(26,115,232,0.05),transparent_60%)]" />
 
@@ -165,7 +235,7 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1 text-xs text-neutral-600 shadow-xs backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" /> No setup fees • Cancel anytime
           </div>
-          <h1 className="mt-4 text-4xl md:text-6xl font-bold leading-tight tracking-tight">
+          <h1 className="mt-4 text-3xl md:text-5xl font-bold leading-tight tracking-tight">
             Pay‑by‑month, all‑inclusive
             {/* Reserve height with invisible placeholder to prevent layout shift */}
             <span className="block relative">
@@ -176,13 +246,13 @@ export default function Home() {
               </span>
             </span>
           </h1>
-          <p className="mt-4 text-neutral-700 text-lg md:text-xl max-w-xl">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
+          <p className="mt-4 text-neutral-700 text-base md:text-lg max-w-xl">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
             <a href="/get-started" className="inline-flex items-center justify-center px-5 py-3 rounded-md bg-success-accent text-white text-sm md:text-base font-medium transition-all duration-200 hover:opacity-90 shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent">
               Get started
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-2 h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </a>
-            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-md border border-white text-success-ink bg-white text-sm md:text-base gap-2 transition-all duration-200 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover">
+            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-md border border-neutral-300 text-success-ink bg-white text-sm md:text-base gap-2 transition-all duration-200 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-md hover:shadow-lg">
               See what’s included
             </a>
           </div>
@@ -207,52 +277,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Showcase teaser */}
-      <section id="showcase" className="scroll-mt-24 mt-12 md:mt-16">
-        <div className="max-w-6xl mx-auto px-2.5 md:px-4">
-        <header className="mb-3 md:mb-4 text-center">
-          <div className="text-xs uppercase tracking-wider text-neutral-500">Showcase</div>
-          <h2 className="mt-1 text-[17px] md:text-xl font-semibold tracking-tight">Selected work</h2>
-          <p className="mt-1 text-xs text-neutral-600 max-w-2xl mx-auto">Fast and responsive websites.</p>
-        </header>
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:[grid-template-columns:repeat(auto-fit,minmax(200px,260px))] sm:justify-center">
-          {SHOWCASE_TEASER.map((s) => (
-            <a key={s.title} href="/showcase" className="group rounded-md border border-soft bg-panel overflow-hidden transition-all duration-300 shadow-soft hover:shadow-md hover:border-success-accent/30">
-              <div className="relative h-24 sm:h-24 md:h-28 bg-neutral-200">
-                <Image
-                  src={s.src}
-                  alt={s.title}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  priority={false}
-                  className="object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-[1.03]"
-                />
-                {/* subtle overlay on hover */}
-                <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
-              </div>
-              <div className="p-2.5">
-                {/* Hide category for tighter layout or make it tiny if desired */}
-                {/* <div className="text-[10px] uppercase tracking-wide text-neutral-500">{s.category}</div> */}
-                <div className="text-[13px] font-medium text-neutral-900 truncate transition-colors duration-200 group-hover:text-success-ink" title={s.title}>
-                  {s.title}
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-        <div className="mt-4 md:mt-6 flex justify-center">
-          <a href="/showcase" className="px-2.5 py-1.5 rounded-md border border-white text-success-ink bg-white text-xs inline-flex items-center gap-1.5 transition-colors hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft">
-            <span>Explore showcase</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-          </a>
-        </div>
-        </div>
-      </section>
       {/* Centered tabs that scroll to sections (sticky + active highlighting) */}
       <div className="sticky top-16 md:top-20 z-30 mt-14">
         <div className="flex justify-center">
           <div
-            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full border border-soft bg-panel px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-soft shadow-hover whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
+            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full bg-white px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-soft shadow-hover whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
             role="tablist"
             aria-label="Section tabs"
           >
@@ -265,7 +294,7 @@ export default function Home() {
                     href={`#${id}`}
                     className={
                       (isActive
-                        ? "border-success text-success-ink bg-panel font-medium shadow-soft"
+                        ? "border-[color:var(--panel)] text-success-ink bg-panel font-medium shadow-soft"
                         : "border-transparent text-neutral-800 hover:text-success-ink hover:bg-success-accent/10") +
                       " px-3 sm:px-4 py-1.5 rounded-full border outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent focus-visible:ring-offset-[color:var(--panel)] transition-all duration-200 hover:shadow-soft snap-start"
                     }
@@ -280,6 +309,17 @@ export default function Home() {
           </div>
         </div>
       </div>
+      {/* Showcase teaser */}
+      <section id="showcase" className="scroll-mt-24 mt-12 md:mt-16">
+        <div className="max-w-5xl mx-auto px-2.5 md:px-4">
+        <header className="mb-3 md:mb-4 text-center">
+          <div className="text-xs uppercase tracking-wider text-neutral-500">Showcase</div>
+          <h2 className="mt-1 text-[17px] md:text-xl font-semibold tracking-tight">Selected work</h2>
+          <p className="mt-1 text-xs text-neutral-600 max-w-2xl mx-auto">Fast and responsive websites.</p>
+        </header>
+        <ShowcaseSection />
+        </div>
+      </section>
 
       {/* Create */}
       <section id="create" className="scroll-mt-24 mt-16 md:mt-24">
@@ -306,7 +346,7 @@ export default function Home() {
             </ul>
             <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-3 xl:items-center">
               <div className="w-full"><a href="/get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-success-accent text-white transition-all duration-200 hover:opacity-90 shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent">Start monthly plan</a></div>
-              <div className="w-full"><a href="#work" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-white text-success-ink bg-white gap-2 transition-all duration-200 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover"><span>View recent work</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></a></div>
+              <div className="w-full"><a href="#work" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-neutral-300 text-success-ink bg-white gap-2 transition-all duration-200 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-sm hover:shadow-md"><span>View recent work</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></a></div>
             </div>
           </div>
         </div>
@@ -322,7 +362,7 @@ export default function Home() {
           <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">From your website to sales automation and payments—built in, simple to use, and ready to scale.</p>
         </header>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6">
-          <div id="features-website" className="group p-5 rounded-xl border border-soft bg-panel transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
+          <div id="features-website" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Website feature preview" />
             </div>
@@ -330,7 +370,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Design, hosting, and updates</h3>
             <p className="mt-2 text-sm text-neutral-600">Launch fast with professional design and monthly updates included.</p>
           </div>
-          <div id="features-sales" className="group p-5 rounded-xl border border-soft bg-panel transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
+          <div id="features-sales" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="sales" className="absolute inset-0 h-full w-full" aria-label="Sales & automation preview" />
             </div>
@@ -338,7 +378,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Funnels, forms, workflows</h3>
             <p className="mt-2 text-sm text-neutral-600">Capture leads and automate follow‑ups without extra tools.</p>
           </div>
-          <div id="features-ai" className="group p-5 rounded-xl border border-soft bg-panel transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
+          <div id="features-ai" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="ai" className="absolute inset-0 h-full w-full" aria-label="AI features preview" />
             </div>
@@ -346,7 +386,7 @@ export default function Home() {
             <h3 className="mt-2 text-lg font-semibold">Content, insights, assistance</h3>
             <p className="mt-2 text-sm text-neutral-600">Speed up content, find insights, and get helpful suggestions.</p>
           </div>
-          <div id="features-payments" className="group p-5 rounded-xl border border-soft bg-panel transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
+          <div id="features-payments" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
               <VectorArt variant="payments" className="absolute inset-0 h-full w-full" aria-label="Payments preview" />
             </div>
@@ -363,9 +403,9 @@ export default function Home() {
       <section id="faq" className="scroll-mt-24 mt-20 md:mt-28">
         <h2 className="text-2xl md:text-4xl font-semibold tracking-tight">FAQ</h2>
         <dl className="mt-4 space-y-4">
-          <div className="rounded-md border border-soft bg-panel p-4 transition-colors duration-200 hover:bg-panel-hover shadow-soft shadow-hover"><dt className="font-medium">What’s included in the monthly plan?</dt><dd className="mt-1 text-sm text-neutral-600">Design, hosting, SSL, and monthly content updates with support.</dd></div>
-          <div className="rounded-md border border-soft bg-panel p-4 transition-colors duration-200 hover:bg-panel-hover shadow-soft shadow-hover"><dt className="font-medium">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-neutral-600">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
-          <div className="rounded-md border border-soft bg-panel p-4 transition-colors duration-200 hover:bg-panel-hover shadow-soft shadow-hover"><dt className="font-medium">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-neutral-600">We’ll align the site with your brand and adjust layouts to fit your content.</dd></div>
+          <div className="rounded-md border border-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-neutral-50 shadow-soft shadow-hover"><dt className="font-medium">What’s included in the monthly plan?</dt><dd className="mt-1 text-sm text-neutral-600">Design, hosting, SSL, and monthly content updates with support.</dd></div>
+          <div className="rounded-md border border-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-neutral-50 shadow-soft shadow-hover"><dt className="font-medium">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-neutral-600">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
+          <div className="rounded-md border border-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-neutral-50 shadow-soft shadow-hover"><dt className="font-medium">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-neutral-600">We’ll align the site with your brand and adjust layouts to fit your content.</dd></div>
         </dl>
       </section>
 

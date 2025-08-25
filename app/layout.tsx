@@ -33,9 +33,9 @@ export default function RootLayout({
         className={`${interSans.variable} ${geistMono.variable} font-sans antialiased text-neutral-900`}
       >
         <Header />
-        <main className="max-w-6xl mx-auto px-3 sm:px-4">{children}</main>
+        <main className="max-w-5xl mx-auto px-3 sm:px-4">{children}</main>
         <footer className="mt-20 border-t border-neutral-800 bg-black text-[#faf6ec]">
-          <div className="max-w-6xl mx-auto px-3 sm:px-4 py-8 sm:py-10">
+          <div className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-10">
             <div className="flex items-center gap-2 sm:gap-2 mb-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
