@@ -235,7 +235,7 @@ export default function Header() {
             aria-label="Open menu"
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="md:hidden inline-flex items-center justify-center rounded-md border border-neutral-300 p-2.5 text-neutral-900 hover:bg-neutral-50 active:bg-neutral-100 transition-colors no-btn-shadow"
+            className="md:hidden inline-flex items-center justify-center rounded-md border border-neutral-300 p-2.5 text-neutral-900 bg-white hover:bg-neutral-50 active:bg-neutral-100 transition-colors no-btn-shadow"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

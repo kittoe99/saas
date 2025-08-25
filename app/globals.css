@@ -198,6 +198,26 @@ nav {
   border-bottom: 0 !important;
 }
 
+/* Remove shadows from interactive items within the header */
+header button,
+header button:hover,
+header button:focus,
+header button:active,
+header [role="button"],
+header [role="button"]:hover,
+header [role="button"]:focus,
+header [role="button"]:active,
+header a.no-btn-shadow,
+header a.no-btn-shadow:hover,
+header a.no-btn-shadow:focus,
+header a.no-btn-shadow:active,
+header .no-btn-shadow,
+header .no-btn-shadow:hover,
+header .no-btn-shadow:focus,
+header .no-btn-shadow:active {
+  box-shadow: none !important;
+}
+
 /* Shadow utilities for containers (forms, cards, lists) */
 /* Subtle, warm-tinted drop shadows that work with the palette */
 .shadow-soft {
