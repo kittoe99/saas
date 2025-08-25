@@ -1130,7 +1130,7 @@ export default function OnboardingPage() {
                 </div>
               </summary>
               <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide">
+                <div className="accordion-content p-4 sm:p-5 fade-slide overflow-x-hidden">
                   <label className="block text-sm font-medium">Do you have a current website?</label>
                   <div className="mt-2 flex gap-2">
                     {(["yes","no"] as const).map((v) => (
@@ -1146,7 +1146,7 @@ export default function OnboardingPage() {
                   </div>
 
                   {hasCurrent === "yes" && (
-                    <div className="mt-4 grid gap-3 max-w-xl">
+                    <div className="mt-4 grid gap-3 max-w-xl min-w-0">
                       <div>
                         <label className="block text-sm font-medium">Website URL or domain</label>
                         <input
@@ -1171,7 +1171,7 @@ export default function OnboardingPage() {
 
                       {/* Analyzing panel (progress + logs) */}
                       {searching && (
-                        <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft">
+                        <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft overflow-hidden">
                           {/* Mobile collapsible */}
                           <div className="sm:hidden">
                             <details open className="group">
@@ -1179,7 +1179,7 @@ export default function OnboardingPage() {
                                 <span>Analyzing your website…</span>
                                 <span className="ml-2 text-[11px] text-neutral-500">{step4Progress}%</span>
                               </summary>
-                              <ul className="mt-2 max-h-40 overflow-y-auto pr-1 space-y-1 text-[11px] text-neutral-700">
+                              <ul className="mt-2 max-h-40 overflow-y-auto overflow-x-hidden pr-1 space-y-1 text-[11px] text-neutral-700">
                                 {step4Logs.map((l, idx) => (
                                   <li key={idx} className="flex items-center gap-2">
                                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
@@ -1205,7 +1205,7 @@ export default function OnboardingPage() {
                             <div className="mt-2 h-2 w-full rounded bg-neutral-100">
                               <div className="h-2 rounded bg-success-accent transition-all" style={{ width: `${step4Progress}%` }} />
                             </div>
-                            <ul className="mt-3 max-h-40 overflow-y-auto pr-1 space-y-1 text-xs text-neutral-700">
+                            <ul className="mt-3 max-h-40 overflow-y-auto overflow-x-hidden pr-1 space-y-1 text-xs text-neutral-700">
                               {step4Logs.map((l, idx) => (
                                 <li key={idx} className="flex items-center gap-2">
                                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
@@ -1232,8 +1232,8 @@ export default function OnboardingPage() {
 
                       {/* Results header: count + sources toggle */}
                       {!searching && (searchedCount !== null || searchedPreview.length > 0) && (
-                        <div className="mt-4 flex items-center justify-between">
-                          <div className="inline-flex items-center gap-2 text-xs">
+                        <div className="mt-4 flex items-center justify-between min-w-0 overflow-x-hidden">
+                          <div className="inline-flex items-center gap-2 text-xs min-w-0">
                             <span className="rounded-full bg-success-bg text-success-ink px-2 py-0.5">{searchedCount ?? searchedPreview.length} results shown</span>
                           </div>
                           <button type="button" className="text-xs text-neutral-700 hover:underline" onClick={() => setShowSources((v) => !v)}>
@@ -1244,12 +1244,12 @@ export default function OnboardingPage() {
 
                       {/* Sources preview */}
                       {!searching && showSources && searchedPreview.length > 0 && (
-                        <div className="mt-2 rounded-lg border border-neutral-200 bg-white shadow-soft">
+                        <div className="mt-2 rounded-lg border border-neutral-200 bg-white shadow-soft overflow-hidden">
                           <ul className="divide-y divide-neutral-100">
                             {searchedPreview.slice(0, 4).map((r) => (
-                              <li key={r.index} className="p-3">
-                                <div className="text-[13px] font-medium text-neutral-800 truncate">{sanitizeText(r.title || r.url)}</div>
-                                <div className="text-[11px] text-neutral-500 truncate">{r.url}</div>
+                              <li key={r.index} className="p-3 min-w-0">
+                                <div className="text-[13px] font-medium text-neutral-800 truncate min-w-0">{sanitizeText(r.title || r.url)}</div>
+                                <div className="text-[11px] text-neutral-500 truncate min-w-0">{r.url}</div>
                                 {r.snippet && <div className="mt-1 text-[12px] text-neutral-700 line-clamp-2">{sanitizeText(r.snippet)}</div>}
                               </li>
                             ))}
