@@ -242,7 +242,7 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1 text-xs text-neutral-600 shadow-xs backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" /> No setup fees • Cancel anytime
           </div>
-          <h1 className="mt-4 text-3xl md:text-5xl font-bold leading-tight tracking-tight">
+          <h1 className="mt-4 text-4xl md:text-5xl font-bold leading-tight tracking-tight">
             Pay‑by‑month, all‑inclusive
             {/* Reserve height with invisible placeholder to prevent layout shift */}
             <span className="block relative">
