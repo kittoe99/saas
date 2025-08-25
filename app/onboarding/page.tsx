@@ -811,7 +811,7 @@ export default function OnboardingPage() {
     }, [text]);
     return (
       <div className="mt-1 text-sm text-gray-700 min-w-0">
-        <span className="whitespace-pre-wrap break-words">{display}</span>
+        <span className="whitespace-pre-wrap break-all sm:break-words">{display}</span>
         <span className="inline-block w-0.5 h-4 align-middle ml-0.5 bg-success-accent animate-pulse" />
       </div>
     );
@@ -826,16 +826,16 @@ export default function OnboardingPage() {
     if (bulletLines.length > 0) {
       const items = bulletLines.map((l) => l.replace(/^[−•\*]\s+/, "").trim());
       return (
-        <ul className="mt-2 space-y-2 min-w-0">
+        <ul className="mt-2 space-y-2 min-w-0 max-w-prose pr-2">
           {items.map((t, i) => {
             const idx = t.indexOf(":");
             const hasLabel = idx > 0 && idx < 40;
             const label = hasLabel ? t.slice(0, idx) : "";
             const rest = hasLabel ? t.slice(idx + 1).trim() : t;
             return (
-              <li key={i} className="flex items-start gap-2 min-w-0">
-                <span className="mt-1 inline-flex h-2.5 w-2.5 flex-shrink-0 rounded-full bg-success-accent" />
-                <div className="flex-1 min-w-0 text-sm text-neutral-800 break-words">
+              <li key={i} className="flex items-start gap-1.5 min-w-0">
+                <span className="mt-1 inline-flex h-2 w-2 flex-shrink-0 rounded-full bg-success-accent" />
+                <div className="flex-1 min-w-0 text-sm text-neutral-800 break-all sm:break-words">
                   {hasLabel ? (
                     <>
                       <span className="font-semibold">{label}:</span> {rest}
@@ -1259,7 +1259,7 @@ export default function OnboardingPage() {
 
                       {/* Summary with improved design */}
                       {summary?.summary && !searching && (
-                        <div className="mt-3 rounded-lg border border-neutral-200 bg-gray-50 p-3 sm:p-4 shadow-soft min-w-0 overflow-hidden">
+                        <div className="mt-3 rounded-lg border border-neutral-200 bg-gray-50 p-3 sm:p-4 pr-2 shadow-soft min-w-0 overflow-hidden">
                           <div className="text-sm font-medium text-neutral-800">Summary</div>
                           <RenderSummary text={summary.summary} />
                         </div>
