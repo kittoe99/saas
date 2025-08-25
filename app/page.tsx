@@ -175,7 +175,7 @@ export default function Home() {
       <div className="sticky top-16 md:top-20 z-30 mt-14">
         <div className="flex justify-center">
           <div
-            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full border border-soft bg-panel px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-soft shadow-hover whitespace-nowrap snap-x snap-mandatory ring-1 ring-[color:var(--border)]/40"
+            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full border border-soft bg-panel px-2 py-2 text-sm sm:text-base md:text-lg text-neutral-800 shadow-soft shadow-hover whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
             role="tablist"
             aria-label="Section tabs"
           >
@@ -188,9 +188,9 @@ export default function Home() {
                     href={`#${id}`}
                     className={
                       (isActive
-                        ? "border border-success text-success-ink bg-panel font-medium shadow-sm"
-                        : "text-neutral-800 hover:text-success-ink hover:bg-success-accent/10") +
-                      " px-3 sm:px-4 py-1.5 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent transition-all duration-200 hover:shadow-xs snap-start"
+                        ? "border-success text-success-ink bg-panel font-medium shadow-soft"
+                        : "border-transparent text-neutral-800 hover:text-success-ink hover:bg-success-accent/10") +
+                      " px-3 sm:px-4 py-1.5 rounded-full border outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent focus-visible:ring-offset-[color:var(--panel)] transition-all duration-200 hover:shadow-soft snap-start"
                     }
                     aria-current={isActive ? "true" : undefined}
                     role="tab"

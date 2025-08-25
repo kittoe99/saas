@@ -1187,6 +1187,16 @@ export default function OnboardingPage() {
                                   </li>
                                 ))}
                               </ul>
+                              {step4Progress >= 100 && (
+                                <div className="mt-3 flex items-center gap-2 text-[12px] text-neutral-700">
+                                  <span
+                                    className="inline-block h-4 w-4 rounded-full border-2 animate-spin"
+                                    style={{ borderColor: "var(--success-accent)", borderTopColor: "transparent" }}
+                                    aria-hidden
+                                  />
+                                  <span>Loading results…</span>
+                                </div>
+                              )}
                             </details>
                           </div>
                           {/* Desktop */}
@@ -1203,6 +1213,16 @@ export default function OnboardingPage() {
                                 </li>
                               ))}
                             </ul>
+                            {step4Progress >= 100 && (
+                              <div className="mt-3 flex items-center gap-2 text-sm text-neutral-700">
+                                <span
+                                  className="inline-block h-5 w-5 rounded-full border-2 animate-spin"
+                                  style={{ borderColor: "var(--success-accent)", borderTopColor: "transparent" }}
+                                  aria-hidden
+                                />
+                                <span>Loading results…</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -1330,15 +1350,39 @@ export default function OnboardingPage() {
                     <div>
                       <label className="block text-sm font-medium">Brand colors (select up to 2)</label>
                       <div className="mt-2">
+                        {/* Selected preview */}
+                        {primaryColors.length > 0 ? (
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            {primaryColors.map((c, i) => (
+                              <div key={`sel-${c}`} className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white pl-1 pr-2 py-1 shadow-sm">
+                                <span aria-hidden className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-medium text-white shadow" style={{ backgroundColor: c }}>{i === 0 ? "1" : "2"}</span>
+                                <span className="text-xs text-neutral-700">{i === 0 ? "Primary" : "Secondary"} · {c}</span>
+                                <button
+                                  type="button"
+                                  className="ml-1 rounded p-1 text-[11px] text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100"
+                                  aria-label={`Remove ${i === 0 ? "Primary" : "Secondary"} color ${c}`}
+                                  onClick={() => setPrimaryColors(primaryColors.filter((x) => x !== c))}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="mb-2 text-xs text-gray-600">No color selected</div>
+                        )}
+                        {/* Swatch grid */}
                         <div className="grid grid-cols-8 gap-2">
                           {PRESET_COLORS.map((c) => {
                             const selected = primaryColors.includes(c);
                             const atLimit = !selected && primaryColors.length >= 2;
+                            const idx = selected ? primaryColors.indexOf(c) + 1 : null;
                             return (
                               <button
                                 key={c}
                                 type="button"
                                 aria-pressed={selected}
+                                aria-label={`Select color ${c}`}
                                 title={c}
                                 onClick={() => {
                                   setPrimaryColors((prev) => {
@@ -1348,20 +1392,31 @@ export default function OnboardingPage() {
                                   });
                                 }}
                                 className={classNames(
-                                  "h-8 w-8 rounded-md border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                                  selected ? "ring-2 ring-success border-success" : "border-gray-300",
-                                  atLimit ? "opacity-50 cursor-not-allowed" : "hover:opacity-90",
+                                  "relative h-10 w-10 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft",
+                                  selected ? "ring-2 ring-success border-success" : "border-neutral-300",
+                                  atLimit ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.03]",
                                   step5Analyzing ? "opacity-60 cursor-not-allowed" : ""
                                 )}
                                 style={{ backgroundColor: c }}
                                 disabled={atLimit || step5Analyzing}
-                              />
+                              >
+                                {selected && (
+                                  <>
+                                    <span className="absolute inset-0 flex items-center justify-center">
+                                      <svg viewBox="0 0 20 20" fill="none" stroke="white" strokeWidth="2.2" className="h-5 w-5 drop-shadow" aria-hidden="true">
+                                        <path d="M6 10.5l2.5 2.5L14 8" />
+                                      </svg>
+                                    </span>
+                                    <span className="absolute -top-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white text-[11px]">
+                                      {idx}
+                                    </span>
+                                  </>
+                                )}
+                              </button>
                             );
                           })}
                         </div>
-                        <div className="mt-2 text-xs text-gray-600">
-                          {primaryColors.length === 0 ? "No color selected" : `Selected: ${primaryColors.join(", ")}`}
-                        </div>
+                        <div className="mt-2 text-[11px] text-neutral-500">Tip: Choose one primary and one secondary brand color.</div>
                       </div>
                     </div>
                     <div>
@@ -1458,7 +1513,7 @@ export default function OnboardingPage() {
               </div>
             </summary>
             <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
+              <div className="accordion-content p-4 sm:p-5 fade-slide overflow-x-hidden">
                 {/* Services as chip toggles */}
                 <div>
                   <label className="block text-sm font-medium">Services</label>
@@ -1507,57 +1562,76 @@ export default function OnboardingPage() {
                 {/* Business hours */}
                 <div className="mt-6">
                   <label className="block text-sm font-medium">Business hours</label>
-                  <div className="mt-1 inline-flex rounded-md border border-neutral-300 p-0.5">
+                  {/* Mode selector as visual cards */}
+                  <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {([
-                      { key: "services", label: "Standard", mode: "standard" },
-                      { key: "24_7", label: "24/7", mode: "24_7" },
-                      { key: "appointment", label: "Appointment", mode: "appointment" },
-                      { key: "custom", label: "Custom", mode: "custom" },
-                    ] as const).map((opt) => (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        onClick={() => {
-                          setBusinessHoursMode(opt.mode as any);
-                          let text = businessHours;
-                          if (opt.mode === "standard") text = "Mon–Fri 9am–5pm";
-                          if (opt.mode === "24_7") text = "Open 24/7";
-                          if (opt.mode === "appointment") text = "By appointment only";
-                          setBusinessHours(text);
-                          setTypeSpecific((prev) => ({
-                            ...prev,
-                            businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
-                          }));
-                        }}
-                        className={classNames(
-                          "px-2.5 py-1 text-sm rounded",
-                          businessHoursMode === (opt.mode as any) ? "bg-success-accent text-white" : "text-neutral-700 hover:bg-neutral-100"
-                        )}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
+                      { key: "standard", label: "Standard", desc: "Weekday hours", mode: "standard" },
+                      { key: "247", label: "24/7", desc: "Always open", mode: "24_7" },
+                      { key: "appt", label: "Appointment", desc: "By appointment", mode: "appointment" },
+                      { key: "custom", label: "Custom", desc: "Your own schedule", mode: "custom" },
+                    ] as const).map((opt) => {
+                      const active = businessHoursMode === (opt.mode as any);
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => {
+                            setBusinessHoursMode(opt.mode as any);
+                            let text = businessHours;
+                            if (opt.mode === "standard") text = "Mon–Fri 9am–5pm";
+                            if (opt.mode === "24_7") text = "Open 24/7";
+                            if (opt.mode === "appointment") text = "By appointment only";
+                            setBusinessHours(text);
+                            setTypeSpecific((prev) => ({
+                              ...prev,
+                              businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
+                            }));
+                          }}
+                          className={classNames(
+                            "group relative rounded-lg border p-3 text-left transition shadow-soft",
+                            active ? "border-success bg-success-bg" : "border-neutral-300 bg-white hover:bg-neutral-50"
+                          )}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <div className={classNames("text-sm font-medium", active ? "text-success-ink" : "text-neutral-800")}>{opt.label}</div>
+                              <div className="text-[11px] text-neutral-500">{opt.desc}</div>
+                            </div>
+                            {active && (
+                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {businessHoursMode === "standard" && (
-                    <div className="mt-2">
+                    <div className="mt-3">
                       <label className="text-xs text-neutral-600">Quick presets</label>
-                      <select
-                        className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
-                        value={businessHours}
-                        onChange={(e) => {
-                          const text = e.target.value;
-                          setBusinessHours(text);
-                          setTypeSpecific((prev) => ({
-                            ...prev,
-                            businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
-                          }));
-                        }}
-                      >
+                      <div className="mt-1 flex flex-wrap gap-2">
                         {["Mon–Fri 9am–5pm","Mon–Fri 8am–6pm","Mon–Sat 9am–6pm","Tue–Sat 10am–7pm"].map((p) => (
-                          <option key={p} value={p}>{p}</option>
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => {
+                              const text = p;
+                              setBusinessHours(text);
+                              setTypeSpecific((prev) => ({
+                                ...prev,
+                                businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
+                              }));
+                            }}
+                            className={classNames(
+                              "rounded-full border px-3 py-1 text-sm",
+                              businessHours === p ? "bg-success-accent text-white border-success-accent" : "bg-white text-neutral-800 border-neutral-300 hover:bg-neutral-50"
+                            )}
+                          >
+                            {p}
+                          </button>
                         ))}
-                      </select>
+                      </div>
                     </div>
                   )}
 
@@ -1581,6 +1655,12 @@ export default function OnboardingPage() {
                       <div className="mt-1 text-[11px] text-neutral-500">Tip: Use line breaks for each day or range.</div>
                     </div>
                   )}
+
+                  {/* Current hours preview */}
+                  <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700">
+                    <span className="inline-flex h-2 w-2 rounded-full bg-success-accent" aria-hidden />
+                    <span className="truncate max-w-full">{businessHours || "No hours set yet"}</span>
+                  </div>
                 </div>
 
                 {/* Type-specific details */}
@@ -1687,11 +1767,31 @@ export default function OnboardingPage() {
                       <ul className="mt-2 max-h-40 overflow-y-auto rounded border border-neutral-200 bg-white text-sm shadow">
                         {citySuggestions.map((sug, i) => (
                           <li key={`${sug.display_name}-${i}`} className="flex items-center justify-between px-3 py-2 hover:bg-neutral-50">
-                            <span className="truncate pr-2">{sug.display_name}</span>
+                            <span
+                              className="truncate pr-2 cursor-pointer text-neutral-800 hover:underline"
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
+                                setCitySuggestions([]);
+                                setCityQuery("");
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
+                                  setCitySuggestions([]);
+                                  setCityQuery("");
+                                }
+                              }}
+                            >
+                              {sug.display_name}
+                            </span>
                             <button
                               type="button"
                               className="text-xs text-success-ink hover:underline"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
                                 setCitySuggestions([]);
                                 setCityQuery("");
@@ -1732,11 +1832,11 @@ export default function OnboardingPage() {
                     <div className="mt-1 text-xs">Search a city or address above and click Add to include it. Then adjust the radius.</div>
                   </div>
                 ) : (
-                  <ul className="mt-4 space-y-3 text-sm">
+                  <ul className="mt-4 space-y-3 text-sm overflow-x-hidden">
                     {cities.map((c, idx) => {
                       const geocoded = (c.lat !== 0 || c.lon !== 0);
                       return (
-                        <li key={`${c.name}-${idx}`} className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3 shadow-soft shadow-hover transition-colors hover:bg-neutral-50 min-w-0">
+                        <li key={`${c.name}-${idx}`} className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3 shadow-soft shadow-hover transition-colors hover:bg-neutral-50 min-w-0 overflow-hidden">
                           <div className="flex items-start gap-3 flex-wrap">
                             <div className="flex items-start gap-3 min-w-0 flex-1 order-1">
                               <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-success-bg text-success-ink">
@@ -1762,22 +1862,88 @@ export default function OnboardingPage() {
                             </button>
                           </div>
                           {geocoded ? (
-                            <div className="mt-3 grid w-full min-w-0 grid-cols-1 sm:grid-cols-12 items-center gap-3">
+                            <div className="mt-3 grid w-full min-w-0 grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3 overflow-hidden">
+                              {/* Label (mobile top, desktop left) */}
                               <label className="text-xs text-neutral-600 sm:col-span-2">Radius</label>
-                              <input
-                                type="range"
-                                min={1}
-                                max={100}
-                                value={toDisplayDistance(c.radiusKm)}
-                                onChange={(e) => {
-                                  const val = Number(e.target.value);
-                                  setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(val) } : ci));
-                                }}
-                                className="w-full min-w-0 max-w-full sm:col-span-9"
-                              />
-                              <span className="inline-flex self-start sm:self-auto mt-1 sm:mt-0 sm:col-span-1 sm:justify-self-end items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700 whitespace-nowrap">
-                                {toDisplayDistance(c.radiusKm)} {distanceUnit}
-                              </span>
+
+                              {/* Controls row (mobile): - value + */}
+                              <div className="flex items-center justify-between sm:hidden">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    aria-label="Decrease radius"
+                                    className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                                    onClick={() => {
+                                      const cur = toDisplayDistance(c.radiusKm);
+                                      const next = Math.max(1, cur - 1);
+                                      setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
+                                    }}
+                                  >
+                                    −
+                                  </button>
+                                  <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700 whitespace-nowrap">
+                                    {toDisplayDistance(c.radiusKm)} {distanceUnit}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    aria-label="Increase radius"
+                                    className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                                    onClick={() => {
+                                      const cur = toDisplayDistance(c.radiusKm);
+                                      const next = Math.min(100, cur + 1);
+                                      setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Slider (mobile full-width) */}
+                              <div className="min-w-0 w-full max-w-full sm:col-span-8 sm:self-center">
+                                <input
+                                  type="range"
+                                  min={1}
+                                  max={100}
+                                  value={toDisplayDistance(c.radiusKm)}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(val) } : ci));
+                                  }}
+                                  className="block w-full min-w-0 max-w-full"
+                                />
+                              </div>
+
+                              {/* Desktop value and +/- controls */}
+                              <div className="hidden sm:flex items-center justify-end gap-2 sm:col-span-2">
+                                <button
+                                  type="button"
+                                  aria-label="Decrease radius"
+                                  className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                                  onClick={() => {
+                                    const cur = toDisplayDistance(c.radiusKm);
+                                    const next = Math.max(1, cur - 1);
+                                    setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
+                                  }}
+                                >
+                                  −
+                                </button>
+                                <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700 whitespace-nowrap">
+                                  {toDisplayDistance(c.radiusKm)} {distanceUnit}
+                                </span>
+                                <button
+                                  type="button"
+                                  aria-label="Increase radius"
+                                  className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                                  onClick={() => {
+                                    const cur = toDisplayDistance(c.radiusKm);
+                                    const next = Math.min(100, cur + 1);
+                                    setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
+                                  }}
+                                >
+                                  +
+                                </button>
+                              </div>
                             </div>
                           ) : null}
                         </li>
