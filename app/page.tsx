@@ -209,13 +209,13 @@ export default function Home() {
 
       {/* Showcase teaser */}
       <section id="showcase" className="scroll-mt-24 mt-12 md:mt-16">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-2.5 md:px-4">
         <header className="mb-3 md:mb-4 text-center">
           <div className="text-xs uppercase tracking-wider text-neutral-500">Showcase</div>
           <h2 className="mt-1 text-[17px] md:text-xl font-semibold tracking-tight">Selected work</h2>
           <p className="mt-1 text-xs text-neutral-600 max-w-2xl mx-auto">Fast and responsive websites.</p>
         </header>
-        <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fit,minmax(160px,200px))] justify-center">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:[grid-template-columns:repeat(auto-fit,minmax(200px,260px))] sm:justify-center">
           {SHOWCASE_TEASER.map((s) => (
             <a key={s.title} href="/showcase" className="group rounded-md border border-soft bg-panel overflow-hidden transition-all duration-300 shadow-soft hover:shadow-md hover:border-success-accent/30">
               <div className="relative h-24 sm:h-24 md:h-28 bg-neutral-200">
