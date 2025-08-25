@@ -288,7 +288,7 @@ export default function Home() {
       <div className="sticky top-16 md:top-20 z-30 mt-14">
         <div className="flex justify-center">
           <div
-            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full bg-white px-2 py-2 text-base sm:text-base md:text-lg text-neutral-800 whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none"
+            className="inline-flex max-w-full overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 rounded-full bg-white px-2 py-2 text-lg sm:text-lg md:text-lg text-neutral-800 whitespace-nowrap snap-x snap-mandatory ring-0 outline-none focus:outline-none shadow-soft shadow-hover lg:shadow-none"
             role="tablist"
             aria-label="Section tabs"
           >
