@@ -2,10 +2,10 @@
 
 :root {
   /* Anthropic-like warm palette */
-  --bg-page: #fdfbf7;     /* page background (even lighter) */
-  --panel: #faf6ef;       /* cards/hero/tabs (lighter) */
-  --panel-hover: #f3ecdf; /* hover state for panels (still subtle) */
-  --border: #eee3d2;      /* soft border (lighter) */
+  --bg-page: color-mix(in srgb, #fdfbf7 15%, #ffffff 85%); /* page background further lightened */
+  --panel: #f8f2ea;       /* cards/hero/tabs (slightly deeper for contrast) */
+  --panel-hover: #f1e9dc; /* hover state tuned to match panel */
+  --border: #e7dac4;      /* soft border slightly deeper for visibility */
   --accent: #d97759;      /* warm accent for links */
   --background: var(--bg-page);
   --foreground: #171717;
@@ -157,6 +157,8 @@ details[open] .fade-slide {
 .border-on-white { border-color: #ffffff !important; }
 .border-on-warm { border-color: #faf6ec !important; }
 .border-on-gray { border-color: #efeae2 !important; }
+
+ 
 
 /* Global container border reset: hide borders on typical containers */
 div.border:not(.keep-border),
