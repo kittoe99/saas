@@ -9,6 +9,10 @@
   --accent: #d97759;      /* warm accent for links */
   --background: var(--bg-page);
   --foreground: #171717;
+  /* Subtle background pattern tokens */
+  --pattern-size: 24px; /* grid spacing (slightly tighter) */
+  --pattern-dot: rgba(217, 119, 89, 0.07); /* warm accent-tinted dot (more visible) */
+  --pattern-dot-2: rgba(217, 119, 89, 0.035); /* secondary (more visible) */
   /* Accent-derived success tokens (Option B) */
   --success-accent: var(--accent);
   /* Use CSS color-mix for subtle tints; falls back gracefully in older browsers */
@@ -34,11 +38,21 @@ html, body {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    /* Dark mode: soften pattern significantly */
+    --pattern-dot: rgba(250, 246, 236, 0.035);
+    --pattern-dot-2: rgba(250, 246, 236, 0.02);
   }
 }
 
 body {
-  background: var(--background);
+  /* Keep color separate from image layers */
+  background-color: var(--background);
+  /* Subtle warm dot-grid pattern; extremely faint */
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--pattern-dot) 1.2px, transparent 1.6px),
+    radial-gradient(circle at calc(var(--pattern-size)/2) calc(var(--pattern-size)/2), var(--pattern-dot-2) 1.2px, transparent 1.6px);
+  background-repeat: repeat;
+  background-size: var(--pattern-size) var(--pattern-size);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -224,30 +238,30 @@ header .no-btn-shadow:active {
 /* Subtle, warm-tinted drop shadows that work with the palette */
 .shadow-soft {
   box-shadow:
-    0 1px 1px rgba(17, 17, 17, 0.02),
-    0 2px 6px rgba(17, 17, 17, 0.04);
+    0 1px 1px rgba(17, 17, 17, 0.01),
+    0 2px 6px rgba(17, 17, 17, 0.02);
 }
 
 .shadow-elevated {
   box-shadow:
-    0 1px 1px rgba(17, 17, 17, 0.03),
-    0 6px 16px rgba(17, 17, 17, 0.06),
-    0 12px 24px rgba(17, 17, 17, 0.04);
+    0 1px 1px rgba(17, 17, 17, 0.02),
+    0 6px 16px rgba(17, 17, 17, 0.035),
+    0 12px 24px rgba(17, 17, 17, 0.025);
 }
 
 /* Hover utility: now elevated across all states (default, hover, focus, active) */
 .shadow-hover {
   box-shadow:
-    0 2px 4px rgba(17, 17, 17, 0.04),
-    0 8px 18px rgba(17, 17, 17, 0.06);
+    0 2px 4px rgba(17, 17, 17, 0.02),
+    0 8px 18px rgba(17, 17, 17, 0.035);
 }
 .shadow-hover:hover,
 .shadow-hover:focus,
 .shadow-hover:focus-visible,
 .shadow-hover:active {
   box-shadow:
-    0 2px 4px rgba(17, 17, 17, 0.04),
-    0 8px 18px rgba(17, 17, 17, 0.06);
+    0 2px 4px rgba(17, 17, 17, 0.02),
+    0 8px 18px rgba(17, 17, 17, 0.035);
 }
 
 /* Compose helpers */
@@ -261,8 +275,8 @@ button,
 .btn {
   /* default subtle elevation */
   box-shadow:
-    0 1px 1px rgba(17, 17, 17, 0.02),
-    0 2px 6px rgba(17, 17, 17, 0.04);
+    0 1px 1px rgba(17, 17, 17, 0.01),
+    0 2px 6px rgba(17, 17, 17, 0.02);
   transition: box-shadow 160ms ease, transform 120ms ease;
 }
 
@@ -284,8 +298,8 @@ button:active,
 .btn:active {
   /* elevated shadow on interaction */
   box-shadow:
-    0 2px 4px rgba(17, 17, 17, 0.04),
-    0 8px 18px rgba(17, 17, 17, 0.06);
+    0 2px 4px rgba(17, 17, 17, 0.02),
+    0 8px 18px rgba(17, 17, 17, 0.035);
 }
 
 button:active,
@@ -304,14 +318,14 @@ button:active,
 @media (prefers-color-scheme: dark) {
   .shadow-soft {
     box-shadow:
-      0 1px 1px rgba(0, 0, 0, 0.20),
-      0 2px 6px rgba(0, 0, 0, 0.28);
+      0 1px 1px rgba(0, 0, 0, 0.12),
+      0 2px 6px rgba(0, 0, 0, 0.18);
   }
   .shadow-elevated {
     box-shadow:
-      0 1px 1px rgba(0, 0, 0, 0.22),
-      0 6px 16px rgba(0, 0, 0, 0.32),
-      0 12px 24px rgba(0, 0, 0, 0.26);
+      0 1px 1px rgba(0, 0, 0, 0.14),
+      0 6px 16px rgba(0, 0, 0, 0.22),
+      0 12px 24px rgba(0, 0, 0, 0.18);
   }
   .shadow-hover,
   .shadow-hover:hover,
@@ -319,19 +333,19 @@ button:active,
   .shadow-hover:focus-visible,
   .shadow-hover:active {
     box-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.26),
-      0 8px 18px rgba(0, 0, 0, 0.30);
+      0 2px 4px rgba(0, 0, 0, 0.16),
+      0 8px 18px rgba(0, 0, 0, 0.22);
   }
-  .shadow-card { box-shadow: 0 1px 1px rgba(0,0,0,0.22), 0 4px 10px rgba(0,0,0,0.30); }
-  .shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(0,0,0,0.28); }
+  .shadow-card { box-shadow: 0 1px 1px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.22); }
+  .shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(0,0,0,0.18); }
   /* Dark mode button shadows */
   button,
   [role="button"],
   .button,
   .btn {
     box-shadow:
-      0 1px 1px rgba(0, 0, 0, 0.20),
-      0 2px 6px rgba(0, 0, 0, 0.28);
+      0 1px 1px rgba(0, 0, 0, 0.12),
+      0 2px 6px rgba(0, 0, 0, 0.18);
   }
   button:hover,
   button:focus,
@@ -350,7 +364,7 @@ button:active,
   .btn:focus-visible,
   .btn:active {
     box-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.26),
-      0 8px 18px rgba(0, 0, 0, 0.30);
+      0 2px 4px rgba(0, 0, 0, 0.16),
+      0 8px 18px rgba(0, 0, 0, 0.22);
   }
 }
