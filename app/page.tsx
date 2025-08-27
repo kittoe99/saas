@@ -1,6 +1,7 @@
 "use client";
 import VectorArt from "./components/VectorArt";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 // Words to animate in the hero headline
@@ -376,6 +377,12 @@ export default function Home() {
             <div className="text-sm font-medium text-neutral-500">Website</div>
             <h3 className="mt-2 text-lg font-semibold">Design, hosting, and updates</h3>
             <p className="mt-2 text-sm text-neutral-600">Launch fast with professional design and monthly updates included.</p>
+            <div className="mt-3">
+              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-success-ink hover:opacity-80">
+                Learn more
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
           </div>
           <div id="features-sales" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
@@ -384,6 +391,12 @@ export default function Home() {
             <div className="text-sm font-medium text-neutral-500">Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
             <h3 className="mt-2 text-lg font-semibold">Funnels, forms, workflows</h3>
             <p className="mt-2 text-sm text-neutral-600">Capture leads and automate follow‑ups without extra tools.</p>
+            <div className="mt-3">
+              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-success-ink hover:opacity-80">
+                Learn more
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
           </div>
           <div id="features-ai" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
@@ -392,6 +405,12 @@ export default function Home() {
             <div className="text-sm font-medium text-neutral-500">Artificial Intelligence <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
             <h3 className="mt-2 text-lg font-semibold">Content, insights, assistance</h3>
             <p className="mt-2 text-sm text-neutral-600">Speed up content, find insights, and get helpful suggestions.</p>
+            <div className="mt-3">
+              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-success-ink hover:opacity-80">
+                Learn more
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
           </div>
           <div id="features-payments" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
             <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
@@ -400,6 +419,12 @@ export default function Home() {
             <div className="text-sm font-medium text-neutral-500">Payments <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
             <h3 className="mt-2 text-lg font-semibold">Subscriptions & one‑time</h3>
             <p className="mt-2 text-sm text-neutral-600">Sell plans or services with simple, integrated checkout.</p>
+            <div className="mt-3">
+              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-success-ink hover:opacity-80">
+                Learn more
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

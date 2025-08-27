@@ -58,16 +58,13 @@ function getPlanPrice(planId: string): number {
 function StepSummary({
   personal,
   planId,
-  addonAiPhone,
 }: {
   personal: PersonalInfo;
   planId: string;
-  addonAiPhone: boolean;
 }) {
   const plan = PLANS.find((p) => p.id === planId)!;
   const planPrice = getPlanPrice(planId);
-  const addonPrice = addonAiPhone ? 29 : 0;
-  const total = planPrice + addonPrice;
+  const total = planPrice;
 
   return (
     <div>
@@ -83,12 +80,6 @@ function StepSummary({
               <dt className="text-neutral-600">Plan</dt>
               <dd className="text-neutral-900 font-medium">{plan.name} — {plan.price}</dd>
             </div>
-            {addonAiPhone && (
-              <div className="flex items-start justify-between">
-                <dt className="text-neutral-600">AI Phone Answering Service</dt>
-                <dd className="text-neutral-900 font-medium">$29/mo</dd>
-              </div>
-            )}
             <div className="flex items-start justify-between border-t border-neutral-200 pt-2 mt-2">
               <dt className="text-neutral-700">Total due monthly</dt>
               <dd className="text-neutral-900 font-semibold">${total}/mo</dd>
@@ -116,7 +107,6 @@ function StepSummary({
 function StepCheckout({
   personal,
   planId,
-  addonAiPhone,
   onPay,
   loading,
   paid,
@@ -126,7 +116,6 @@ function StepCheckout({
 }: {
   personal: PersonalInfo;
   planId: string;
-  addonAiPhone: boolean;
   onPay: () => void | Promise<void>;
   loading: boolean;
   paid: boolean;
@@ -136,8 +125,7 @@ function StepCheckout({
 }) {
   const plan = PLANS.find((p) => p.id === planId)!;
   const planPrice = getPlanPrice(planId);
-  const addonPrice = addonAiPhone ? 29 : 0;
-  const total = planPrice + addonPrice;
+  const total = planPrice;
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [showCard, setShowCard] = useState<boolean>(false);
 
@@ -171,12 +159,6 @@ function StepCheckout({
                   <dt className="text-neutral-600">Plan</dt>
                   <dd className="text-neutral-900 font-medium">{plan.name} — {plan.price}</dd>
                 </div>
-                {addonAiPhone && (
-                  <div className="flex items-start justify-between">
-                    <dt className="text-neutral-600">AI Phone Answering Service</dt>
-                    <dd className="text-neutral-900 font-medium">$29/mo</dd>
-                  </div>
-                )}
                 <div className="flex items-start justify-between border-t border-neutral-200 pt-2 mt-2">
                   <dt className="text-neutral-700">Total due monthly</dt>
                   <dd className="text-neutral-900 font-semibold">${total}/mo</dd>
@@ -238,8 +220,8 @@ function StepCheckout({
                 onClick={() => setShowCard(true)}
                 disabled={!canContinueBilling}
                 className={classNames(
-                  "w-full sm:w-auto px-4 py-2 rounded-md text-white text-sm",
-                  !canContinueBilling ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                  "w-full sm:w-auto px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                  !canContinueBilling ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
                 )}
               >
                 Continue
@@ -292,8 +274,8 @@ function StepCheckout({
                 onClick={onPay}
                 disabled={loading || !canPay}
                 className={classNames(
-                  "w-full sm:w-auto px-4 py-2 rounded-md text-white text-sm",
-                  loading || !canPay ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                  "w-full sm:w-auto px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                  loading || !canPay ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
                 )}
               >
                 {loading ? "Processing..." : `Pay $${total}/mo (Mock)`}
@@ -348,7 +330,6 @@ function StepCheckout({
         phone: "",
       });
       const [selectedPlan, setSelectedPlan] = useState<string | null>("small");
-      const [addonAiPhone, setAddonAiPhone] = useState<boolean>(false);
       const [checkoutLoading, setCheckoutLoading] = useState<boolean>(false);
       const [checkoutError, setCheckoutError] = useState<string | null>(null);
       const [mockPaid, setMockPaid] = useState<boolean>(false);
@@ -421,19 +402,18 @@ function StepCheckout({
       }
 
       return (
-        <div className="py-10 md:py-16">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <header className="mb-8">
-              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Get Started</h1>
-              <p className="mt-2 text-neutral-600">Complete a few quick steps to continue your account setup.</p>
-            </header>
-            <div className="md:grid md:grid-cols-[220px_1fr] md:gap-6">
-              {/* Left vertical progress */}
-              <aside className="hidden md:block">
-                <ProgressSidebar current={step} />
-              </aside>
+        <div className="mx-auto max-w-5xl px-6 py-10">
+          <h1 className="text-2xl font-semibold">Get Started</h1>
+          <p className="mt-1 text-sm text-gray-600">Complete a few quick steps to continue your account setup.</p>
 
-              {/* Right step cards */}
+          <div className="mt-8 grid grid-cols-12 gap-8">
+            {/* Sidebar */}
+            <aside className="hidden md:block md:col-span-4 md:sticky md:top-6">
+              <ProgressSidebar current={step} />
+            </aside>
+
+            {/* Main content: Accordion */}
+            <main className="col-span-12 md:col-span-8">
               <div className="space-y-4">
                 {/* Step 1 */}
                 <details
@@ -466,7 +446,7 @@ function StepCheckout({
                     <div className="ml-auto flex items-center gap-3">
                       <span className={classNames(
                         "text-xs rounded-full px-2 py-0.5",
-                        step > 1 ? "bg-success-pill text-success-pill" : "bg-neutral-100 text-neutral-700"
+                        step > 1 ? "bg-success-bg text-success-ink" : step === 1 ? "bg-neutral-100 text-neutral-700" : "bg-neutral-100 text-neutral-500"
                       )}>{step > 1 ? "Completed" : step === 1 ? "In progress" : "Locked"}</span>
                       <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                     </div>
@@ -480,8 +460,8 @@ function StepCheckout({
                           onClick={handleNext}
                           disabled={!canProceedStep1}
                           className={classNames(
-                            "px-4 py-2 rounded-md text-white text-sm",
-                            !canProceedStep1 ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                            "px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                            !canProceedStep1 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
                           )}
                         >
                           Continue
@@ -522,163 +502,162 @@ function StepCheckout({
                       {step > 2 && (
                         <div className="text-xs text-neutral-600 mt-0.5 truncate">{PLANS.find(p=>p.id===selectedPlan!)?.name || "—"}</div>
                       )}
-                </div>
-                <div className="ml-auto flex items-center gap-3">
-                  <span className={classNames(
-                    "text-xs rounded-full px-2 py-0.5",
-                    step > 2 ? "bg-success-pill text-success-pill" : "bg-neutral-100 text-neutral-700"
-                  )}>{step > 2 ? "Completed" : step === 2 ? "In progress" : "Locked"}</span>
-                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                </div>
-              </summary>
-              <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide">
-                  <StepPackageSelection
-                    plans={PLANS}
-                    selectedPlan={selectedPlan}
-                    onSelect={(id) => {
-                      setSelectedPlan(id);
-                      if (id === "startup") setAddonAiPhone(false);
-                    }}
-                    addonAiPhone={addonAiPhone}
-                    onToggleAddon={() => setAddonAiPhone((v) => !v)}
-                  />
-                  <div className="mt-4 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50 shadow-soft shadow-hover"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      disabled={!selectedPlan}
-                      className={classNames(
-                        "px-4 py-2 rounded-md text-white text-sm",
-                        !selectedPlan ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
-                      )}
-                    >
-                      Continue
-                    </button>
+                    </div>
+                    <div className="ml-auto flex items-center gap-3">
+                      <span className={classNames(
+                        "text-xs rounded-full px-2 py-0.5",
+                        step > 2 ? "bg-success-bg text-success-ink" : step === 2 ? "bg-neutral-100 text-neutral-700" : "bg-neutral-100 text-neutral-500"
+                      )}>{step > 2 ? "Completed" : step === 2 ? "In progress" : "Locked"}</span>
+                      <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                    </div>
+                  </summary>
+                  <div className="accordion border-t border-neutral-200">
+                    <div className="accordion-content p-4 sm:p-5 fade-slide">
+                      <StepPackageSelection
+                        plans={PLANS}
+                        selectedPlan={selectedPlan}
+                        onSelect={(id) => {
+                          setSelectedPlan(id);
+                        }}
+                      />
+                      <div className="mt-4 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={handleBack}
+                          className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50 shadow-soft shadow-hover"
+                        >
+                          Back
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleNext}
+                          disabled={!selectedPlan}
+                          className={classNames(
+                            "px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                            !selectedPlan ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                          )}
+                        >
+                          Continue
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </details>
+                </details>
 
-            {/* Step 3 */}
-            <details
-              ref={step3Ref as any}
-              open={step === 3}
-              className={classNames(
-                "relative rounded-xl border shadow-soft shadow-hover",
-                step > 3 ? "bg-success-bg border-success" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-              )}
-              onToggle={(e) => {
-                const el = e.currentTarget as HTMLDetailsElement;
-                if (el.open && step >= 3) setStep(3);
-                if (step < 3) el.open = false;
-              }}
-            >
-              {step > 3 && (
-                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />
-              )}
-              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-                <div>
-                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                    {step > 3 && (
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>
-                    )}
-                    <span>3. Summary</span>
-                  </div>
+                {/* Step 3 */}
+                <details
+                  ref={step3Ref as any}
+                  open={step === 3}
+                  className={classNames(
+                    "relative rounded-xl border shadow-soft shadow-hover",
+                    step > 3 ? "bg-success-bg border-success" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+                  )}
+                  onToggle={(e) => {
+                    const el = e.currentTarget as HTMLDetailsElement;
+                    if (el.open && step >= 3) setStep(3);
+                    if (step < 3) el.open = false;
+                  }}
+                >
                   {step > 3 && (
-                    <div className="text-xs text-neutral-600 mt-0.5 truncate">Ready to pay</div>
+                    <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />
                   )}
-                </div>
-                <div className="ml-auto flex items-center gap-3">
-                  <span className={classNames(
-                    "text-xs rounded-full px-2 py-0.5",
-                    step > 3 ? "bg-success-pill text-success-pill" : "bg-neutral-100 text-neutral-700"
-                  )}>{step > 3 ? "Completed" : step === 3 ? "In progress" : "Locked"}</span>
-                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                </div>
-              </summary>
-              <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide">
-                  {selectedPlan && (
-                    <StepSummary personal={data} planId={selectedPlan} addonAiPhone={addonAiPhone} />
-                  )}
-                  <div className="mt-4 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      disabled={!selectedPlan}
-                      className={classNames(
-                        "px-4 py-2 rounded-md text-white text-sm",
-                        !selectedPlan ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                  <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                    <div>
+                      <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                        {step > 3 && (
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>
+                        )}
+                        <span>3. Summary</span>
+                      </div>
+                      {step > 3 && (
+                        <div className="text-xs text-neutral-600 mt-0.5 truncate">Ready to pay</div>
                       )}
-                    >
-                      Continue
-                    </button>
+                    </div>
+                    <div className="ml-auto flex items-center gap-3">
+                      <span className={classNames(
+                        "text-xs rounded-full px-2 py-0.5",
+                        step > 3 ? "bg-success-bg text-success-ink" : step === 3 ? "bg-neutral-100 text-neutral-700" : "bg-neutral-100 text-neutral-500"
+                      )}>{step > 3 ? "Completed" : step === 3 ? "In progress" : "Locked"}</span>
+                      <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                    </div>
+                  </summary>
+                  <div className="accordion border-t border-neutral-200">
+                    <div className="accordion-content p-4 sm:p-5 fade-slide">
+                      {selectedPlan && (
+                        <StepSummary personal={data} planId={selectedPlan} />
+                      )}
+                      <div className="mt-4 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={handleBack}
+                          className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50"
+                        >
+                          Back
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleNext}
+                          disabled={!selectedPlan}
+                          className={classNames(
+                            "px-4 py-2 rounded-md text-white text-sm",
+                            !selectedPlan ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                          )}
+                        >
+                          Continue
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </details>
+                </details>
 
-            {/* Step 4 */}
-            <details
-              ref={step4Ref as any}
-              open={step === 4}
-              className={classNames("rounded-xl border bg-white shadow-soft shadow-hover", step >= 4 ? "border-neutral-200" : "border-neutral-100 opacity-70")}
-              onToggle={(e) => {
-                const el = e.currentTarget as HTMLDetailsElement;
-                if (el.open && step >= 4) setStep(4);
-                if (step < 4) el.open = false;
-              }}
-            >
-              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-                <div>
-                  <div className="text-sm font-medium text-neutral-800">4. Checkout</div>
-                </div>
-                <div className="ml-auto flex items-center gap-3">
-                  <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">{step === 4 ? "In progress" : step > 4 ? "Completed" : "Locked"}</span>
-                  <svg className="chev h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                </div>
-              </summary>
-              <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide">
-                  {selectedPlan && (
-                    <StepCheckout
-                      personal={data}
-                      planId={selectedPlan}
-                      addonAiPhone={addonAiPhone}
-                      onPay={handleCheckout}
-                      loading={checkoutLoading}
-                      paid={mockPaid}
-                      error={checkoutError}
-                      billing={billing}
-                      onBillingChange={handleBillingChange}
-                    />
-                  )}
-                </div>
+                {/* Step 4 */}
+                <details
+                  ref={step4Ref as any}
+                  open={step === 4}
+                  className={classNames("rounded-xl border bg-white shadow-soft shadow-hover", step >= 4 ? "border-neutral-200" : "border-neutral-100 opacity-70")}
+                  onToggle={(e) => {
+                    const el = e.currentTarget as HTMLDetailsElement;
+                    if (el.open && step >= 4) setStep(4);
+                    if (step < 4) el.open = false;
+                  }}
+                >
+                  <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                    <div>
+                      <div className="text-sm font-medium text-neutral-800">4. Checkout</div>
+                    </div>
+                    <div className="ml-auto flex items-center gap-3">
+                      <span className={classNames(
+                        "text-xs rounded-full px-2 py-0.5",
+                        step > 4 ? "bg-success-bg text-success-ink" : step === 4 ? "bg-neutral-100 text-neutral-700" : "bg-neutral-100 text-neutral-500"
+                      )}>{step > 4 ? "Completed" : step === 4 ? "In progress" : "Locked"}</span>
+                      <svg className="chev h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                    </div>
+                  </summary>
+                  <div className="accordion border-t border-neutral-200">
+                    <div className="accordion-content p-4 sm:p-5 fade-slide">
+                      {selectedPlan && (
+                        <StepCheckout
+                          personal={data}
+                          planId={selectedPlan}
+                          onPay={handleCheckout}
+                          loading={checkoutLoading}
+                          paid={mockPaid}
+                          error={checkoutError}
+                          billing={billing}
+                          onBillingChange={handleBillingChange}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </details>
               </div>
-            </details>
+            </main>
           </div>
-        </div>
 
-        {/* Footer hint */}
-        <p className="mt-4 text-xs text-neutral-500">You can safely leave this page at any time—your progress will be saved when we wire up persistence.</p>
-      </div>
-    </div>
-  );
+          {/* Footer hint */}
+          <p className="mt-4 text-xs text-neutral-500">You can safely leave this page at any time—your progress will be saved when we wire up persistence.</p>
+        </div>
+      );
 }
 
 function Field({ label, children, required = false }: { label: string; children: React.ReactNode; required?: boolean }) {
@@ -720,11 +699,11 @@ function ProgressSidebar({ current }: { current: number }) {
       {/* Progress */}
       <div
         className="absolute left-2 w-[2px] bg-success-accent rounded transition-all"
-        style={{ top: 0, height: `${(Math.max(1, current) - 1) / (TOTAL_STEPS - 1) * 100}%` }}
+        style={{ top: 0, height: `${((Math.max(1, current) - 1) / (Math.max(1, TOTAL_STEPS - 1))) * 100}%` }}
         aria-hidden
       />
       <ol className="space-y-6">
-        {items.map((it, idx) => {
+        {items.map((it) => {
           const active = it.id === current;
           const done = it.id < current;
           return (
@@ -732,11 +711,11 @@ function ProgressSidebar({ current }: { current: number }) {
               <span
                 className={classNames(
                   "mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px]",
-                  done ? "bg-success-accent border-success text-white" : active ? "border-success text-success-accent" : "border-neutral-300 text-neutral-500"
+                  done ? "bg-success-accent border-success text-white" : active ? "border-success text-success-ink" : "border-neutral-300 text-neutral-500"
                 )}
                 aria-hidden
               >
-                {done ? "✓" : it.id}
+                {done ? "" : it.id}
               </span>
               <div>
                 <div className={classNames("text-sm", done ? "text-neutral-700" : active ? "text-neutral-900 font-medium" : "text-neutral-600")}>{it.label}</div>
@@ -754,14 +733,10 @@ function StepPackageSelection({
   plans,
   selectedPlan,
   onSelect,
-  addonAiPhone,
-  onToggleAddon,
 }: {
   plans: PlanOption[];
   selectedPlan: string | null;
   onSelect: (id: string) => void;
-  addonAiPhone: boolean;
-  onToggleAddon: () => void;
 }) {
   return (
     <div>
@@ -811,28 +786,7 @@ function StepPackageSelection({
         })}
       </div>
 
-      {/* Add-ons */}
-      <div className="mt-6 border-t border-neutral-200 pt-4">
-        <div className="text-sm font-medium text-neutral-700">Add-ons</div>
-        <label className="mt-3 flex items-start gap-3 text-sm">
-          <input
-            type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-neutral-300"
-            checked={addonAiPhone}
-            onChange={onToggleAddon}
-            disabled={selectedPlan === "startup"}
-          />
-          <span className={classNames(
-            "text-neutral-700",
-            selectedPlan === "startup" && "text-neutral-400"
-          )}>
-            AI Phone Answering Service — <span className="font-medium">$29/mo</span> <span className="text-neutral-500">(150 minutes)</span>
-            {selectedPlan === "startup" && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Not available for Startups</span>
-            )}
-          </span>
-        </label>
-      </div>
+      
     </div>
   );
 }

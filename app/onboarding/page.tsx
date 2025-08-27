@@ -344,13 +344,15 @@ export default function OnboardingPage() {
   const step5Done = (businessPhone.trim().length >= 7 || /\S+@\S+\.\S+/.test(businessEmail)) && !!contactMethod;
   const step6Done = selectedServices.length > 0;
   const step7Done = cities.length > 0; // at least one service area
+  const step8Done = !!logoFile && assetFiles.length > 0; // logo + at least one asset
   const canGoStep2 = step1Done;
   const canGoStep3 = step2Done;
   const canGoStep4 = step3Done;
   const canGoStep5 = step4Done;
   const canGoStep6 = step5Done;
   const canGoStep7 = step6Done; // proceed to areas
-  const canFinish = step7Done && isTypeSpecificValid(siteType, typeSpecific);
+  const canGoStep8 = step7Done; // proceed to logo & assets
+  const canFinish = step8Done && isTypeSpecificValid(siteType, typeSpecific);
 
   // Steps metadata for sidebar
   const steps = [
@@ -361,6 +363,7 @@ export default function OnboardingPage() {
     { id: 5, label: "Business & contact", completed: step5Done },
     { id: 6, label: "Services & details", completed: step6Done },
     { id: 7, label: "Service areas", completed: step7Done },
+    { id: 8, label: "Logo & assets", completed: step8Done },
   ];
 
   // Minimal nudge scrolling: only scroll enough so the element is slightly in view
@@ -1964,11 +1967,200 @@ export default function OnboardingPage() {
                   <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(6)}>Back</button>
                   <button
                     type="button"
-                    disabled={!canFinish}
+                    disabled={!canGoStep8}
+                    onClick={() => setStep(8)}
                     className={classNames(
                       "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                      !canFinish ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                      !canGoStep8 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
                     )}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* Step 8: Logo & assets */}
+          <details
+            open={step === 8}
+            className={classNames(
+              "relative rounded-xl border shadow-soft shadow-hover",
+              step > 8 ? "bg-success-bg border-success" : step >= 8 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+            )}
+            onToggle={(e) => {
+              const el = e.currentTarget as HTMLDetailsElement;
+              if (el.open && canGoStep8) setStep(8);
+              if (!canGoStep8) el.open = false;
+            }}
+          >
+            {step > 8 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                  {step > 8 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                  <span>8. Logo & assets</span>
+                </div>
+                {step > 8 && (
+                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
+                    {logoFile ? "Logo set" : "No logo"} • {assetFiles.length} asset{assetFiles.length === 1 ? "" : "s"}
+                  </div>
+                )}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 8 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 8 ? "Completed" : step === 8 ? "In progress" : "Locked"}</span>
+                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+              </div>
+            </summary>
+            <div className="accordion border-t border-neutral-200">
+              <div className="accordion-content p-4 sm:p-5 fade-slide">
+                {/* Logo uploader */}
+                <div>
+                  <label className="block text-sm font-medium">Logo</label>
+                  <div className="mt-2 flex items-center gap-3">
+                    <input
+                      id="logo-file"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const f = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                        setLogoFile(f);
+                      }}
+                      className="sr-only"
+                    />
+                    <label
+                      htmlFor="logo-file"
+                      className="group inline-flex items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-3 py-2 shadow-soft hover:border-success cursor-pointer"
+                    >
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
+                        {/* Upload icon */}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" />
+                        </svg>
+                      </span>
+                      <div>
+                        <div className="text-sm text-neutral-800">Click to upload</div>
+                        <div className="text-[11px] text-neutral-500">PNG or SVG, up to 2MB</div>
+                      </div>
+                    </label>
+                    {logoFile && (
+                      <div className="flex items-center gap-2">
+                        <img src={URL.createObjectURL(logoFile)} alt="Logo preview" className="h-12 w-12 rounded border border-neutral-200 object-contain bg-white" />
+                        <button type="button" className="text-xs text-neutral-600 hover:underline" onClick={() => setLogoFile(null)}>Remove</button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-1 text-[11px] text-neutral-500">Transparent background preferred.</div>
+                </div>
+
+                {/* Favicon uploader (optional) */}
+                <div className="mt-5">
+                  <label className="block text-sm font-medium">Favicon (optional)</label>
+                  <div className="mt-2 flex items-center gap-3">
+                    <input
+                      id="favicon-file"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const f = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                        setFaviconFile(f);
+                      }}
+                      className="sr-only"
+                    />
+                    <label
+                      htmlFor="favicon-file"
+                      className="group inline-flex items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-3 py-2 shadow-soft hover:border-success cursor-pointer"
+                    >
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" />
+                        </svg>
+                      </span>
+                      <div>
+                        <div className="text-sm text-neutral-800">Click to upload</div>
+                        <div className="text-[11px] text-neutral-500">Square, 48×48px+</div>
+                      </div>
+                    </label>
+                    {faviconFile && (
+                      <div className="flex items-center gap-2">
+                        <img src={URL.createObjectURL(faviconFile)} alt="Favicon preview" className="h-8 w-8 rounded border border-neutral-200 object-contain bg-white" />
+                        <button type="button" className="text-xs text-neutral-600 hover:underline" onClick={() => setFaviconFile(null)}>Remove</button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-1 text-[11px] text-neutral-500">Use a simple mark for best results.</div>
+                </div>
+
+                {/* Assets uploader */}
+                <div className="mt-5">
+                  <label className="block text-sm font-medium">Additional assets</label>
+                  <div className="mt-2">
+                    <input
+                      id="asset-files"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const picked = Array.from(e.target.files || []);
+                        setAssetFiles((prev) => {
+                          const merged = [...prev, ...picked];
+                          // De-duplicate by name+size
+                          const map = new Map<string, File>();
+                          for (const f of merged) map.set(`${f.name}:${f.size}`, f);
+                          return Array.from(map.values());
+                        });
+                        // Allow re-selecting the same files by resetting the input value
+                        (e.target as HTMLInputElement).value = "";
+                      }}
+                      className="sr-only"
+                    />
+                    <label
+                      htmlFor="asset-files"
+                      className="group flex w-full items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-4 py-3 shadow-soft hover:border-success cursor-pointer max-w-xl"
+                    >
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5l6-6 4 4 5-5 3 3" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 20h18" />
+                        </svg>
+                      </span>
+                      <div className="text-left">
+                        <div className="text-sm text-neutral-800">Click to upload images</div>
+                        <div className="text-[11px] text-neutral-500">JPG, PNG, up to 10 files</div>
+                      </div>
+                    </label>
+                  </div>
+                  {assetFiles.length > 0 ? (
+                    <ul className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {assetFiles.map((f, i) => (
+                        <li key={`${f.name}-${i}`} className="group relative rounded border border-neutral-200 bg-white p-2 shadow-soft">
+                          <img src={URL.createObjectURL(f)} alt={f.name} className="h-20 w-full object-cover rounded" />
+                          <div className="mt-1 truncate text-[11px] text-neutral-600" title={f.name}>{f.name}</div>
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 hidden group-hover:inline-flex items-center justify-center rounded bg-black/60 px-1.5 py-0.5 text-[11px] text-white"
+                            onClick={() => setAssetFiles(assetFiles.filter((_, idx) => idx !== i))}
+                            aria-label={`Remove ${f.name}`}
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="mt-2 rounded-lg border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600 shadow-soft">No assets uploaded yet.</div>
+                  )}
+                  <div className="mt-1 text-[11px] text-neutral-500">Upload photos, graphics, or brand assets. You can add more later.</div>
+                </div>
+
+                <div className="mt-6 flex justify-between">
+                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(7)}>Back</button>
+                  <button
+                    type="button"
+                    disabled={!canFinish}
+                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent", !canFinish ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")}
                   >
                     Finish
                   </button>

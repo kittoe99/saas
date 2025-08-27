@@ -59,32 +59,32 @@ export default function BlogPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-white">
+    <div className="py-8 sm:py-12">
       {/* Hero */}
-      <section className="border-b border-neutral-200 bg-neutral-50">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-10 sm:py-14">
-          <div className="max-w-3xl">
-            <span className="inline-block text-xs tracking-wide uppercase text-neutral-500">Blog</span>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-900">
-              Insights, updates, and resources from hinn.io
-            </h1>
-            <p className="mt-3 text-sm sm:text-base text-neutral-600">
-              Learn about our Website‑as‑a‑Service approach, explore features like AI chat and automation,
-              and see how we keep your site fast, secure, and always improving.
-            </p>
-            <div className="mt-4 flex gap-3 text-sm">
-              <Link href="/contact" className="px-3 py-2 rounded-md bg-[#1a73e8] text-white">Start a project</Link>
-              <Link href="/showcase" className="px-3 py-2 rounded-md border border-neutral-300 text-neutral-700 hover:bg-neutral-50">See showcase</Link>
-            </div>
+      <section className="relative rounded-2xl border border-neutral-200 keep-border bg-white p-6 sm:p-8 shadow-soft shadow-hover">
+        {/* Soft background accent (warm) */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-[radial-gradient(1200px_600px_at_10%_-10%,rgba(217,119,89,0.06),transparent_60%),radial-gradient(1000px_500px_at_90%_110%,rgba(217,119,89,0.05),transparent_60%)]" />
+        <div className="max-w-3xl">
+          <span className="inline-block text-xs tracking-wider uppercase text-neutral-500">News</span>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-900">
+            Insights, updates, and resources from hinn.io
+          </h1>
+          <p className="mt-3 text-sm sm:text-base text-neutral-600">
+            Learn about our Website‑as‑a‑Service approach, explore features like AI chat and automation,
+            and see how we keep your site fast, secure, and always improving.
+          </p>
+          <div className="mt-4 flex gap-3 text-sm">
+            <Link href="/contact" className="px-3 py-2 rounded-md bg-success-accent text-white transition-opacity hover:opacity-90">Start a project</Link>
+            <Link href="/showcase" className="px-3 py-2 rounded-md border border-neutral-300 text-success-ink bg-white hover:bg-neutral-50 shadow-sm">See showcase</Link>
           </div>
         </div>
       </section>
 
       {/* Featured */}
-      <section className="max-w-5xl mx-auto px-3 sm:px-4 py-10">
+      <section className="mt-8">
         <div className="grid md:grid-cols-5 gap-6 items-start">
-          <div className="md:col-span-3 rounded-xl border border-neutral-200 p-5 bg-white">
-            <div className="text-xs uppercase tracking-wide text-[#1a73e8]">Featured</div>
+          <div className="md:col-span-3 rounded-xl border border-neutral-200 keep-border p-5 bg-white shadow-soft">
+            <div className="text-xs uppercase tracking-wide text-success-ink">Featured</div>
             <h2 className="mt-2 text-xl sm:text-2xl font-semibold text-neutral-900">
               Your website, always current—design, hosting, and updates included
             </h2>
@@ -99,22 +99,22 @@ export default function BlogPage() {
               <li>Optional add‑ons: sales funnels, payments, CRM, and AI</li>
             </ul>
           </div>
-          <div className="md:col-span-2 rounded-xl border border-neutral-200 p-5 bg-white">
-            <div className="text-xs uppercase tracking-wide text-neutral-500">What we offer</div>
+          <div className="md:col-span-2 rounded-xl border border-neutral-200 keep-border p-5 bg-panel shadow-soft">
+            <div className="text-xs uppercase tracking-wide text-neutral-700">What we offer</div>
             <dl className="mt-3 grid grid-cols-1 gap-3 text-sm">
-              <div className="rounded-lg border border-neutral-200 p-3">
+              <div className="rounded-lg border border-neutral-200 keep-border bg-white p-3 shadow-soft">
                 <dt className="font-medium">Website</dt>
                 <dd className="mt-1 text-neutral-700">Design, content, and technical setup handled end‑to‑end.</dd>
               </div>
-              <div className="rounded-lg border border-neutral-200 p-3">
+              <div className="rounded-lg border border-neutral-200 keep-border bg-white p-3 shadow-soft">
                 <dt className="font-medium">Sales & Automation</dt>
                 <dd className="mt-1 text-neutral-700">Lead capture, forms, email sequences, and workflows.</dd>
               </div>
-              <div className="rounded-lg border border-neutral-200 p-3">
+              <div className="rounded-lg border border-neutral-200 keep-border bg-white p-3 shadow-soft">
                 <dt className="font-medium">Payments</dt>
                 <dd className="mt-1 text-neutral-700">Subscriptions and one‑time purchases with secure checkout.</dd>
               </div>
-              <div className="rounded-lg border border-neutral-200 p-3">
+              <div className="rounded-lg border border-neutral-200 keep-border bg-white p-3 shadow-soft">
                 <dt className="font-medium">AI</dt>
                 <dd className="mt-1 text-neutral-700">Chat, content generation, and analytics insights.</dd>
               </div>
@@ -124,15 +124,26 @@ export default function BlogPage() {
       </section>
 
       {/* Posts grid */}
-      <section className="max-w-5xl mx-auto px-3 sm:px-4 pb-10">
+      <section className="mt-8 pb-6">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {posts.map((p) => (
-            <article key={p.id} className="rounded-xl border border-neutral-200 bg-white p-4 hover:shadow-sm transition-shadow">
-              <div className="text-xs text-neutral-500">{p.category} • {p.date}</div>
-              <h3 className="mt-2 text-base sm:text-lg font-semibold text-neutral-900">{p.title}</h3>
+            <article key={p.id} className="group rounded-xl border border-neutral-200 keep-border bg-white p-4 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-hover">
+              <div className="flex items-center gap-2 text-xs text-neutral-600">
+                <span className="inline-flex items-center rounded-full bg-success-pill px-2 py-0.5 text-success-pill uppercase tracking-wide">{p.category}</span>
+                <span className="opacity-70">•</span>
+                <span className="text-neutral-500">{p.date}</span>
+              </div>
+              <h3 className="mt-2 text-base sm:text-lg font-semibold text-neutral-900">
+                <Link href={`/blog/${p.slug}`} className="hover:underline">
+                  {p.title}
+                </Link>
+              </h3>
               <p className="mt-2 text-sm text-neutral-700">{p.excerpt}</p>
               <div className="mt-3">
-                <Link href={`/blog/${p.slug}`} className="text-sm text-[#1a73e8] hover:underline">Read more</Link>
+                <Link href={`/blog/${p.slug}`} className="inline-flex items-center gap-1 text-sm text-success-ink hover:opacity-80">
+                  Read more
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </Link>
               </div>
             </article>
           ))}
@@ -140,17 +151,15 @@ export default function BlogPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-neutral-200 bg-neutral-50">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-10">
-          <div className="rounded-xl border border-neutral-200 bg-white p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h4 className="text-base sm:text-lg font-semibold text-neutral-900">Have a project in mind?</h4>
-              <p className="mt-1 text-sm text-neutral-700">Tell us about it and we’ll get back with a plan.</p>
-            </div>
-            <Link href="/contact" className="px-3 py-2 rounded-md bg-[#1a73e8] text-white text-sm">Contact us</Link>
+      <section className="mt-8">
+        <div className="rounded-xl border border-neutral-200 keep-border bg-panel p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-soft">
+          <div>
+            <h4 className="text-base sm:text-lg font-semibold text-neutral-900">Have a project in mind?</h4>
+            <p className="mt-1 text-sm text-neutral-700">Tell us about it and we’ll get back with a plan.</p>
           </div>
+          <Link href="/contact" className="px-3 py-2 rounded-md bg-success-accent text-white text-sm transition-opacity hover:opacity-90">Contact us</Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
