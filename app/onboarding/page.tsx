@@ -1002,26 +1002,26 @@ export default function OnboardingPage() {
               <div className="accordion border-t border-neutral-200">
                 <div className="accordion-content p-4 sm:p-5 fade-slide">
                   <label className="block text-sm font-medium">Select a category / industry</label>
-                  <div className="mt-3">
-                    <div className="inline-flex max-w-full flex-wrap gap-1.5 sm:gap-2 rounded-full bg-white px-2 py-1.5 text-xs sm:text-[13px] text-neutral-800 whitespace-normal">
-                      {categoriesFor(siteType).map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setCategory(c)}
-                          className={classNames(
-                            category === c
-                              ? "border-[color:var(--panel)] text-success-ink bg-panel font-medium"
-                              : "border-transparent text-neutral-800 hover:text-success-ink hover:bg-success-accent/10",
-                            "px-2.5 sm:px-3 py-1 rounded-full border outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent focus-visible:ring-offset-[color:var(--panel)] transition-all duration-200"
-                          )}
-                          aria-pressed={category === c}
-                          aria-selected={category === c}
-                        >
-                          {c}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                    {categoriesFor(siteType).map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setCategory(c)}
+                        className={classNames(
+                          "w-full text-left rounded-lg border px-3 py-2 text-sm shadow-soft shadow-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                          category === c
+                            ? "border-success bg-success-accent/15 text-success-ink ring-1 ring-success"
+                            : "border-neutral-200 bg-white text-neutral-800 hover:border-success hover:bg-success-accent/10"
+                        )}
+                        aria-pressed={category === c}
+                        aria-selected={category === c}
+                      >
+                        <div className="flex items-center">
+                          <span className="truncate">{c}</span>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                   {/* Optional primary goal */}
                   <div className="mt-4 max-w-sm">
