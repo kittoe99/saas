@@ -16,7 +16,7 @@ export default function LoginPage() {
   // Compute a safe redirect URL back to this app
   const redirectTo = useMemo(() => {
     if (typeof window === "undefined") return undefined;
-    return `${window.location.origin}/`; // redirect to home after login
+    return `${window.location.origin}/dashboard`; // redirect to dashboard after login
   }, []);
 
   async function signInWithGoogle() {
@@ -54,7 +54,7 @@ export default function LoginPage() {
         if (error) throw error;
         // If email confirmed, user will be signed in; otherwise Supabase may require confirmation
         setSuccess("Signed in successfully. Redirecting...");
-        window.location.replace("/");
+        window.location.replace("/dashboard");
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -66,7 +66,7 @@ export default function LoginPage() {
           setSuccess("Check your email to confirm your account.");
         } else {
           setSuccess("Account created. Redirecting...");
-          window.location.replace("/");
+          window.location.replace("/dashboard");
         }
       }
     } catch (e: any) {

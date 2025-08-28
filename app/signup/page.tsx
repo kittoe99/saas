@@ -17,7 +17,7 @@ export default function SignupPage() {
 
   const redirectTo = useMemo(() => {
     if (typeof window === "undefined") return undefined;
-    return `${window.location.origin}/`;
+    return `${window.location.origin}/dashboard`;
   }, []);
 
   async function signUpWithEmail(e: React.FormEvent) {
@@ -38,7 +38,7 @@ export default function SignupPage() {
         router.replace(`/verify-email?email=${encodeURIComponent(email)}&fromSignup=1`);
       } else {
         setSuccess("Account created. Redirecting...");
-        window.location.replace("/");
+        window.location.replace("/dashboard");
       }
     } catch (e: any) {
       const msg = e?.message || "Failed to create account";
