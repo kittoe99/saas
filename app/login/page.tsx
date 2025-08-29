@@ -70,7 +70,14 @@ export default function LoginPage() {
         }
       }
     } catch (e: any) {
-      const msg = e?.message || "Authentication failed";
+      let msg = e?.message || "Authentication failed";
+      // Friendly message if account already exists when signing up
+      if (
+        mode === "signup" &&
+        (e?.code === "user_already_exists" || /already.*(registered|exists)/i.test(msg))
+      ) {
+        msg = "An account with this email already exists. Please sign in instead.";
+      }
       setError(msg);
       if (/confirm|verify/i.test(msg)) setUnverified(true);
     } finally {
