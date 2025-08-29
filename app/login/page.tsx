@@ -56,13 +56,59 @@ export default function LoginPage() {
         setSuccess("Signed in successfully. Redirecting...");
         window.location.replace("/dashboard");
       } else {
+        // Check our auth-users table first
+        try {
+          const res = await fetch(`/api/auth-users?email=${encodeURIComponent(email)}`);
+          const j = await res.json();
+          if (res.ok && j?.exists) {
+            setError("An account with this email already exists. Please sign in instead.");
+            setMode("signin");
+            return;
+          }
+        } catch {}
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: redirectTo },
         });
         if (error) throw error;
+        // Supabase nuance: if user already exists, identities can be empty
+        const identities = (data.user as any)?.identities as any[] | undefined;
+        const alreadyExists = Array.isArray(identities) && identities.length === 0;
+        if (alreadyExists) {
+          setError("An account with this email already exists. Please sign in instead.");
+          setUnverified(true);
+          setMode("signin");
+          return;
+        }
+        // Record successful account creation in our table
+        try {
+          await fetch(`/api/auth-users`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, user_id: data.user?.id }),
+          });
+        } catch {}
         if (data.user && !data.session) {
+          // Heuristic: try a sign-in probe to distinguish scenarios
+          const probe = await supabase.auth.signInWithPassword({ email, password });
+          if (probe.error) {
+            const perr = probe.error.message || "";
+            if (/confirm|verify|not.*confirmed|email\s*not\s*confirmed/i.test(perr)) {
+              setError("Your account exists but the email is not verified. Please check your inbox or sign in to resend verification.");
+              setUnverified(true);
+              setMode("signin");
+              return;
+            }
+            if (/already|exists|registered|invalid/i.test(perr)) {
+              setError("An account with this email already exists. Please sign in instead.");
+              setUnverified(false);
+              setMode("signin");
+              return;
+            }
+          }
+          // Otherwise, assume a new account that needs email verification
           setSuccess("Check your email to confirm your account.");
         } else {
           setSuccess("Account created. Redirecting...");
