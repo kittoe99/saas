@@ -16,6 +16,7 @@ export default function VerifyEmailPage() {
 function VerifyEmailInner() {
   const search = useSearchParams();
   const email = search.get("email");
+  const autoresend = search.get("autoresend") === "1";
   const fromSignup = search.get("fromSignup");
   const redirectTo = useMemo(() => {
     if (typeof window === "undefined") return undefined;
@@ -34,6 +35,15 @@ function VerifyEmailInner() {
   useEffect(() => {
     setViewMode(email ? "verify" : "exists");
   }, [email]);
+
+  // If autoresend flag is present (from login banner), automatically trigger a resend once
+  useEffect(() => {
+    if (email && autoresend && cooldown === 0 && !loading) {
+      // fire and forget; UI will show message/cooldown
+      resend();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, autoresend]);
 
   async function resend() {
     if (!email) return;
