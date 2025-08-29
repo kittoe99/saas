@@ -16,7 +16,8 @@ export default function LoginPage() {
   // Compute a safe redirect URL back to this app
   const redirectTo = useMemo(() => {
     if (typeof window === "undefined") return undefined;
-    return `${window.location.origin}/dashboard`; // redirect to dashboard after login
+    // Use auth callback to finalize the session, then continue to dashboard
+    return `${window.location.origin}/auth/callback?next=/dashboard`;
   }, []);
 
   async function signInWithGoogle() {

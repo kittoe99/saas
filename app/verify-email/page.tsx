@@ -19,7 +19,8 @@ function VerifyEmailInner() {
   const fromSignup = search.get("fromSignup");
   const redirectTo = useMemo(() => {
     if (typeof window === "undefined") return undefined;
-    return `${window.location.origin}/`;
+    // After verifying via email link, send users to the login screen to continue
+    return `${window.location.origin}/login`;
   }, []);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -27,14 +28,7 @@ function VerifyEmailInner() {
   const [cooldown, setCooldown] = useState<number>(0); // seconds remaining
   const [viewMode, setViewMode] = useState<"verify" | "exists">("exists");
 
-  // If user is already signed in, redirect home
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        window.location.replace("/");
-      }
-    });
-  }, []);
+  // Do not auto-redirect; let users stay on this page to resend or navigate manually
 
   // Choose view automatically: if email is provided, show verify UI; otherwise show existing-account guidance
   useEffect(() => {
@@ -59,7 +53,7 @@ function VerifyEmailInner() {
           throw error;
         }
       } else {
-        setMessage("Verification email sent. Please check your inbox.");
+        setMessage("Verification email sent. Please check your inbox. If you don't see it, check spam and ensure noreply@supabase.io is allowed.");
         setCooldown(60);
       }
     } catch (e: any) {
