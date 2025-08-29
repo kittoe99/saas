@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 function classNames(...args: Array<string | false | null | undefined>) {
   return args.filter(Boolean).join(" ");
@@ -46,6 +47,23 @@ function TabIcon({ tab, selected }: { tab: TabKey; selected?: boolean }) {
 export default function DashboardPage() {
   const [active, setActive] = useState<TabKey>("Home");
   const [showMobileTabs, setShowMobileTabs] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Auth guard: redirect to /login if there is no session
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      if (!data.session) {
+        window.location.replace("/login");
+      } else {
+        setAuthChecked(true);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Initialize from URL or localStorage
   useEffect(() => {
@@ -93,6 +111,15 @@ export default function DashboardPage() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Show a lightweight loading state until auth check completes
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-neutral-600">
+        Checking authentication...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
