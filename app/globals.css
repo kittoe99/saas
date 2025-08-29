@@ -237,9 +237,10 @@ header .no-btn-shadow:active {
 /* Shadow utilities for containers (forms, cards, lists) */
 /* Subtle, warm-tinted drop shadows that work with the palette */
 .shadow-soft {
+  /* Slightly stronger for visibility on warm light background */
   box-shadow:
-    0 1px 1px rgba(17, 17, 17, 0.01),
-    0 2px 6px rgba(17, 17, 17, 0.02);
+    0 1px 2px rgba(17, 17, 17, 0.05),
+    0 4px 10px rgba(17, 17, 17, 0.06);
 }
 
 .shadow-elevated {
@@ -251,17 +252,18 @@ header .no-btn-shadow:active {
 
 /* Hover utility: now elevated across all states (default, hover, focus, active) */
 .shadow-hover {
+  /* Default elevated look (applies at rest and on hover for consistent feel) */
   box-shadow:
-    0 2px 4px rgba(17, 17, 17, 0.02),
-    0 8px 18px rgba(17, 17, 17, 0.035);
+    0 3px 6px rgba(17, 17, 17, 0.06),
+    0 10px 24px rgba(17, 17, 17, 0.10);
 }
 .shadow-hover:hover,
 .shadow-hover:focus,
 .shadow-hover:focus-visible,
 .shadow-hover:active {
   box-shadow:
-    0 2px 4px rgba(17, 17, 17, 0.02),
-    0 8px 18px rgba(17, 17, 17, 0.035);
+    0 4px 10px rgba(17, 17, 17, 0.07),
+    0 16px 32px rgba(17, 17, 17, 0.12);
 }
 
 /* Compose helpers */
@@ -318,8 +320,8 @@ button:active,
 @media (prefers-color-scheme: dark) {
   .shadow-soft {
     box-shadow:
-      0 1px 1px rgba(0, 0, 0, 0.12),
-      0 2px 6px rgba(0, 0, 0, 0.18);
+      0 1px 2px rgba(0, 0, 0, 0.18),
+      0 4px 10px rgba(0, 0, 0, 0.22);
   }
   .shadow-elevated {
     box-shadow:
@@ -333,8 +335,8 @@ button:active,
   .shadow-hover:focus-visible,
   .shadow-hover:active {
     box-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.16),
-      0 8px 18px rgba(0, 0, 0, 0.22);
+      0 3px 6px rgba(0, 0, 0, 0.22),
+      0 12px 28px rgba(0, 0, 0, 0.28);
   }
   .shadow-card { box-shadow: 0 1px 1px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.22); }
   .shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(0,0,0,0.18); }

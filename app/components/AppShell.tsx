@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import FooterLinks from "./FooterLinks";
@@ -18,6 +19,44 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header />
+      {/* Breadcrumbs (container width, simple chevron-separated) */}
+      {pathname && pathname !== "/" && (
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 mt-2">
+          <nav aria-label="Breadcrumb" className="text-[11px] sm:text-xs">
+            <ol className="flex items-center flex-wrap gap-1 text-neutral-600">
+              <li className="flex items-center">
+                <Link href="/" className="inline-flex items-center hover:text-success-ink transition-colors">
+                  <span>Home</span>
+                </Link>
+              </li>
+              {(() => {
+                const parts = pathname.split("/").filter(Boolean);
+                let hrefAcc = "";
+                return parts.map((seg, idx) => {
+                  hrefAcc += `/${seg}`;
+                  const isLast = idx === parts.length - 1;
+                  const label = seg
+                    .split("-")
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(" ");
+                  return (
+                    <li key={hrefAcc} className="flex items-center">
+                      <span aria-hidden className="mx-1 text-neutral-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                      </span>
+                      {isLast ? (
+                        <span aria-current="page" className="text-neutral-900 font-medium">{label}</span>
+                      ) : (
+                        <Link href={hrefAcc} className="hover:text-success-ink transition-colors">{label}</Link>
+                      )}
+                    </li>
+                  );
+                });
+              })()}
+            </ol>
+          </nav>
+        </div>
+      )}
       <main className="max-w-5xl mx-auto px-3 sm:px-4">{children}</main>
       <footer className="mt-20 border-t border-[#2a2119] bg-[#0e0b08] text-[#faf6ec]">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-10">
