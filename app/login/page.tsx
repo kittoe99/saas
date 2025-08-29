@@ -96,20 +96,18 @@ export default function LoginPage() {
           if (probe.error) {
             const perr = probe.error.message || "";
             if (/confirm|verify|not.*confirmed|email\s*not\s*confirmed/i.test(perr)) {
-              setError("Your account exists but the email is not verified. Please check your inbox or sign in to resend verification.");
-              setUnverified(true);
-              setMode("signin");
+              setSuccess("Check your email for a verification link to activate your account");
               return;
             }
             if (/already|exists|registered|invalid/i.test(perr)) {
-              setError("An account with this email already exists. Please sign in instead.");
-              setUnverified(false);
-              setMode("signin");
+              // Right after creating a new account, sign-in can fail until email is verified.
+              // Show verification guidance instead of 'account already exists'.
+              setSuccess("Check your email for a verification link to activate your account");
               return;
             }
           }
           // Otherwise, assume a new account that needs email verification
-          setSuccess("Check your email to confirm your account.");
+          setSuccess("Check your email for a verification link to activate your account");
         } else {
           setSuccess("Account created. Redirecting...");
           window.location.replace("/dashboard");
