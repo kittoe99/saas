@@ -36,16 +36,9 @@ function VerifyEmailInner() {
     });
   }, []);
 
-  // If coming directly from signup, show verify mode; otherwise show existing-account guidance
+  // Choose view automatically: if email is provided, show verify UI; otherwise show existing-account guidance
   useEffect(() => {
-    if (fromSignup === "1") {
-      setViewMode("verify");
-    }
-  }, [fromSignup]);
-
-  // If no email is provided, show existing-account guidance instead
-  useEffect(() => {
-    if (!email) setViewMode("exists");
+    setViewMode(email ? "verify" : "exists");
   }, [email]);
 
   async function resend() {
@@ -54,7 +47,7 @@ function VerifyEmailInner() {
       setLoading(true);
       setMessage(null);
       setError(null);
-      const { error } = await supabase.auth.resend({ type: "signup", email });
+      const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: redirectTo } });
       if (error) {
         const msg = error.message || "Failed to resend verification email";
         // If the user is already registered/confirmed, guide to reset password instead of resending
