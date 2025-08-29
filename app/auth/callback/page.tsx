@@ -1,10 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
+export const dynamic = "force-dynamic";
+
 export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center px-4 pt-8"><div className="text-sm text-neutral-600">Finalizing verification...</div></div>}>
+      <AuthCallbackInner />
+    </Suspense>
+  );
+}
+
+function AuthCallbackInner() {
   const params = useSearchParams();
   const [status, setStatus] = useState<
     | { kind: "loading" }
@@ -23,19 +33,14 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function run() {
       try {
-        // Supabase JS will automatically detect URL hash/session for magic links and confirmations.
-        // But for certain flows (PKCE/code), exchange explicitly.
-        // If there is a `code` param, try exchanging it.
         const hasCode = !!params.get("code");
         if (hasCode) {
           const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
           if (error) throw error;
         } else {
-          // Fall back to checking session (hash tokens are handled automatically by the client on page load)
           const { data, error } = await supabase.auth.getSession();
           if (error) throw error;
           if (!data.session) {
-            // Give the client a moment to process hash-based auth
             await new Promise((r) => setTimeout(r, 400));
             const again = await supabase.auth.getSession();
             if (!again.data.session) {
