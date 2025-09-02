@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // Lightweight utility like in get-started
 function classNames(...args: Array<string | false | null | undefined>) {
@@ -234,6 +235,7 @@ const PRESET_COLORS: string[] = [
 const PRIMARY_GOALS = ["Leads", "Sales", "Bookings", "Community", "Content"];
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const [siteType, setSiteType] = useState<SiteType | null>(null);
   const [category, setCategory] = useState<string>("");
   const [name, setName] = useState("");
@@ -346,7 +348,8 @@ export default function OnboardingPage() {
   const step5Done = (businessPhone.trim().length >= 7 || /\S+@\S+\.\S+/.test(businessEmail)) && !!contactMethod;
   const step6Done = selectedServices.length > 0;
   const step7Done = areasNotApplicable || cities.length > 0; // allow N/A or at least one area
-  const step8Done = ((!!logoFile || noLogoYet) && assetFiles.length > 0); // logo or text logo + at least one asset
+  // Step 8 uploads are optional for all users
+  const step8Done = true;
   const canGoStep2 = step1Done;
   const canGoStep3 = step2Done;
   const canGoStep4 = step3Done;
@@ -354,7 +357,15 @@ export default function OnboardingPage() {
   const canGoStep6 = step5Done;
   const canGoStep7 = step6Done; // proceed to areas
   const canGoStep8 = step7Done; // proceed to logo & assets
-  const canFinish = step8Done && isTypeSpecificValid(siteType, typeSpecific);
+  // Allow finishing without Step 8 uploads; still enforce type-specific required fields if any
+  const canFinish = isTypeSpecificValid(siteType, typeSpecific);
+
+  // Finish handler (navigate after successful completion)
+  function handleFinish() {
+    if (!canFinish) return;
+    // TODO: submit onboarding payload to backend when ready
+    router.push("/");
+  }
 
   // Steps metadata for sidebar
   const steps = [
@@ -2271,6 +2282,7 @@ export default function OnboardingPage() {
                   <button
                     type="button"
                     disabled={!canFinish}
+                    onClick={handleFinish}
                     className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent", !canFinish ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")}
                   >
                     Finish
