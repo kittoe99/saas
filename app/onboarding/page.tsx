@@ -281,6 +281,7 @@ export default function OnboardingPage() {
   const [languages, setLanguages] = useState<string[]>(["English"]);
   const [primaryLanguage, setPrimaryLanguage] = useState<string>("English");
   const [teamNotes, setTeamNotes] = useState("");
+  const [noLogoYet, setNoLogoYet] = useState<boolean>(false);
   const [summary, setSummary] = useState<
     | null
     | {
@@ -345,7 +346,7 @@ export default function OnboardingPage() {
   const step5Done = (businessPhone.trim().length >= 7 || /\S+@\S+\.\S+/.test(businessEmail)) && !!contactMethod;
   const step6Done = selectedServices.length > 0;
   const step7Done = areasNotApplicable || cities.length > 0; // allow N/A or at least one area
-  const step8Done = !!logoFile && assetFiles.length > 0; // logo + at least one asset
+  const step8Done = ((!!logoFile || noLogoYet) && assetFiles.length > 0); // logo or text logo + at least one asset
   const canGoStep2 = step1Done;
   const canGoStep3 = step2Done;
   const canGoStep4 = step3Done;
@@ -1580,6 +1581,68 @@ export default function OnboardingPage() {
                   </div>
                 </div>
 
+                {/* Per-service quick details (optional) */}
+                {selectedServices.length > 0 && (
+                  <div className="mt-5">
+                    <label className="block text-sm font-medium">Service details (optional)</label>
+                    <div className="mt-2 space-y-2">
+                      {selectedServices.map((svc) => (
+                        <details key={`svc-${svc}`} className="rounded-md border border-neutral-200 bg-white p-3 shadow-soft">
+                          <summary className="cursor-pointer select-none text-sm font-medium text-neutral-800">{svc}</summary>
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div className="sm:col-span-2">
+                              <label className="block text-xs text-neutral-600">Short description</label>
+                              <input
+                                type="text"
+                                value={serviceDetails[svc]?.description || ""}
+                                onChange={(e) => setServiceDetails((prev) => ({ ...prev, [svc]: { ...prev[svc], description: e.target.value } }))}
+                                placeholder="One-line summary for this service"
+                                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-neutral-600">CTA</label>
+                              <select
+                                value={serviceDetails[svc]?.cta || "None"}
+                                onChange={(e) => setServiceDetails((prev) => ({ ...prev, [svc]: { ...prev[svc], cta: e.target.value as any } }))}
+                                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                              >
+                                {(["None","Call","Form","Booking"] as const).map((opt) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </details>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Must-have pages (optional) */}
+                <div className="mt-5">
+                  <label className="block text-sm font-medium">Must-have pages (optional)</label>
+                  <div className="mt-2 flex flex-wrap gap-3 text-sm">
+                    {(["About","Services","Pricing","Contact","Blog","FAQ","Testimonials"] as const).map((p) => {
+                      const checked = mustHavePages.includes(p);
+                      return (
+                        <label key={p} className={classNames("inline-flex items-center gap-2 rounded-full border px-3 py-1.5 cursor-pointer", checked ? "bg-success-bg border-success text-success-ink" : "bg-white border-neutral-300 text-neutral-800 hover:bg-neutral-50")}> 
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-neutral-300 text-success-accent focus:ring-success-accent"
+                            checked={checked}
+                            onChange={(e) => {
+                              if (e.target.checked) setMustHavePages([...mustHavePages, p]);
+                              else setMustHavePages(mustHavePages.filter((x) => x !== p));
+                            }}
+                          />
+                          <span>{p}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Business hours */}
                 <div className="mt-6">
                   <label className="block text-sm font-medium">Business hours</label>
@@ -2036,7 +2099,7 @@ export default function OnboardingPage() {
                 </div>
                 {step > 8 && (
                   <div className="text-xs text-neutral-600 mt-0.5 truncate">
-                    {logoFile ? "Logo set" : "No logo"} • {assetFiles.length} asset{assetFiles.length === 1 ? "" : "s"}
+                    {logoFile ? "Logo set" : (noLogoYet ? "Using text logo" : "No logo")} • {assetFiles.length} asset{assetFiles.length === 1 ? "" : "s"}
                   </div>
                 )}
               </div>
@@ -2049,12 +2112,27 @@ export default function OnboardingPage() {
               <div className="accordion-content p-4 sm:p-5 fade-slide">
                 {/* Logo uploader */}
                 <div>
+                  <div className="mb-3 flex items-start gap-2">
+                    <input
+                      id="no-logo-yet"
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-success-accent focus:ring-success-accent"
+                      checked={noLogoYet}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setNoLogoYet(checked);
+                        if (checked) setLogoFile(null);
+                      }}
+                    />
+                    <label htmlFor="no-logo-yet" className="text-sm text-neutral-800">I don't have a logo yet — use my site name as a text logo</label>
+                  </div>
                   <label className="block text-sm font-medium">Logo</label>
-                  <div className="mt-2 flex items-center gap-3">
+                  <div className={classNames("mt-2 flex items-center gap-3", noLogoYet ? "opacity-50 pointer-events-none" : "")}> 
                     <input
                       id="logo-file"
                       type="file"
                       accept="image/*"
+                      disabled={noLogoYet}
                       onChange={(e) => {
                         const f = e.target.files && e.target.files[0] ? e.target.files[0] : null;
                         setLogoFile(f);
