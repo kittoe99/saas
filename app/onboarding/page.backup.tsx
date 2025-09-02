@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // Lightweight utility like in get-started
 function classNames(...args: Array<string | false | null | undefined>) {
@@ -234,6 +235,7 @@ const PRESET_COLORS: string[] = [
 const PRIMARY_GOALS = ["Leads", "Sales", "Bookings", "Community", "Content"];
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const [siteType, setSiteType] = useState<SiteType | null>(null);
   const [category, setCategory] = useState<string>("");
   const [name, setName] = useState("");
@@ -321,7 +323,6 @@ export default function OnboardingPage() {
   const [cities, setCities] = useState<Array<{ name: string; displayName: string; lat: number; lon: number; radiusKm: number }>>([]);
   const [distanceUnit, setDistanceUnit] = useState<"km" | "mi">("km");
   const [isCitySearching, setIsCitySearching] = useState(false);
-  const [areasNotApplicable, setAreasNotApplicable] = useState<boolean>(false);
   // Step 5 analyzing UX
   const [step5Analyzing, setStep5Analyzing] = useState(false);
   const [step5Progress, setStep5Progress] = useState(0);
@@ -344,7 +345,7 @@ export default function OnboardingPage() {
   const step4Done = !!siteType && !!name.trim() && (hasCurrent === "no" || (hasCurrent === "yes" && (siteAdded || skipped)));
   const step5Done = (businessPhone.trim().length >= 7 || /\S+@\S+\.\S+/.test(businessEmail)) && !!contactMethod;
   const step6Done = selectedServices.length > 0;
-  const step7Done = areasNotApplicable || cities.length > 0; // allow N/A or at least one area
+  const step7Done = cities.length > 0; // at least one service area
   const step8Done = !!logoFile && assetFiles.length > 0; // logo + at least one asset
   const canGoStep2 = step1Done;
   const canGoStep3 = step2Done;
@@ -861,9 +862,36 @@ export default function OnboardingPage() {
 
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="text-2xl font-semibold">Onboarding</h1>
-      <p className="mt-1 text-sm text-gray-600">Follow the steps below to tell us about your site.</p>
+    <>
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="flex min-h-full items-start justify-center p-4 sm:p-6 lg:p-8">
+          <div role="dialog" aria-modal="true" className="relative w-full max-w-5xl rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              aria-label="Close"
+              className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent/50"
+            >
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+            <div className="px-6 py-6 sm:px-8">
+              <div className="mx-auto max-w-5xl">
+                <h1 className="text-2xl font-semibold">Onboarding</h1>
+                <p className="mt-1 text-sm text-gray-600">Follow the steps below to tell us about your site.</p>
+              </div>
+            </div>
+            <div className="px-6 pb-8 sm:px-8">
+            <div className="mx-auto max-w-5xl">
+              {/* Original content continues */}
+    
+    
+    
+    
+    
+    
 
       <div className="mt-8 grid grid-cols-12 gap-8">
         {/* Sidebar */}
@@ -1530,7 +1558,7 @@ export default function OnboardingPage() {
                 <div>
                   <label className="block text-sm font-medium">Services</label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {[...new Set([...servicesFor(siteType, category), ...selectedServices])].map((svc) => {
+                    {servicesFor(siteType, category).map((svc) => {
                       const active = selectedServices.includes(svc);
                       return (
                         <button
@@ -1560,15 +1588,6 @@ export default function OnboardingPage() {
                       placeholder="Add a custom service"
                       value={newService}
                       onChange={(e) => setNewService(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          const v = newService.trim();
-                          if (v && !selectedServices.includes(v)) {
-                            setSelectedServices([...selectedServices, v]);
-                            setNewService("");
-                          }
-                        }
-                      }}
                     />
                     <button
                       type="button"
@@ -1750,9 +1769,7 @@ export default function OnboardingPage() {
                   <span>7. Service areas</span>
                 </div>
                 {step > 7 && (
-                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
-                    {areasNotApplicable ? "Not applicable" : `${cities.length} area${cities.length === 1 ? "" : "s"} • ${distanceUnit.toUpperCase()}`}
-                  </div>
+                  <div className="text-xs text-neutral-600 mt-0.5 truncate">{cities.length} area{cities.length === 1 ? "" : "s"} • {distanceUnit.toUpperCase()}</div>
                 )}
               </div>
               <div className="ml-auto flex items-center gap-3">
@@ -1762,30 +1779,10 @@ export default function OnboardingPage() {
             </summary>
             <div className="accordion border-t border-neutral-200">
               <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <div className="mb-3 flex items-start gap-2">
-                  <input
-                    id="areas-na"
-                    type="checkbox"
-                    className="mt-1 h-4 w-4 rounded border-neutral-300 text-success-accent focus:ring-success-accent"
-                    checked={areasNotApplicable}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setAreasNotApplicable(checked);
-                      if (checked) {
-                        setCities([]);
-                        setCitySuggestions([]);
-                        setCityQuery("");
-                      }
-                    }}
-                  />
-                  <label htmlFor="areas-na" className="text-sm text-neutral-800">
-                    My business/site does not have a physical address or service areas (online‑only / N/A)
-                  </label>
-                </div>
-                <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 items-start ${areasNotApplicable ? "opacity-50 pointer-events-none" : ""}`}>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
                   <div className="min-w-[180px]">
                     <label className="block text-sm font-medium">Country (optional)</label>
-                    <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} disabled={areasNotApplicable} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:bg-neutral-50 disabled:text-neutral-500">
+                    <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success">
                       <option value="">All countries</option>
                       {COUNTRIES.map((c) => (
                         <option key={c.code} value={c.code}>{c.name}</option>
@@ -1797,13 +1794,12 @@ export default function OnboardingPage() {
                     <div className="mt-1 flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent disabled:bg-neutral-50 disabled:text-neutral-500"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent"
                         placeholder="Start typing a city..."
                         value={cityQuery}
                         onChange={(e) => setCityQuery(e.target.value)}
-                        disabled={areasNotApplicable}
                       />
-                      <button type="button" className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90 w-full sm:w-auto disabled:bg-neutral-300 disabled:text-white" onClick={() => runCitySearch()} disabled={isCitySearching || areasNotApplicable}>
+                      <button type="button" className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90 w-full sm:w-auto" onClick={() => runCitySearch()} disabled={isCitySearching}>
                         {isCitySearching ? "Searching…" : "Search"}
                       </button>
                     </div>
@@ -2201,8 +2197,14 @@ export default function OnboardingPage() {
               </div>
             </div>
           </details>
+          </div>
         </main>
+        </div>
+        </div>
+        </div>
       </div>
     </div>
+    </div>
+  </>
   );
 }
