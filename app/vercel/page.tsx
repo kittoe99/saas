@@ -15,11 +15,12 @@ function fmtDate(ts?: number) {
 export default async function VercelProjectsPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const teamId = (searchParams?.teamId as string | undefined) || process.env.VERCEL_TEAM_ID;
-  const limit = Number(searchParams?.limit ?? 20);
-  const from = (searchParams?.from as string | undefined) || undefined;
+  const sp = (await searchParams) || {};
+  const teamId = (sp?.teamId as string | undefined) || process.env.VERCEL_TEAM_ID;
+  const limit = Number(sp?.limit ?? 20);
+  const from = (sp?.from as string | undefined) || undefined;
 
   let data: Awaited<ReturnType<typeof listProjects>> | null = null;
   let error: string | null = null;
