@@ -34,14 +34,14 @@ export default async function VercelProjectsPage({
   const nextCursor = (data as any)?.pagination?.next as string | undefined;
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="text-2xl font-semibold mb-4">Vercel Projects</h1>
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-10">
+      <h1 className="text-xl sm:text-2xl font-semibold mb-4">Vercel Projects</h1>
 
-      <form className="flex flex-wrap gap-3 mb-6" method="get">
+      <form className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" method="get">
         <div>
           <label className="block text-sm font-medium mb-1">Team ID (optional)</label>
           <input
-            className="border rounded px-3 py-2 w-80"
+            className="border rounded px-3 py-2 w-full"
             type="text"
             name="teamId"
             placeholder="team_xxx"
@@ -50,14 +50,14 @@ export default async function VercelProjectsPage({
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Limit</label>
-          <input className="border rounded px-3 py-2 w-28" type="number" name="limit" defaultValue={isNaN(limit) ? 20 : limit} />
+          <input className="border rounded px-3 py-2 w-full sm:w-28" type="number" name="limit" defaultValue={isNaN(limit) ? 20 : limit} />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">From (cursor)</label>
-          <input className="border rounded px-3 py-2 w-80" type="text" name="from" defaultValue={from || ''} />
+          <input className="border rounded px-3 py-2 w-full" type="text" name="from" defaultValue={from || ''} />
         </div>
         <div className="self-end">
-          <button className="bg-black text-white rounded px-4 py-2" type="submit">Load</button>
+          <button className="bg-black text-white rounded px-4 py-2 w-full sm:w-auto" type="submit">Load</button>
         </div>
       </form>
 
@@ -75,36 +75,40 @@ export default async function VercelProjectsPage({
         )}
       </div>
 
-      <div className="border rounded divide-y">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {projects.map((p: any) => (
-          <div key={p.id} className="p-4 flex items-start justify-between gap-4">
+          <div key={p.id} className="p-4 border rounded-lg shadow-sm bg-white flex flex-col gap-3">
             <div>
-              <div className="font-medium">{p.name}</div>
-              <div className="text-xs text-gray-600">ID: {p.id}</div>
+              <div className="font-semibold text-base truncate" title={p.name}>{p.name}</div>
+              <div className="text-[11px] text-gray-600 break-all">ID: {p.id}</div>
               {p.framework && <div className="text-xs text-gray-600">Framework: {p.framework}</div>}
-              {p.environment && <div className="text-xs text-gray-600">Env: {Array.isArray(p.environment) ? p.environment.join(', ') : ''}</div>}
+              {p.environment && (
+                <div className="text-xs text-gray-600">
+                  Env: {Array.isArray(p.environment) ? p.environment.join(', ') : ''}
+                </div>
+              )}
             </div>
-            <div className="text-xs text-gray-600 text-right min-w-[220px]">
+            <div className="text-xs text-gray-600">
               <div>Created: {fmtDate(p.createdAt)}</div>
               {p.link?.type && p.link?.repo && (
-                <div>
+                <div className="truncate" title={`${p.link.type} / ${p.link.repo}`}>
                   Repo: {p.link.type} / {p.link.repo}
                 </div>
               )}
               {p.latestDeployments?.[0]?.url && (
-                <div>
-                  Latest: <a className="text-blue-600 hover:underline" href={`https://${p.latestDeployments[0].url}`} target="_blank">{p.latestDeployments[0].url}</a>
+                <div className="truncate">
+                  Latest: <a className="text-blue-600 hover:underline" href={`https://${p.latestDeployments[0].url}`} target="_blank" rel="noreferrer">{p.latestDeployments[0].url}</a>
                 </div>
               )}
             </div>
           </div>
         ))}
         {projects.length === 0 && (
-          <div className="p-6 text-sm text-gray-600">No projects found for the given scope.</div>
+          <div className="p-6 text-sm text-gray-600 border rounded-lg">No projects found for the given scope.</div>
         )}
       </div>
 
-      <div className="mt-6 flex gap-3">
+      <div className="mt-6 flex flex-col sm:flex-row gap-3">
         {nextCursor && (
           <Link
             className="border rounded px-3 py-2 text-sm hover:bg-gray-50"
