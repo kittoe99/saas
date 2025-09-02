@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import AppShell from "./components/AppShell";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
 const interSans = Inter({
@@ -9,10 +9,7 @@ const interSans = Inter({
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Removed mono font to avoid Turbopack internal font resolver issue
 
 export const metadata: Metadata = {
   title: "hinn.io",
@@ -26,9 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body
-        className={`${interSans.variable} ${geistMono.variable} font-sans antialiased text-neutral-900`}
-      >
+      <body className={`${interSans.variable} font-sans antialiased text-neutral-900`}>
         <AppShell>{children}</AppShell>
       </body>
     </html>

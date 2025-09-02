@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 // Lightweight utility like in get-started
 function classNames(...args: Array<string | false | null | undefined>) {
@@ -309,6 +310,7 @@ export default function OnboardingPage() {
   const [notFound, setNotFound] = useState(false);
   const [siteAdded, setSiteAdded] = useState(false);
   const [skipped, setSkipped] = useState(false);
+  const [saving, setSaving] = useState(false);
   // Auto-scroll refs
   const nameRef = React.useRef<HTMLDivElement | null>(null);
   const nameInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -361,10 +363,81 @@ export default function OnboardingPage() {
   const canFinish = isTypeSpecificValid(siteType, typeSpecific);
 
   // Finish handler (navigate after successful completion)
-  function handleFinish() {
-    if (!canFinish) return;
-    // TODO: submit onboarding payload to backend when ready
-    router.push("/");
+  async function handleFinish() {
+    if (!canFinish || saving) return;
+    setError(null);
+    setSaving(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth?.user;
+      if (!user) {
+        setError("Please sign in to finish onboarding.");
+        setSaving(false);
+        router.push("/login");
+        return;
+      }
+
+      // Build minimal payload of collected onboarding data
+      const payload = {
+        siteType,
+        category,
+        name,
+        hasCurrent,
+        currentUrl,
+        businessPhone,
+        businessEmail,
+        selectedServices,
+        serviceDetails,
+        mustHavePages,
+        cities,
+        areasNotApplicable,
+        primaryColors,
+        contactMethod,
+        social: { x: socialX, linkedin: socialLinkedIn, instagram: socialInstagram, facebook: socialFacebook },
+        typeSpecific,
+        subcategory,
+        primaryGoal,
+        tagline,
+        preferredDomain,
+        competitors,
+        contentSources,
+        businessAddress,
+        timeZone,
+        responseSla,
+        bookingTool,
+        businessHours,
+        businessHoursMode,
+        step6Phase,
+        voiceTone,
+        highContrast,
+        onSiteMode,
+        coverageType,
+        travelFeePolicy,
+        languages,
+        primaryLanguage,
+        teamNotes,
+        // Step 8 file fields are optional and not uploaded here; store flags only
+        hasLogo: !!logoFile,
+        noLogoYet,
+        assetCount: assetFiles.length,
+        createdAt: new Date().toISOString(),
+      };
+
+      const res = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id, data: payload }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error || "Failed to save onboarding");
+      }
+      router.push("/dashboard");
+    } catch (e: any) {
+      setError(e?.message || "Something went wrong while finishing onboarding.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   // Steps metadata for sidebar

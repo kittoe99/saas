@@ -48,6 +48,8 @@ export default function DashboardPage() {
   const [active, setActive] = useState<TabKey>("Home");
   const [showMobileTabs, setShowMobileTabs] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // Auth guard: redirect to /login if there is no session
   useEffect(() => {
@@ -64,6 +66,22 @@ export default function DashboardPage() {
       mounted = false;
     };
   }, []);
+
+  // Check onboarding status for current user
+  useEffect(() => {
+    if (!authChecked) return;
+    let mounted = true;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth?.user;
+      if (!mounted || !user) return;
+      const { data } = await supabase.from('onboarding').select('user_id').eq('user_id', user.id).maybeSingle();
+      if (!mounted) return;
+      setNeedsOnboarding(!data);
+      setOnboardingChecked(true);
+    })();
+    return () => { mounted = false; };
+  }, [authChecked]);
 
   // Initialize from URL or localStorage
   useEffect(() => {
@@ -201,7 +219,6 @@ export default function DashboardPage() {
 
           {/* Main panel */}
           <main className="col-span-12 sm:col-span-9 lg:col-span-10">
-            {/* Keep tab panels empty as requested */}
             <div
               className="rounded-xl border border-neutral-200 bg-white shadow-soft min-h-[40vh]"
               role="tabpanel"
@@ -209,7 +226,19 @@ export default function DashboardPage() {
               aria-labelledby={`tab-${active.toLowerCase()}`}
               aria-label={active}
             >
-              {/* Intentionally left blank inside tabs */}
+              {onboardingChecked && needsOnboarding && active === "Home" ? (
+                <div className="flex min-h-[40vh] items-center justify-center p-8 text-center">
+                  <div className="max-w-md space-y-4">
+                    <div className="flex justify-center">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-8 w-8 text-amber-600"><path d="M12 9v4m0 4h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                    </div>
+                    <h2 className="text-base font-semibold text-neutral-900">Complete your onboarding to get the most out of your dashboard.</h2>
+                    <div>
+                      <a href="/dashboard/onboarding" className="inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-1.5 text-white hover:opacity-90">Start onboarding</a>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </main>
         </div>
