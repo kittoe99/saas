@@ -13,6 +13,9 @@ export async function POST(req: Request) {
     if (!user_id) {
       return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
     }
+    if (data === null || typeof data !== 'object') {
+      return NextResponse.json({ error: 'Invalid data payload' }, { status: 400 });
+    }
 
     const payload = { user_id, data } as { user_id: string; data: any };
 
@@ -24,7 +27,23 @@ export async function POST(req: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ ok: true });
+    // Read back the row to confirm what was written (debug aid)
+    const { data: row, error: readErr } = await supabaseServer
+      .from('onboarding')
+      .select('*')
+      .eq('user_id', user_id)
+      .single();
+
+    if (readErr) {
+      return NextResponse.json({ ok: true, warn: 'Saved but failed to read back', error: readErr.message }, { status: 200 });
+    }
+
+    let keys: string[] = [];
+    try {
+      keys = row && row.data ? Object.keys(row.data) : [];
+    } catch {}
+
+    return NextResponse.json({ ok: true, user_id, keys, row }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 });
   }
