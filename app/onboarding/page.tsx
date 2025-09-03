@@ -311,6 +311,8 @@ export default function OnboardingPage() {
   const [siteAdded, setSiteAdded] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Back navigation confirm modal
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
   // Auto-scroll refs
   const nameRef = React.useRef<HTMLDivElement | null>(null);
   const nameInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -529,6 +531,14 @@ export default function OnboardingPage() {
   const [searchedCount, setSearchedCount] = useState<number | null>(null);
   const [searchedPreview, setSearchedPreview] = useState<Array<{ index: number; title: string; url: string; snippet?: string }>>([]);
   const [showSources, setShowSources] = useState(false);
+
+  // Back to home handlers (native confirm to keep UX simple and robust)
+  function requestBack() {
+    const ok = typeof window !== "undefined" ? window.confirm("Leave onboarding? Your progress won't be saved unless you finish. Go back home?") : true;
+    if (ok) router.push("/dashboard");
+  }
+  function confirmBack() { router.push("/dashboard"); }
+  function cancelBack() { /* no-op for native confirm */ }
 
   // Basic text sanitizer for LLM output: normalize bullets, quotes, spaces, and strip markdown markers
   function sanitizeText(input: string): string {
@@ -944,11 +954,25 @@ export default function OnboardingPage() {
     return <Typewriter text={cleaned} />;
   }
 
-
+  // Full onboarding UI
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="text-2xl font-semibold">Onboarding</h1>
-      <p className="mt-1 text-sm text-gray-600">Follow the steps below to tell us about your site.</p>
+    <div className="mx-auto max-w-6xl px-6 py-8 sm:py-10">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Onboarding</h1>
+          <p className="mt-1 text-sm text-gray-600">Follow the steps below to tell us about your site.</p>
+        </div>
+        <button
+          type="button"
+          onClick={requestBack}
+          className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm text-neutral-800 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent/50"
+          aria-label="Back to home"
+          title="Back to home"
+        >
+          ← Back to home
+        </button>
+      </div>
 
       <div className="mt-8 grid grid-cols-12 gap-8">
         {/* Sidebar */}
@@ -986,20 +1010,17 @@ export default function OnboardingPage() {
           </div>
         </aside>
 
-        {/* Main content: Accordion (repo-matched) */}
+        {/* Main content */}
         <main className="col-span-12 md:col-span-8">
           <div className="space-y-4">
-            {/* Step 1: Type of site */}
+            {/* Step 1: Site type */}
             <details
               open={step === 1}
               className={classNames(
                 "relative rounded-xl border shadow-soft shadow-hover",
                 step > 1 ? "bg-success-bg border-success" : "bg-white border-neutral-200"
               )}
-              onToggle={(e) => {
-                const el = e.currentTarget as HTMLDetailsElement;
-                if (el.open) setStep(1);
-              }}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open) setStep(1); }}
             >
               {step > 1 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
               <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
@@ -1012,11 +1033,10 @@ export default function OnboardingPage() {
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                   <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 1 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 1 ? "Completed" : step === 1 ? "In progress" : "Locked"}</span>
-                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                 </div>
               </summary>
-              <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide">
+              <div className="border-t border-neutral-200">
+                <div className="p-4 sm:p-5">
                   <label className="block text-sm font-medium">Type of site</label>
                   <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {SITE_TYPES.map((t) => (
@@ -1058,18 +1078,14 @@ export default function OnboardingPage() {
               </div>
             </details>
 
-            {/* Step 2: Category/Industry */}
+            {/* Step 2: Category */}
             <details
               open={step === 2}
               className={classNames(
                 "relative rounded-xl border shadow-soft shadow-hover",
                 step > 2 ? "bg-success-bg border-success" : step >= 2 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
-              onToggle={(e) => {
-                const el = e.currentTarget as HTMLDetailsElement;
-                if (el.open && canGoStep2) setStep(2);
-                if (!canGoStep2) el.open = false;
-              }}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep2) setStep(2); if (!canGoStep2) el.open = false; }}
             >
               {step > 2 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
               <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
@@ -1082,11 +1098,10 @@ export default function OnboardingPage() {
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                   <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 2 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 2 ? "Completed" : step === 2 ? "In progress" : "Locked"}</span>
-                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                 </div>
               </summary>
-              <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide">
+              <div className="border-t border-neutral-200">
+                <div className="p-4 sm:p-5">
                   <label className="block text-sm font-medium">Select a category / industry</label>
                   <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
                     {categoriesFor(siteType).map((c) => (
@@ -1096,9 +1111,7 @@ export default function OnboardingPage() {
                         onClick={() => setCategory(c)}
                         className={classNames(
                           "w-full text-left rounded-lg border px-3 py-2 text-sm shadow-soft shadow-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                          category === c
-                            ? "border-success bg-success-accent/15 text-success-ink ring-1 ring-success"
-                            : "border-neutral-200 bg-white text-neutral-800 hover:border-success hover:bg-success-accent/10"
+                          category === c ? "border-success bg-success-accent/15 text-success-ink ring-1 ring-success" : "border-neutral-200 bg-white text-neutral-800 hover:border-success hover:bg-success-accent/10"
                         )}
                         aria-pressed={category === c}
                         aria-selected={category === c}
@@ -1109,7 +1122,6 @@ export default function OnboardingPage() {
                       </button>
                     ))}
                   </div>
-                  {/* Optional primary goal */}
                   <div className="mt-4 max-w-sm">
                     <label className="block text-sm font-medium">Primary goal (optional)</label>
                     <select value={primaryGoal} onChange={(e) => setPrimaryGoal(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success">
@@ -1142,11 +1154,7 @@ export default function OnboardingPage() {
                 "relative rounded-xl border shadow-soft shadow-hover",
                 step > 3 ? "bg-success-bg border-success" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
-              onToggle={(e) => {
-                const el = e.currentTarget as HTMLDetailsElement;
-                if (el.open && canGoStep3) setStep(3);
-                if (!canGoStep3) el.open = false;
-              }}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep3) setStep(3); if (!canGoStep3) el.open = false; }}
             >
               {step > 3 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
               <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
@@ -1159,11 +1167,10 @@ export default function OnboardingPage() {
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                   <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 3 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 3 ? "Completed" : step === 3 ? "In progress" : "Locked"}</span>
-                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                 </div>
               </summary>
-              <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide">
+              <div className="border-t border-neutral-200">
+                <div className="p-4 sm:p-5">
                   <div className="max-w-md">
                     <label className="block text-sm font-medium">Business or site name</label>
                     <input
@@ -1195,18 +1202,14 @@ export default function OnboardingPage() {
               </div>
             </details>
 
-            {/* Step 4: Website details */}
+            {/* Step 4: Existing site */}
             <details
               open={step === 4}
               className={classNames(
                 "relative rounded-xl border shadow-soft shadow-hover",
                 step > 4 ? "bg-success-bg border-success" : step >= 4 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
-              onToggle={(e) => {
-                const el = e.currentTarget as HTMLDetailsElement;
-                if (el.open && canGoStep4) setStep(4);
-                if (!canGoStep4) el.open = false;
-              }}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep4) setStep(4); if (!canGoStep4) el.open = false; }}
             >
               {step > 4 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
               <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
@@ -1223,114 +1226,53 @@ export default function OnboardingPage() {
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                   <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 4 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 4 ? "Completed" : step === 4 ? "In progress" : "Locked"}</span>
-                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                 </div>
               </summary>
-              <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide overflow-x-hidden">
+              <div className="border-t border-neutral-200">
+                <div className="p-4 sm:p-5">
                   <label className="block text-sm font-medium">Do you have a current website?</label>
                   <div className="mt-2 flex gap-2">
                     {(["yes","no"] as const).map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setHasCurrent(v)}
-                        className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover", hasCurrent === v ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50")}
-                      >
-                        {v.toUpperCase()}
-                      </button>
+                      <button key={v} type="button" onClick={() => setHasCurrent(v)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover", hasCurrent === v ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50")}>{v.toUpperCase()}</button>
                     ))}
                   </div>
 
                   {hasCurrent === "yes" && (
-                    <div className="mt-4 grid gap-3 max-w-xl min-w-0">
+                    <div className="mt-4 grid gap-3 max-w-xl">
                       <div>
                         <label className="block text-sm font-medium">Website URL or domain</label>
-                        <input
-                          disabled={searching}
-                          value={currentUrl}
-                          onChange={(e) => setCurrentUrl(e.target.value)}
-                          placeholder="example.com or https://example.com"
-                          className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:opacity-60"
-                        />
+                        <input disabled={searching} value={currentUrl} onChange={(e) => setCurrentUrl(e.target.value)} placeholder="example.com or https://example.com" className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:opacity-60" />
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className={classNames("rounded-md px-3 py-1.5 text-sm text-white", currentUrl ? "bg-success-accent hover:opacity-90" : "bg-neutral-300 cursor-not-allowed")}
-                          disabled={!currentUrl || searching}
-                          onClick={() => summarizeUrl()}
-                        >
+                        <button type="button" className={classNames("rounded-md px-3 py-1.5 text-sm text-white", currentUrl ? "bg-success-accent hover:opacity-90" : "bg-neutral-300 cursor-not-allowed")} disabled={!currentUrl || searching} onClick={() => summarizeUrl()}>
                           {searching ? "Analyzing…" : "Analyze site"}
                         </button>
                         <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => { setSkipped(true); setSiteAdded(false); setSummary(null); setError(null); }}>Skip</button>
                       </div>
 
-                      {/* Analyzing panel (progress + logs) */}
                       {searching && (
-                        <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft overflow-hidden">
-                          {/* Mobile collapsible */}
-                          <div className="sm:hidden">
-                            <details open className="group">
-                              <summary className="flex items-center justify-between cursor-pointer text-[13px] font-medium text-neutral-800">
-                                <span>Analyzing your website…</span>
-                                <span className="ml-2 text-[11px] text-neutral-500">{step4Progress}%</span>
-                              </summary>
-                              <ul className="mt-2 max-h-40 overflow-y-auto overflow-x-hidden pr-1 space-y-1 text-[11px] text-neutral-700">
-                                {step4Logs.map((l, idx) => (
-                                  <li key={idx} className="flex items-center gap-2">
-                                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
-                                    {l}
-                                  </li>
-                                ))}
-                              </ul>
-                              {step4Progress >= 100 && (
-                                <div className="mt-3 flex items-center gap-2 text-[12px] text-neutral-700">
-                                  <span
-                                    className="inline-block h-4 w-4 rounded-full border-2 animate-spin"
-                                    style={{ borderColor: "var(--success-accent)", borderTopColor: "transparent" }}
-                                    aria-hidden
-                                  />
-                                  <span>Loading results…</span>
-                                </div>
-                              )}
-                            </details>
+                        <div className="mt-4 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft">
+                          <div className="text-sm font-medium text-neutral-800">Analyzing your website…</div>
+                          <div className="mt-2 h-2 w-full rounded bg-neutral-100">
+                            <div className="h-2 rounded bg-success-accent transition-all" style={{ width: `${step4Progress}%` }} />
                           </div>
-                          {/* Desktop */}
-                          <div className="hidden sm:block">
-                            <div className="text-sm font-medium text-neutral-800">Analyzing your website…</div>
-                            <div className="mt-2 h-2 w-full rounded bg-neutral-100">
-                              <div className="h-2 rounded bg-success-accent transition-all" style={{ width: `${step4Progress}%` }} />
-                            </div>
-                            <ul className="mt-3 max-h-40 overflow-y-auto overflow-x-hidden pr-1 space-y-1 text-xs text-neutral-700">
-                              {step4Logs.map((l, idx) => (
-                                <li key={idx} className="flex items-center gap-2">
-                                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
-                                  {l}
-                                </li>
-                              ))}
-                            </ul>
-                            {step4Progress >= 100 && (
-                              <div className="mt-3 flex items-center gap-2 text-sm text-neutral-700">
-                                <span
-                                  className="inline-block h-5 w-5 rounded-full border-2 animate-spin"
-                                  style={{ borderColor: "var(--success-accent)", borderTopColor: "transparent" }}
-                                  aria-hidden
-                                />
-                                <span>Loading results…</span>
-                              </div>
-                            )}
-                          </div>
+                          <ul className="mt-3 max-h-40 overflow-y-auto pr-1 space-y-1 text-xs text-neutral-700">
+                            {step4Logs.map((l, idx) => (
+                              <li key={idx} className="flex items-center gap-2">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
+                                {l}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
 
                       {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
                       {notFound && <div className="mt-2 text-sm text-neutral-600">No info found. You can skip or add details manually.</div>}
 
-                      {/* Results header: count + sources toggle */}
                       {!searching && (searchedCount !== null || searchedPreview.length > 0) && (
-                        <div className="mt-4 flex items-center justify-between min-w-0 overflow-x-hidden">
-                          <div className="inline-flex items-center gap-2 text-xs min-w-0">
+                        <div className="mt-4 flex items-center justify-between">
+                          <div className="inline-flex items-center gap-2 text-xs">
                             <span className="rounded-full bg-success-bg text-success-ink px-2 py-0.5">{searchedCount ?? searchedPreview.length} results shown</span>
                           </div>
                           <button type="button" className="text-xs text-neutral-700 hover:underline" onClick={() => setShowSources((v) => !v)}>
@@ -1339,14 +1281,13 @@ export default function OnboardingPage() {
                         </div>
                       )}
 
-                      {/* Sources preview */}
                       {!searching && showSources && searchedPreview.length > 0 && (
-                        <div className="mt-2 rounded-lg border border-neutral-200 bg-white shadow-soft overflow-hidden">
+                        <div className="mt-2 rounded-lg border border-neutral-200 bg-white shadow-soft">
                           <ul className="divide-y divide-neutral-100">
                             {searchedPreview.slice(0, 4).map((r) => (
-                              <li key={r.index} className="p-3 min-w-0">
-                                <div className="text-[13px] font-medium text-neutral-800 truncate min-w-0">{sanitizeText(r.title || r.url)}</div>
-                                <div className="text-[11px] text-neutral-500 truncate min-w-0">{r.url}</div>
+                              <li key={r.index} className="p-3">
+                                <div className="text-[13px] font-medium text-neutral-800 truncate">{sanitizeText(r.title || r.url)}</div>
+                                <div className="text-[11px] text-neutral-500 truncate">{r.url}</div>
                                 {r.snippet && <div className="mt-1 text-[12px] text-neutral-700 line-clamp-2">{sanitizeText(r.snippet)}</div>}
                               </li>
                             ))}
@@ -1354,9 +1295,8 @@ export default function OnboardingPage() {
                         </div>
                       )}
 
-                      {/* Summary with improved design */}
                       {summary?.summary && !searching && (
-                        <div className="mt-3 rounded-lg border border-neutral-200 bg-gray-50 p-3 sm:p-4 pr-2 shadow-soft min-w-0 overflow-hidden">
+                        <div className="mt-3 rounded-lg border border-neutral-200 bg-gray-50 p-3 sm:p-4 pr-2 shadow-soft">
                           <div className="text-sm font-medium text-neutral-800">Summary</div>
                           <RenderSummary text={summary.summary} />
                         </div>
@@ -1367,13 +1307,7 @@ export default function OnboardingPage() {
                   {hasCurrent === "no" && (
                     <div className="mt-4">
                       <label className="block text-sm font-medium">Brief description (optional)</label>
-                      <textarea
-                        value={manualDesc}
-                        onChange={(e) => setManualDesc(e.target.value)}
-                        placeholder="What will your new site be about?"
-                        className="mt-1 w-full max-w-xl rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
-                        rows={4}
-                      />
+                      <textarea value={manualDesc} onChange={(e) => setManualDesc(e.target.value)} placeholder="What will your new site be about?" className="mt-1 w-full max-w-xl rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" rows={4} />
                     </div>
                   )}
 
@@ -1399,11 +1333,7 @@ export default function OnboardingPage() {
                 "relative rounded-xl border shadow-soft shadow-hover",
                 step > 5 ? "bg-success-bg border-success" : step >= 5 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
-              onToggle={(e) => {
-                const el = e.currentTarget as HTMLDetailsElement;
-                if (el.open && canGoStep5) setStep(5);
-                if (!canGoStep5) el.open = false;
-              }}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep5) setStep(5); if (!canGoStep5) el.open = false; }}
             >
               {step > 5 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
               <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
@@ -1413,18 +1343,15 @@ export default function OnboardingPage() {
                     <span>5. Business & Contact</span>
                   </div>
                   {step > 5 && (
-                    <div className="text-xs text-neutral-600 mt-0.5 truncate">
-                      {[businessPhone || null, businessEmail || null].filter(Boolean).join(" • ") || "Contact preferences set"}
-                    </div>
+                    <div className="text-xs text-neutral-600 mt-0.5 truncate">{[businessPhone || null, businessEmail || null].filter(Boolean).join(" • ") || "Contact preferences set"}</div>
                   )}
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                   <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 5 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 5 ? "Completed" : step === 5 ? "In progress" : "Locked"}</span>
-                  <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                 </div>
               </summary>
-              <div className="accordion border-t border-neutral-200">
-                <div className="accordion-content p-4 sm:p-5 fade-slide">
+              <div className="border-t border-neutral-200">
+                <div className="p-4 sm:p-5">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium">Business phone</label>
@@ -1446,75 +1373,35 @@ export default function OnboardingPage() {
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium">Brand colors (select up to 2)</label>
-                      <div className="mt-2">
-                        {/* Selected preview */}
-                        {primaryColors.length > 0 ? (
-                          <div className="mb-2 flex flex-wrap items-center gap-2">
-                            {primaryColors.map((c, i) => (
-                              <div key={`sel-${c}`} className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white pl-1 pr-2 py-1 shadow-sm">
-                                <span aria-hidden className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-medium text-white shadow" style={{ backgroundColor: c }}>{i === 0 ? "1" : "2"}</span>
-                                <span className="text-xs text-neutral-700">{i === 0 ? "Primary" : "Secondary"} · {c}</span>
-                                <button
-                                  type="button"
-                                  className="ml-1 rounded p-1 text-[11px] text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100"
-                                  aria-label={`Remove ${i === 0 ? "Primary" : "Secondary"} color ${c}`}
-                                  onClick={() => setPrimaryColors(primaryColors.filter((x) => x !== c))}
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="mb-2 text-xs text-gray-600">No color selected</div>
-                        )}
-                        {/* Swatch grid */}
-                        <div className="grid grid-cols-8 gap-2">
-                          {PRESET_COLORS.map((c) => {
-                            const selected = primaryColors.includes(c);
-                            const atLimit = !selected && primaryColors.length >= 2;
-                            const idx = selected ? primaryColors.indexOf(c) + 1 : null;
-                            return (
-                              <button
-                                key={c}
-                                type="button"
-                                aria-pressed={selected}
-                                aria-label={`Select color ${c}`}
-                                title={c}
-                                onClick={() => {
-                                  setPrimaryColors((prev) => {
-                                    if (prev.includes(c)) return prev.filter((x) => x !== c);
-                                    if (prev.length >= 2) return prev; // enforce max 2
-                                    return [...prev, c];
-                                  });
-                                }}
-                                className={classNames(
-                                  "relative h-10 w-10 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft",
-                                  selected ? "ring-2 ring-success border-success" : "border-neutral-300",
-                                  atLimit ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.03]",
-                                  step5Analyzing ? "opacity-60 cursor-not-allowed" : ""
-                                )}
-                                style={{ backgroundColor: c }}
-                                disabled={atLimit || step5Analyzing}
-                              >
-                                {selected && (
-                                  <>
-                                    <span className="absolute inset-0 flex items-center justify-center">
-                                      <svg viewBox="0 0 20 20" fill="none" stroke="white" strokeWidth="2.2" className="h-5 w-5 drop-shadow" aria-hidden="true">
-                                        <path d="M6 10.5l2.5 2.5L14 8" />
-                                      </svg>
-                                    </span>
-                                    <span className="absolute -top-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white text-[11px]">
-                                      {idx}
-                                    </span>
-                                  </>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <div className="mt-2 text-[11px] text-neutral-500">Tip: Choose one primary and one secondary brand color.</div>
+                      <div className="mt-2 grid grid-cols-8 gap-2">
+                        {PRESET_COLORS.map((c) => {
+                          const selected = primaryColors.includes(c);
+                          const atLimit = !selected && primaryColors.length >= 2;
+                          return (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => {
+                                setPrimaryColors((prev) => {
+                                  if (prev.includes(c)) return prev.filter((x) => x !== c);
+                                  if (prev.length >= 2) return prev; // enforce max 2
+                                  return [...prev, c];
+                                });
+                              }}
+                              className={classNames(
+                                "h-10 w-10 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft",
+                                selected ? "ring-2 ring-success border-success" : "border-neutral-300",
+                                atLimit ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.03]",
+                                step5Analyzing ? "opacity-60 cursor-not-allowed" : ""
+                              )}
+                              style={{ backgroundColor: c }}
+                              disabled={atLimit || step5Analyzing}
+                              aria-pressed={selected}
+                            />
+                          );
+                        })}
                       </div>
+                      <div className="mt-2 text-[11px] text-neutral-500">Tip: Choose one primary and one secondary brand color.</div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium">Social links (optional)</label>
@@ -1527,40 +1414,19 @@ export default function OnboardingPage() {
                     </div>
                   </div>
                   {step5Analyzing && (
-                    <div className="mt-4 sm:mt-5 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft">
-                      {/* Mobile: collapsible logs, no progress bar */}
-                      <div className="sm:hidden">
-                        <details open className="group">
-                          <summary className="flex items-center justify-between cursor-pointer text-[13px] font-medium text-neutral-800">
-                            <span>Analyzing your preferences…</span>
-                            <span className="ml-2 text-[11px] text-neutral-500">{step5Progress}%</span>
-                          </summary>
-                          <ul className="mt-2 max-h-40 overflow-y-auto pr-1 space-y-1 text-[11px] text-neutral-700">
-                            {step5Logs.map((l, idx) => (
-                              <li key={idx} className="flex items-center gap-2">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
-                                {l}
-                              </li>
-                            ))}
-                          </ul>
-                        </details>
+                    <div className="mt-4 rounded-lg border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft">
+                      <div className="text-sm font-medium text-neutral-800">Analyzing your preferences…</div>
+                      <div className="mt-2 h-2 w-full rounded bg-neutral-100">
+                        <div className="h-2 rounded bg-success-accent transition-all" style={{ width: `${step5Progress}%` }} />
                       </div>
-
-                      {/* Tablet/Desktop: show progress bar and logs */}
-                      <div className="hidden sm:block">
-                        <div className="text-sm font-medium text-neutral-800">Analyzing your preferences…</div>
-                        <div className="mt-2 h-2 w-full rounded bg-neutral-100">
-                          <div className="h-2 rounded bg-success-accent transition-all" style={{ width: `${step5Progress}%` }} />
-                        </div>
-                        <ul className="mt-3 max-h-40 overflow-y-auto pr-1 space-y-1 text-xs text-neutral-700">
-                          {step5Logs.map((l, idx) => (
-                            <li key={idx} className="flex items-center gap-2">
-                              <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
-                              {l}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                      <ul className="mt-3 max-h-40 overflow-y-auto pr-1 space-y-1 text-xs text-neutral-700">
+                        {step5Logs.map((l, idx) => (
+                          <li key={idx} className="flex items-center gap-2">
+                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
+                            {l}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
 
@@ -1578,792 +1444,149 @@ export default function OnboardingPage() {
                 </div>
               </div>
             </details>
-          </div>
 
-          {/* Step 6: Services & details */}
-          <details
-            open={step === 6}
-            className={classNames(
-              "relative rounded-xl border shadow-soft shadow-hover",
-              step > 6 ? "bg-success-bg border-success" : step >= 6 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-            )}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep6) setStep(6);
-              if (!canGoStep6) el.open = false;
-            }}
-          >
-            {step > 6 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 6 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
-                  <span>6. Services & details</span>
-                </div>
-                {step > 6 && (
-                  <div className="text-xs text-neutral-600 mt-0.5 truncate">{selectedServices.length} service{selectedServices.length === 1 ? "" : "s"}</div>
-                )}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 6 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 6 ? "Completed" : step === 6 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide overflow-x-hidden">
-                {/* Services as chip toggles */}
+            {/* Step 6: Services & details */}
+            <details
+              open={step === 6}
+              className={classNames(
+                "relative rounded-xl border shadow-soft shadow-hover",
+                step > 6 ? "bg-success-bg border-success" : step >= 6 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep6) setStep(6); if (!canGoStep6) el.open = false; }}
+            >
+              {step > 6 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
                 <div>
-                  <label className="block text-sm font-medium">Services</label>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 6 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>6. Services & details</span>
+                  </div>
+                  {step > 6 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{selectedServices.join(", ")}</div>}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 6 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 6 ? "Completed" : step === 6 ? "In progress" : "Locked"}</span>
+                </div>
+              </summary>
+              <div className="border-t border-neutral-200">
+                <div className="p-4 sm:p-5">
+                  <label className="block text-sm font-medium">Select services you offer</label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {[...new Set([...servicesFor(siteType, category), ...selectedServices])].map((svc) => {
-                      const active = selectedServices.includes(svc);
+                    {servicesFor(siteType, category).map((svc) => {
+                      const selected = selectedServices.includes(svc);
                       return (
-                        <button
-                          key={svc}
-                          type="button"
-                          onClick={() => {
-                            if (active) setSelectedServices(selectedServices.filter((s) => s !== svc));
-                            else setSelectedServices([...selectedServices, svc]);
-                          }}
-                          className={classNames(
-                            "inline-flex items-center rounded-full border px-3 py-1.5 text-sm transition",
-                            active
-                              ? "bg-success-accent text-white border-success-accent shadow-sm"
-                              : "bg-white text-neutral-800 border-neutral-300 hover:bg-neutral-50"
-                          )}
-                        >
-                          {active && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-white" />}
-                          {svc}
-                        </button>
+                        <button key={svc} type="button" onClick={() => setSelectedServices((prev) => selected ? prev.filter((s) => s !== svc) : [...prev, svc])} className={classNames("rounded-full border px-3 py-1.5 text-sm", selected ? "bg-success-accent/20 border-success text-success-ink" : "border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50")}>{svc}</button>
                       );
                     })}
                   </div>
-                  <div className="mt-3 flex gap-2">
-                    <input
-                      type="text"
-                      className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent"
-                      placeholder="Add a custom service"
-                      value={newService}
-                      onChange={(e) => setNewService(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          const v = newService.trim();
-                          if (v && !selectedServices.includes(v)) {
-                            setSelectedServices([...selectedServices, v]);
-                            setNewService("");
-                          }
-                        }
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => { const v = newService.trim(); if (v && !selectedServices.includes(v)) { setSelectedServices([...selectedServices, v]); setNewService(""); } }}
-                      className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-
-                {/* Per-service quick details (optional) */}
-                {selectedServices.length > 0 && (
-                  <div className="mt-5">
-                    <label className="block text-sm font-medium">Service details (optional)</label>
-                    <div className="mt-2 space-y-2">
-                      {selectedServices.map((svc) => (
-                        <details key={`svc-${svc}`} className="rounded-md border border-neutral-200 bg-white p-3 shadow-soft">
-                          <summary className="cursor-pointer select-none text-sm font-medium text-neutral-800">{svc}</summary>
-                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <div className="sm:col-span-2">
-                              <label className="block text-xs text-neutral-600">Short description</label>
-                              <input
-                                type="text"
-                                value={serviceDetails[svc]?.description || ""}
-                                onChange={(e) => setServiceDetails((prev) => ({ ...prev, [svc]: { ...prev[svc], description: e.target.value } }))}
-                                placeholder="One-line summary for this service"
-                                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs text-neutral-600">CTA</label>
-                              <select
-                                value={serviceDetails[svc]?.cta || "None"}
-                                onChange={(e) => setServiceDetails((prev) => ({ ...prev, [svc]: { ...prev[svc], cta: e.target.value as any } }))}
-                                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
-                              >
-                                {(["None","Call","Form","Booking"] as const).map((opt) => (
-                                  <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        </details>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Must-have pages (optional) */}
-                <div className="mt-5">
-                  <label className="block text-sm font-medium">Must-have pages (optional)</label>
-                  <div className="mt-2 flex flex-wrap gap-3 text-sm">
-                    {(["About","Services","Pricing","Contact","Blog","FAQ","Testimonials"] as const).map((p) => {
-                      const checked = mustHavePages.includes(p);
-                      return (
-                        <label key={p} className={classNames("inline-flex items-center gap-2 rounded-full border px-3 py-1.5 cursor-pointer", checked ? "bg-success-bg border-success text-success-ink" : "bg-white border-neutral-300 text-neutral-800 hover:bg-neutral-50")}> 
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-neutral-300 text-success-accent focus:ring-success-accent"
-                            checked={checked}
-                            onChange={(e) => {
-                              if (e.target.checked) setMustHavePages([...mustHavePages, p]);
-                              else setMustHavePages(mustHavePages.filter((x) => x !== p));
-                            }}
-                          />
-                          <span>{p}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Business hours */}
-                <div className="mt-6">
-                  <label className="block text-sm font-medium">Business hours</label>
-                  {/* Mode selector as visual cards */}
-                  <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {([
-                      { key: "standard", label: "Standard", desc: "Weekday hours", mode: "standard" },
-                      { key: "247", label: "24/7", desc: "Always open", mode: "24_7" },
-                      { key: "appt", label: "Appointment", desc: "By appointment", mode: "appointment" },
-                      { key: "custom", label: "Custom", desc: "Your own schedule", mode: "custom" },
-                    ] as const).map((opt) => {
-                      const active = businessHoursMode === (opt.mode as any);
-                      return (
-                        <button
-                          key={opt.key}
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() => {
-                            setBusinessHoursMode(opt.mode as any);
-                            let text = businessHours;
-                            if (opt.mode === "standard") text = "Mon–Fri 9am–5pm";
-                            if (opt.mode === "24_7") text = "Open 24/7";
-                            if (opt.mode === "appointment") text = "By appointment only";
-                            setBusinessHours(text);
-                            setTypeSpecific((prev) => ({
-                              ...prev,
-                              businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
-                            }));
-                          }}
-                          className={classNames(
-                            "group relative rounded-lg border p-3 text-left transition shadow-soft",
-                            active ? "border-success bg-success-bg" : "border-neutral-300 bg-white hover:bg-neutral-50"
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div>
-                              <div className={classNames("text-sm font-medium", active ? "text-success-ink" : "text-neutral-800")}>{opt.label}</div>
-                              <div className="text-[11px] text-neutral-500">{opt.desc}</div>
-                            </div>
-                            {active && (
-                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
+                  <div className="mt-3 flex gap-2 max-w-md">
+                    <input value={newService} onChange={(e) => setNewService(e.target.value)} placeholder="Add custom service" className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" />
+                    <button type="button" className={classNames("rounded-md px-3 py-2 text-sm text-white", newService.trim() ? "bg-success-accent hover:opacity-90" : "bg-neutral-300 cursor-not-allowed")} disabled={!newService.trim()} onClick={() => { const v = newService.trim(); if (!v) return; setSelectedServices((prev) => prev.includes(v) ? prev : [...prev, v]); setNewService(""); }}>Add</button>
                   </div>
 
-                  {businessHoursMode === "standard" && (
-                    <div className="mt-3">
-                      <label className="text-xs text-neutral-600">Quick presets</label>
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        {["Mon–Fri 9am–5pm","Mon–Fri 8am–6pm","Mon–Sat 9am–6pm","Tue–Sat 10am–7pm"].map((p) => (
-                          <button
-                            key={p}
-                            type="button"
-                            onClick={() => {
-                              const text = p;
-                              setBusinessHours(text);
-                              setTypeSpecific((prev) => ({
-                                ...prev,
-                                businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
-                              }));
-                            }}
-                            className={classNames(
-                              "rounded-full border px-3 py-1 text-sm",
-                              businessHours === p ? "bg-success-accent text-white border-success-accent" : "bg-white text-neutral-800 border-neutral-300 hover:bg-neutral-50"
-                            )}
-                          >
-                            {p}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {businessHoursMode === "custom" && (
-                    <div className="mt-2">
-                      <label className="text-xs text-neutral-600">Enter custom hours (one per line)</label>
-                      <textarea
-                        rows={4}
-                        className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
-                        placeholder={"e.g.\nMon: 9am–5pm\nTue: 9am–5pm\nWed: 9am–1pm\nSat–Sun: Closed"}
-                        value={businessHours}
-                        onChange={(e) => {
-                          const text = e.target.value;
-                          setBusinessHours(text);
-                          setTypeSpecific((prev) => ({
-                            ...prev,
-                            businessHours: text.split("\n").map((s) => s.trim()).filter(Boolean),
-                          }));
-                        }}
-                      />
-                      <div className="mt-1 text-[11px] text-neutral-500">Tip: Use line breaks for each day or range.</div>
-                    </div>
-                  )}
-
-                  {/* Current hours preview */}
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700">
-                    <span className="inline-flex h-2 w-2 rounded-full bg-success-accent" aria-hidden />
-                    <span className="truncate max-w-full">{businessHours || "No hours set yet"}</span>
+                  <div className="mt-6 flex justify-between">
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(5)}>Back</button>
+                    <button type="button" className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white", !canGoStep7 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")} disabled={!canGoStep7} onClick={() => setStep(7)}>Continue</button>
                   </div>
-                </div>
-
-                {/* Type-specific details */}
-                <div className="mt-6 space-y-4">
-                  <label className="block text-sm font-medium">Type-specific details</label>
-                  {typeQuestionsFor(siteType).map((q) => (
-                    <div key={q.key}>
-                      <label className="block text-xs font-medium text-neutral-700">{q.label}</label>
-                      {q.kind === 'text' && (
-                        <input type="text" className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" value={typeSpecific[q.key] || ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value })} />
-                      )}
-                      {q.kind === 'number' && (
-                        <input type="number" className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" value={typeof typeSpecific[q.key] === 'number' ? typeSpecific[q.key] : ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: Number(e.target.value) })} />
-                      )}
-                      {q.kind === 'select' && (
-                        <select className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" value={typeSpecific[q.key] || ''} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value })}>
-                          <option value="">Select…</option>
-                          {q.options.map((opt) => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      )}
-                      {q.kind === 'chips' && (
-                        <input type="text" placeholder={q.hint || 'Comma-separated'} className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" value={(typeSpecific[q.key] || []).join(', ')} onChange={(e) => setTypeSpecific({ ...typeSpecific, [q.key]: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(5)}>Back</button>
-                  <button
-                    type="button"
-                    onClick={() => canGoStep7 && setStep(7)}
-                    disabled={!canGoStep7}
-                    className={classNames(
-                      "inline-flex items-center rounded-md px-4 py-2 text-sm font-medium",
-                      !canGoStep7 ? "bg-neutral-200 text-neutral-500 cursor-not-allowed" : "bg-success-accent text-white hover:opacity-90"
-                    )}
-                  >
-                    Continue
-                  </button>
                 </div>
               </div>
-            </div>
-          </details>
+            </details>
 
-          {/* Step 7: Service areas */}
-          <details
-            open={step === 7}
-            className={classNames(
-              "relative rounded-xl border shadow-soft shadow-hover",
-              step > 7 ? "bg-success-bg border-success" : step >= 7 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-            )}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep7) setStep(7);
-              if (!canGoStep7) el.open = false;
-            }}
-          >
-            {step > 7 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 7 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
-                  <span>7. Service areas</span>
-                </div>
-                {step > 7 && (
-                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
-                    {areasNotApplicable ? "Not applicable" : `${cities.length} area${cities.length === 1 ? "" : "s"} • ${distanceUnit.toUpperCase()}`}
+            {/* Step 7: Service areas */}
+            <details
+              open={step === 7}
+              className={classNames(
+                "relative rounded-xl border shadow-soft shadow-hover",
+                step > 7 ? "bg-success-bg border-success" : step >= 7 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep7) setStep(7); if (!canGoStep7) el.open = false; }}
+            >
+              {step > 7 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 7 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>7. Service areas</span>
                   </div>
-                )}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 7 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 7 ? "Completed" : step === 7 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                <div className="mb-3 flex items-start gap-2">
-                  <input
-                    id="areas-na"
-                    type="checkbox"
-                    className="mt-1 h-4 w-4 rounded border-neutral-300 text-success-accent focus:ring-success-accent"
-                    checked={areasNotApplicable}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setAreasNotApplicable(checked);
-                      if (checked) {
-                        setCities([]);
-                        setCitySuggestions([]);
-                        setCityQuery("");
-                      }
-                    }}
-                  />
-                  <label htmlFor="areas-na" className="text-sm text-neutral-800">
-                    My business/site does not have a physical address or service areas (online‑only / N/A)
+                  {step > 7 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{areasNotApplicable ? "N/A" : `${cities.length} area(s)`}</div>}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 7 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 7 ? "Completed" : step === 7 ? "In progress" : "Locked"}</span>
+                </div>
+              </summary>
+              <div className="border-t border-neutral-200">
+                <div className="p-4 sm:p-5">
+                  <label className="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={areasNotApplicable} onChange={(e) => setAreasNotApplicable(e.target.checked)} />
+                    <span>My business is online-only or service areas are not applicable</span>
                   </label>
-                </div>
-                <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 items-start ${areasNotApplicable ? "opacity-50 pointer-events-none" : ""}`}>
-                  <div className="min-w-[180px]">
-                    <label className="block text-sm font-medium">Country (optional)</label>
-                    <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} disabled={areasNotApplicable} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success disabled:bg-neutral-50 disabled:text-neutral-500">
-                      <option value="">All countries</option>
-                      {COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.name}</option>
-                      ))}
-                    </select>
+                  {!areasNotApplicable && (
+                    <div className="mt-3 text-xs text-neutral-600">You can specify areas later from settings.</div>
+                  )}
+                  <div className="mt-6 flex justify-between">
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(6)}>Back</button>
+                    <button type="button" className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white", !canGoStep8 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")} disabled={!canGoStep8} onClick={() => setStep(8)}>Continue</button>
                   </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium">City or area</label>
-                    <div className="mt-1 flex flex-col sm:flex-row gap-2">
-                      <input
-                        type="text"
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent disabled:bg-neutral-50 disabled:text-neutral-500"
-                        placeholder="Start typing a city..."
-                        value={cityQuery}
-                        onChange={(e) => setCityQuery(e.target.value)}
-                        disabled={areasNotApplicable}
-                      />
-                      <button type="button" className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90 w-full sm:w-auto disabled:bg-neutral-300 disabled:text-white" onClick={() => runCitySearch()} disabled={isCitySearching || areasNotApplicable}>
-                        {isCitySearching ? "Searching…" : "Search"}
+                </div>
+              </div>
+            </details>
+
+            {/* Step 8: Logo & assets */}
+            <details
+              open={step === 8}
+              className={classNames(
+                "relative rounded-xl border shadow-soft shadow-hover",
+                step >= 8 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep8) setStep(8); if (!canGoStep8) el.open = false; }}
+            >
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800">8. Logo & assets</div>
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">Optional</span>
+                </div>
+              </summary>
+              <div className="border-t border-neutral-200">
+                <div className="p-4 sm:p-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium">Logo file (optional)</label>
+                      <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} className="mt-1 block w-full text-sm" />
+                      <label className="mt-2 inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={noLogoYet} onChange={(e) => setNoLogoYet(e.target.checked)} />
+                        <span>I don't have a logo yet</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium">Favicon (optional)</label>
+                      <input type="file" accept="image/*,.ico" onChange={(e) => setFaviconFile(e.target.files?.[0] || null)} className="mt-1 block w-full text-sm" />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium">Other assets (optional)</label>
+                    <input type="file" multiple onChange={(e) => setAssetFiles(Array.from(e.target.files || []))} className="mt-1 block w-full text-sm" />
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between">
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(7)}>Back</button>
+                    <div className="flex items-center gap-3">
+                      {error && <span className="text-sm text-red-600">{error}</span>}
+                      <button
+                        type="button"
+                        onClick={handleFinish}
+                        disabled={!canFinish || saving}
+                        className={classNames("inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white", (!canFinish || saving) ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")}
+                      >
+                        {saving ? "Finishing…" : "Finish"}
                       </button>
                     </div>
-                    {citySuggestions.length > 0 && (
-                      <ul className="mt-2 max-h-40 overflow-y-auto rounded border border-neutral-200 bg-white text-sm shadow">
-                        {citySuggestions.map((sug, i) => (
-                          <li key={`${sug.display_name}-${i}`} className="flex items-center justify-between px-3 py-2 hover:bg-neutral-50">
-                            <span
-                              className="truncate pr-2 cursor-pointer text-neutral-800 hover:underline"
-                              role="button"
-                              tabIndex={0}
-                              onClick={() => {
-                                setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
-                                setCitySuggestions([]);
-                                setCityQuery("");
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
-                                  setCitySuggestions([]);
-                                  setCityQuery("");
-                                }
-                              }}
-                            >
-                              {sug.display_name}
-                            </span>
-                            <button
-                              type="button"
-                              className="text-xs text-success-ink hover:underline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
-                                setCitySuggestions([]);
-                                setCityQuery("");
-                              }}
-                            >
-                              Add
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
                   </div>
-                  <div className="sm:col-span-1">
-                    <label className="block text-sm font-medium">Units</label>
-                    <div className="mt-1 inline-flex rounded-md border border-neutral-300 p-0.5">
-                      {(["km","mi"] as const).map((u) => (
-                        <button
-                          key={u}
-                          type="button"
-                          onClick={() => setDistanceUnit(u)}
-                          className={classNames("px-2 py-1 text-sm rounded", distanceUnit === u ? "bg-success-accent text-white" : "text-neutral-700 hover:bg-neutral-100")}
-                        >
-                          {u.toUpperCase()}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {cities.length === 0 ? (
-                  <div className="mt-4 rounded-lg border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600 shadow-soft">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-success-bg text-success-ink">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 4.97 6.06 12.39 6.32 12.68.37.41 1.01.41 1.38 0C12.94 21.39 19 13.97 19 9a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z"/></svg>
-                      </span>
-                      <div className="font-medium text-neutral-700">No service areas yet</div>
-                    </div>
-                    <div className="mt-1 text-xs">Search a city or address above and click Add to include it. Then adjust the radius.</div>
-                  </div>
-                ) : (
-                  <ul className="mt-4 space-y-3 text-sm overflow-x-hidden">
-                    {cities.map((c, idx) => {
-                      const geocoded = (c.lat !== 0 || c.lon !== 0);
-                      return (
-                        <li key={`${c.name}-${idx}`} className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3 shadow-soft shadow-hover transition-colors hover:bg-neutral-50 min-w-0 overflow-hidden">
-                          <div className="flex items-start gap-3 flex-wrap">
-                            <div className="flex items-start gap-3 min-w-0 flex-1 order-1">
-                              <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-success-bg text-success-ink">
-                                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 4.97 6.06 12.39 6.32 12.68.37.41 1.01.41 1.38 0C12.94 21.39 19 13.97 19 9a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z"/></svg>
-                              </span>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <div className="font-medium truncate">{c.displayName}</div>
-                                  <span className={classNames("inline-flex items-center rounded-full px-2 py-0.5 text-[11px] border", geocoded ? "bg-success-bg text-success-ink border-success-border" : "bg-neutral-100 text-neutral-700 border-neutral-200")}>{geocoded ? "Geocoded" : "Not geocoded"}</span>
-                                </div>
-                                <div className="mt-0.5 text-[11px] text-neutral-500 truncate">
-                                  {geocoded ? <>Lat {Number(c.lat).toFixed(4)}, Lon {Number(c.lon).toFixed(4)}</> : "Add via Search to enable radius"}
-                                </div>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              className="text-xs text-neutral-600 hover:text-neutral-800 hover:underline shrink-0 self-start order-2 sm:order-none sm:ml-auto"
-                              onClick={() => setCities(cities.filter((_, i) => i !== idx))}
-                              aria-label={`Remove ${c.displayName}`}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                          {geocoded ? (
-                            <div className="mt-3 grid w-full min-w-0 grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3 overflow-hidden">
-                              {/* Label (mobile top, desktop left) */}
-                              <label className="text-xs text-neutral-600 sm:col-span-2">Radius</label>
-
-                              {/* Controls row (mobile): - value + */}
-                              <div className="flex items-center justify-between sm:hidden">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    aria-label="Decrease radius"
-                                    className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
-                                    onClick={() => {
-                                      const cur = toDisplayDistance(c.radiusKm);
-                                      const next = Math.max(1, cur - 1);
-                                      setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
-                                    }}
-                                  >
-                                    −
-                                  </button>
-                                  <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700 whitespace-nowrap">
-                                    {toDisplayDistance(c.radiusKm)} {distanceUnit}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    aria-label="Increase radius"
-                                    className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
-                                    onClick={() => {
-                                      const cur = toDisplayDistance(c.radiusKm);
-                                      const next = Math.min(100, cur + 1);
-                                      setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
-                                    }}
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* Slider (mobile full-width) */}
-                              <div className="min-w-0 w-full max-w-full sm:col-span-8 sm:self-center">
-                                <input
-                                  type="range"
-                                  min={1}
-                                  max={100}
-                                  value={toDisplayDistance(c.radiusKm)}
-                                  onChange={(e) => {
-                                    const val = Number(e.target.value);
-                                    setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(val) } : ci));
-                                  }}
-                                  className="block w-full min-w-0 max-w-full"
-                                />
-                              </div>
-
-                              {/* Desktop value and +/- controls */}
-                              <div className="hidden sm:flex items-center justify-end gap-2 sm:col-span-2">
-                                <button
-                                  type="button"
-                                  aria-label="Decrease radius"
-                                  className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
-                                  onClick={() => {
-                                    const cur = toDisplayDistance(c.radiusKm);
-                                    const next = Math.max(1, cur - 1);
-                                    setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
-                                  }}
-                                >
-                                  −
-                                </button>
-                                <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700 whitespace-nowrap">
-                                  {toDisplayDistance(c.radiusKm)} {distanceUnit}
-                                </span>
-                                <button
-                                  type="button"
-                                  aria-label="Increase radius"
-                                  className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
-                                  onClick={() => {
-                                    const cur = toDisplayDistance(c.radiusKm);
-                                    const next = Math.min(100, cur + 1);
-                                    setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
-                                  }}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
-                          ) : null}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-
-                <div className="mt-5 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(6)}>Back</button>
-                  <button
-                    type="button"
-                    disabled={!canGoStep8}
-                    onClick={() => setStep(8)}
-                    className={classNames(
-                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                      !canGoStep8 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
-                    )}
-                  >
-                    Continue
-                  </button>
                 </div>
               </div>
-            </div>
-          </details>
+            </details>
 
-          {/* Step 8: Logo & assets */}
-          <details
-            open={step === 8}
-            className={classNames(
-              "relative rounded-xl border shadow-soft shadow-hover",
-              step > 8 ? "bg-success-bg border-success" : step >= 8 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
-            )}
-            onToggle={(e) => {
-              const el = e.currentTarget as HTMLDetailsElement;
-              if (el.open && canGoStep8) setStep(8);
-              if (!canGoStep8) el.open = false;
-            }}
-          >
-            {step > 8 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
-            <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                  {step > 8 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
-                  <span>8. Logo & assets</span>
-                </div>
-                {step > 8 && (
-                  <div className="text-xs text-neutral-600 mt-0.5 truncate">
-                    {logoFile ? "Logo set" : (noLogoYet ? "Using text logo" : "No logo")} • {assetFiles.length} asset{assetFiles.length === 1 ? "" : "s"}
-                  </div>
-                )}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 8 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 8 ? "Completed" : step === 8 ? "In progress" : "Locked"}</span>
-                <svg className="chevron h-4 w-4 text-neutral-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-              </div>
-            </summary>
-            <div className="accordion border-t border-neutral-200">
-              <div className="accordion-content p-4 sm:p-5 fade-slide">
-                {/* Logo uploader */}
-                <div>
-                  <div className="mb-3 flex items-start gap-2">
-                    <input
-                      id="no-logo-yet"
-                      type="checkbox"
-                      className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-success-accent focus:ring-success-accent"
-                      checked={noLogoYet}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setNoLogoYet(checked);
-                        if (checked) setLogoFile(null);
-                      }}
-                    />
-                    <label htmlFor="no-logo-yet" className="text-sm text-neutral-800">I don't have a logo yet — use my site name as a text logo</label>
-                  </div>
-                  <label className="block text-sm font-medium">Logo</label>
-                  <div className={classNames("mt-2 flex items-center gap-3", noLogoYet ? "opacity-50 pointer-events-none" : "")}> 
-                    <input
-                      id="logo-file"
-                      type="file"
-                      accept="image/*"
-                      disabled={noLogoYet}
-                      onChange={(e) => {
-                        const f = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-                        setLogoFile(f);
-                      }}
-                      className="sr-only"
-                    />
-                    <label
-                      htmlFor="logo-file"
-                      className="group inline-flex items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-3 py-2 shadow-soft hover:border-success cursor-pointer"
-                    >
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
-                        {/* Upload icon */}
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" />
-                        </svg>
-                      </span>
-                      <div>
-                        <div className="text-sm text-neutral-800">Click to upload</div>
-                        <div className="text-[11px] text-neutral-500">PNG or SVG, up to 2MB</div>
-                      </div>
-                    </label>
-                    {logoFile && (
-                      <div className="flex items-center gap-2">
-                        <img src={URL.createObjectURL(logoFile)} alt="Logo preview" className="h-12 w-12 rounded border border-neutral-200 object-contain bg-white" />
-                        <button type="button" className="text-xs text-neutral-600 hover:underline" onClick={() => setLogoFile(null)}>Remove</button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-1 text-[11px] text-neutral-500">Transparent background preferred.</div>
-                </div>
-
-                {/* Favicon uploader (optional) */}
-                <div className="mt-5">
-                  <label className="block text-sm font-medium">Favicon (optional)</label>
-                  <div className="mt-2 flex items-center gap-3">
-                    <input
-                      id="favicon-file"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const f = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-                        setFaviconFile(f);
-                      }}
-                      className="sr-only"
-                    />
-                    <label
-                      htmlFor="favicon-file"
-                      className="group inline-flex items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-3 py-2 shadow-soft hover:border-success cursor-pointer"
-                    >
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" />
-                        </svg>
-                      </span>
-                      <div>
-                        <div className="text-sm text-neutral-800">Click to upload</div>
-                        <div className="text-[11px] text-neutral-500">Square, 48×48px+</div>
-                      </div>
-                    </label>
-                    {faviconFile && (
-                      <div className="flex items-center gap-2">
-                        <img src={URL.createObjectURL(faviconFile)} alt="Favicon preview" className="h-8 w-8 rounded border border-neutral-200 object-contain bg-white" />
-                        <button type="button" className="text-xs text-neutral-600 hover:underline" onClick={() => setFaviconFile(null)}>Remove</button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-1 text-[11px] text-neutral-500">Use a simple mark for best results.</div>
-                </div>
-
-                {/* Assets uploader */}
-                <div className="mt-5">
-                  <label className="block text-sm font-medium">Additional assets</label>
-                  <div className="mt-2">
-                    <input
-                      id="asset-files"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => {
-                        const picked = Array.from(e.target.files || []);
-                        setAssetFiles((prev) => {
-                          const merged = [...prev, ...picked];
-                          // De-duplicate by name+size
-                          const map = new Map<string, File>();
-                          for (const f of merged) map.set(`${f.name}:${f.size}`, f);
-                          return Array.from(map.values());
-                        });
-                        // Allow re-selecting the same files by resetting the input value
-                        (e.target as HTMLInputElement).value = "";
-                      }}
-                      className="sr-only"
-                    />
-                    <label
-                      htmlFor="asset-files"
-                      className="group flex w-full items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-4 py-3 shadow-soft hover:border-success cursor-pointer max-w-xl"
-                    >
-                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5l6-6 4 4 5-5 3 3" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 20h18" />
-                        </svg>
-                      </span>
-                      <div className="text-left">
-                        <div className="text-sm text-neutral-800">Click to upload images</div>
-                        <div className="text-[11px] text-neutral-500">JPG, PNG, up to 10 files</div>
-                      </div>
-                    </label>
-                  </div>
-                  {assetFiles.length > 0 ? (
-                    <ul className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-3">
-                      {assetFiles.map((f, i) => (
-                        <li key={`${f.name}-${i}`} className="group relative rounded border border-neutral-200 bg-white p-2 shadow-soft">
-                          <img src={URL.createObjectURL(f)} alt={f.name} className="h-20 w-full object-cover rounded" />
-                          <div className="mt-1 truncate text-[11px] text-neutral-600" title={f.name}>{f.name}</div>
-                          <button
-                            type="button"
-                            className="absolute top-1 right-1 hidden group-hover:inline-flex items-center justify-center rounded bg-black/60 px-1.5 py-0.5 text-[11px] text-white"
-                            onClick={() => setAssetFiles(assetFiles.filter((_, idx) => idx !== i))}
-                            aria-label={`Remove ${f.name}`}
-                          >
-                            Remove
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="mt-2 rounded-lg border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600 shadow-soft">No assets uploaded yet.</div>
-                  )}
-                  <div className="mt-1 text-[11px] text-neutral-500">Upload photos, graphics, or brand assets. You can add more later.</div>
-                </div>
-
-                <div className="mt-6 flex justify-between">
-                  <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(7)}>Back</button>
-                  <button
-                    type="button"
-                    disabled={!canFinish}
-                    onClick={handleFinish}
-                    className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent", !canFinish ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")}
-                  >
-                    Finish
-                  </button>
-                </div>
-              </div>
-            </div>
-          </details>
+          </div>
         </main>
       </div>
     </div>

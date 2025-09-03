@@ -50,15 +50,19 @@ export default function DashboardPage() {
   const [authChecked, setAuthChecked] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   // Auth guard: redirect to /login if there is no session
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return;
       if (!data.session) {
         window.location.replace("/login");
       } else {
+        // capture email for greeting
+        const { data: u } = await supabase.auth.getUser();
+        setUserEmail(u?.user?.email ?? null);
         setAuthChecked(true);
       }
     });
@@ -226,8 +230,92 @@ export default function DashboardPage() {
               aria-labelledby={`tab-${active.toLowerCase()}`}
               aria-label={active}
             >
-              {onboardingChecked && needsOnboarding && active === "Home" ? (
-                <div className="flex min-h-[40vh] items-center justify-center p-8 text-center">
+              {/* Mobile (native-like) Home */}
+              {active === "Home" && (
+                <div className="sm:hidden">
+                  {/* Greeting / hero */}
+                  <div className="bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-4 rounded-t-xl border-b border-neutral-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs text-neutral-600">Welcome{userEmail ? "," : ""}</div>
+                        <div className="text-lg font-semibold text-neutral-900 truncate max-w-[80%]">{userEmail ?? "to your dashboard"}</div>
+                      </div>
+                      <div className="h-9 w-9 rounded-full bg-success-accent/20 text-success-ink inline-flex items-center justify-center font-semibold">H</div>
+                    </div>
+                    {onboardingChecked && needsOnboarding && (
+                      <div className="mt-3">
+                        <a href="/dashboard/onboarding" className="w-full inline-flex items-center justify-center rounded-lg bg-success-accent px-3 py-2 text-white text-sm shadow-hover">
+                          Start onboarding
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* KPI cards */}
+                  <div className="grid grid-cols-2 gap-3 p-4">
+                    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-card">
+                      <div className="text-[11px] text-neutral-500">Site status</div>
+                      <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-neutral-900">
+                        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" /> Online
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-card">
+                      <div className="text-[11px] text-neutral-500">Visitors</div>
+                      <div className="mt-1 text-lg font-semibold text-neutral-900">—</div>
+                    </div>
+                    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-card">
+                      <div className="text-[11px] text-neutral-500">Leads</div>
+                      <div className="mt-1 text-lg font-semibold text-neutral-900">—</div>
+                    </div>
+                    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-card">
+                      <div className="text-[11px] text-neutral-500">Domains</div>
+                      <div className="mt-1 text-sm font-semibold text-neutral-900">Setup</div>
+                    </div>
+                  </div>
+
+                  {/* Quick actions */}
+                  <div className="px-4">
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft">
+                      <div className="text-xs text-neutral-600 mb-2">Quick actions</div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <a href="/dashboard?tab=Website" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
+                          <span className="text-[11px] text-neutral-700">Edit site</span>
+                        </a>
+                        <a href="/dashboard?tab=Domains" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18"/></svg>
+                          <span className="text-[11px] text-neutral-700">Buy domain</span>
+                        </a>
+                        <a href="mailto:support@hinn.io" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><path d="M4 4h16v16H4z"/><path d="M22 6 12 13 2 6"/></svg>
+                          <span className="text-[11px] text-neutral-700">Support</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent activity placeholder */}
+                  <div className="p-4">
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft">
+                      <div className="text-xs text-neutral-600 mb-2">Recent</div>
+                      <ul className="divide-y divide-neutral-200">
+                        <li className="py-2 flex items-center justify-between">
+                          <div className="text-sm text-neutral-800">Welcome to hinn.io</div>
+                          <span className="text-[11px] text-neutral-500">now</span>
+                        </li>
+                        <li className="py-2 flex items-center justify-between">
+                          <div className="text-sm text-neutral-800">Get started by completing onboarding</div>
+                          <span className="text-[11px] text-neutral-500">1m</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Desktop or other tabs content placeholder */}
+              {onboardingChecked && needsOnboarding && active === "Home" && (
+                <div className="hidden sm:flex min-h-[40vh] items-center justify-center p-8 text-center">
                   <div className="max-w-md space-y-4">
                     <div className="flex justify-center">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-8 w-8 text-amber-600"><path d="M12 9v4m0 4h.01"/><circle cx="12" cy="12" r="9"/></svg>
@@ -238,7 +326,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-              ) : null}
+              )}
             </div>
           </main>
         </div>
@@ -247,17 +335,18 @@ export default function DashboardPage() {
       {/* Mobile bottom tab bar (hides on scroll down, shows on scroll up) */}
       <nav
         className={classNames(
-          "fixed bottom-0 left-0 right-0 z-40 border-t border-neutral-200 bg-white/95 backdrop-blur sm:hidden transition-transform duration-200",
+          "fixed bottom-0 left-0 right-0 z-40 sm:hidden transition-transform duration-200",
           showMobileTabs ? "translate-y-0" : "translate-y-full"
         )}
         aria-label="Primary"
       >
-        <div className="mx-auto max-w-6xl px-2">
-          <ol
-            className="grid grid-cols-4"
-            role="tablist"
-            aria-orientation="horizontal"
-            onKeyDown={(e) => {
+        <div className="mx-auto max-w-6xl px-3 pb-[max(8px,env(safe-area-inset-bottom))]">
+          <div className="rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur shadow-soft">
+            <ol
+              className="grid grid-cols-4"
+              role="tablist"
+              aria-orientation="horizontal"
+              onKeyDown={(e) => {
               const items = Array.from(
                 (e.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>('button[role="tab"]')
               );
@@ -278,32 +367,35 @@ export default function DashboardPage() {
                 items[items.length - 1]?.focus();
               }
             }}
-          >
-            {TABS.map((tab) => {
-              const selected = active === tab;
-              return (
-                <li key={tab} className="flex">
-                  <button
-                    type="button"
-                    onClick={() => setActive(tab)}
-                    className={classNames(
-                      "flex-1 py-2.5 text-center text-[11px] leading-tight flex flex-col items-center gap-1",
-                      selected ? "text-success-ink font-medium" : "text-neutral-700"
-                    )}
-                    role="tab"
-                    aria-selected={selected}
-                    aria-controls={`panel-${tab.toLowerCase()}`}
-                    id={`tab-${tab.toLowerCase()}`}
-                    tabIndex={selected ? 0 : -1}
-                    aria-current={selected ? "page" : undefined}
-                  >
-                    <TabIcon tab={tab} selected={selected} />
-                    <span>{tab}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
+            >
+              {TABS.map((tab) => {
+                const selected = active === tab;
+                return (
+                  <li key={tab} className="flex">
+                    <button
+                      type="button"
+                      onClick={() => setActive(tab)}
+                      className={classNames(
+                        "mx-1 my-1 flex-1 py-2 text-center text-[11px] leading-tight flex flex-col items-center gap-1 rounded-xl",
+                        selected
+                          ? "bg-success-accent/10 text-success-ink border border-success"
+                          : "text-neutral-700 border border-transparent"
+                      )}
+                      role="tab"
+                      aria-selected={selected}
+                      aria-controls={`panel-${tab.toLowerCase()}`}
+                      id={`tab-${tab.toLowerCase()}`}
+                      tabIndex={selected ? 0 : -1}
+                      aria-current={selected ? "page" : undefined}
+                    >
+                      <TabIcon tab={tab} selected={selected} />
+                      <span>{tab}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
         </div>
       </nav>
     </div>
