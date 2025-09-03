@@ -1373,35 +1373,89 @@ export default function OnboardingPage() {
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium">Brand colors (select up to 2)</label>
-                      <div className="mt-2 grid grid-cols-8 gap-2">
-                        {PRESET_COLORS.map((c) => {
-                          const selected = primaryColors.includes(c);
-                          const atLimit = !selected && primaryColors.length >= 2;
-                          return (
-                            <button
-                              key={c}
-                              type="button"
-                              onClick={() => {
-                                setPrimaryColors((prev) => {
-                                  if (prev.includes(c)) return prev.filter((x) => x !== c);
-                                  if (prev.length >= 2) return prev; // enforce max 2
-                                  return [...prev, c];
-                                });
-                              }}
-                              className={classNames(
-                                "h-10 w-10 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft",
-                                selected ? "ring-2 ring-success border-success" : "border-neutral-300",
-                                atLimit ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.03]",
-                                step5Analyzing ? "opacity-60 cursor-not-allowed" : ""
-                              )}
-                              style={{ backgroundColor: c }}
-                              disabled={atLimit || step5Analyzing}
-                              aria-pressed={selected}
-                            />
-                          );
-                        })}
+                      <div className="mt-2">
+                        {primaryColors.length > 0 ? (
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            {primaryColors.map((c, i) => (
+                              <div
+                                key={`sel-${c}`}
+                                className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white pl-1 pr-2 py-1 shadow-sm"
+                              >
+                                <span
+                                  aria-hidden
+                                  className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-medium text-white shadow"
+                                  style={{ backgroundColor: c }}
+                                >
+                                  {i === 0 ? "1" : "2"}
+                                </span>
+                                <span className="text-xs text-neutral-700">{i === 0 ? "Primary" : "Secondary"} · {c}</span>
+                                <button
+                                  type="button"
+                                  className="ml-1 rounded p-1 text-[11px] text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100"
+                                  aria-label={`Remove ${i === 0 ? "Primary" : "Secondary"} color ${c}`}
+                                  onClick={() => setPrimaryColors(primaryColors.filter((x) => x !== c))}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="mb-2 text-xs text-gray-600">No color selected</div>
+                        )}
+                        <div className="grid grid-cols-8 gap-2">
+                          {PRESET_COLORS.map((c) => {
+                            const selected = primaryColors.includes(c);
+                            const atLimit = !selected && primaryColors.length >= 2;
+                            const idx = selected ? primaryColors.indexOf(c) + 1 : null;
+                            return (
+                              <button
+                                key={c}
+                                type="button"
+                                aria-pressed={selected}
+                                aria-label={`Select color ${c}`}
+                                title={c}
+                                onClick={() => {
+                                  setPrimaryColors((prev) => {
+                                    if (prev.includes(c)) return prev.filter((x) => x !== c);
+                                    if (prev.length >= 2) return prev; // enforce max 2
+                                    return [...prev, c];
+                                  });
+                                }}
+                                className={classNames(
+                                  "relative h-10 w-10 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft",
+                                  selected ? "ring-2 ring-success border-success" : "border-neutral-300",
+                                  atLimit ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.03]",
+                                  step5Analyzing ? "opacity-60 cursor-not-allowed" : ""
+                                )}
+                                style={{ backgroundColor: c }}
+                                disabled={atLimit || step5Analyzing}
+                              >
+                                {selected && (
+                                  <>
+                                    <span className="absolute inset-0 flex items-center justify-center">
+                                      <svg
+                                        viewBox="0 0 20 20"
+                                        fill="none"
+                                        stroke="white"
+                                        strokeWidth="2.2"
+                                        className="h-5 w-5 drop-shadow"
+                                        aria-hidden="true"
+                                      >
+                                        <path d="M6 10.5l2.5 2.5L14 8" />
+                                      </svg>
+                                    </span>
+                                    <span className="absolute -top-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white text-[11px]">
+                                      {idx}
+                                    </span>
+                                  </>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-2 text-[11px] text-neutral-500">Tip: Choose one primary and one secondary brand color.</div>
                       </div>
-                      <div className="mt-2 text-[11px] text-neutral-500">Tip: Choose one primary and one secondary brand color.</div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium">Social links (optional)</label>
@@ -1507,7 +1561,15 @@ export default function OnboardingPage() {
                     {step > 7 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
                     <span>7. Service areas</span>
                   </div>
-                  {step > 7 && <div className="text-xs text-neutral-600 mt-0.5 truncate">{areasNotApplicable ? "N/A" : `${cities.length} area(s)`}</div>}
+                  {step > 7 && (
+                    <div className="text-xs text-neutral-600 mt-0.5 truncate">
+                      {areasNotApplicable ? "N/A" : (
+                        <>
+                          {cities.length} area{cities.length === 1 ? "" : "s"} • {distanceUnit.toUpperCase()}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                   <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 7 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 7 ? "Completed" : step === 7 ? "In progress" : "Locked"}</span>
@@ -1519,9 +1581,217 @@ export default function OnboardingPage() {
                     <input type="checkbox" checked={areasNotApplicable} onChange={(e) => setAreasNotApplicable(e.target.checked)} />
                     <span>My business is online-only or service areas are not applicable</span>
                   </label>
+
                   {!areasNotApplicable && (
-                    <div className="mt-3 text-xs text-neutral-600">You can specify areas later from settings.</div>
+                    <>
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+                        <div className="min-w-[180px]">
+                          <label className="block text-sm font-medium">Country (optional)</label>
+                          <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success">
+                            <option value="">All countries</option>
+                            {COUNTRIES.map((c) => (
+                              <option key={c.code} value={c.code}>{c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium">City or area</label>
+                          <div className="mt-1 flex flex-col sm:flex-row gap-2">
+                            <input
+                              type="text"
+                              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent"
+                              placeholder="Start typing a city..."
+                              value={cityQuery}
+                              onChange={(e) => setCityQuery(e.target.value)}
+                            />
+                            <button type="button" className="rounded-md px-3 py-2 text-sm font-medium bg-success-accent text-white hover:opacity-90 w-full sm:w-auto" onClick={() => runCitySearch()} disabled={isCitySearching}>
+                              {isCitySearching ? "Searching…" : "Search"}
+                            </button>
+                          </div>
+                          {citySuggestions.length > 0 && (
+                            <ul className="mt-2 max-h-40 overflow-y-auto rounded border border-neutral-200 bg-white text-sm shadow">
+                              {citySuggestions.map((sug, i) => (
+                                <li key={`${sug.display_name}-${i}`} className="flex items-center justify-between px-3 py-2 hover:bg-neutral-50">
+                                  <span
+                                    className="truncate pr-2 cursor-pointer text-neutral-800 hover:underline"
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => {
+                                      setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
+                                      setCitySuggestions([]);
+                                      setCityQuery("");
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
+                                        setCitySuggestions([]);
+                                        setCityQuery("");
+                                      }
+                                    }}
+                                  >
+                                    {sug.display_name}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="text-xs text-success-ink hover:underline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCities([...cities, { name: sug.display_name, displayName: sug.display_name, lat: Number(sug.lat), lon: Number(sug.lon), radiusKm: 10 }]);
+                                      setCitySuggestions([]);
+                                      setCityQuery("");
+                                    }}
+                                  >
+                                    Add
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        <div className="sm:col-span-1">
+                          <label className="block text-sm font-medium">Units</label>
+                          <div className="mt-1 inline-flex rounded-md border border-neutral-300 p-0.5">
+                            {(["km","mi"] as const).map((u) => (
+                              <button
+                                key={u}
+                                type="button"
+                                onClick={() => setDistanceUnit(u)}
+                                className={classNames("px-2 py-1 text-sm rounded", distanceUnit === u ? "bg-success-accent text-white" : "text-neutral-700 hover:bg-neutral-100")}
+                              >
+                                {u.toUpperCase()}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {cities.length === 0 ? (
+                        <div className="mt-4 rounded-lg border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600 shadow-soft">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-success-bg text-success-ink">
+                              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 4.97 6.06 12.39 6.32 12.68.37.41 1.01.41 1.38 0C12.94 21.39 19 13.97 19 9a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z"/></svg>
+                            </span>
+                            <div className="font-medium text-neutral-700">No service areas yet</div>
+                          </div>
+                          <div className="mt-1 text-xs">Search a city or address above and click Add to include it. Then adjust the radius.</div>
+                        </div>
+                      ) : (
+                        <ul className="mt-4 space-y-3 text-sm overflow-x-hidden">
+                          {cities.map((c, idx) => {
+                            const geocoded = (c.lat !== 0 || c.lon !== 0);
+                            return (
+                              <li key={`${c.name}-${idx}`} className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3 shadow-soft shadow-hover transition-colors hover:bg-neutral-50 min-w-0 overflow-hidden">
+                                <div className="flex items-start gap-3 flex-wrap">
+                                  <div className="flex items-start gap-3 min-w-0 flex-1 order-1">
+                                    <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-success-bg text-success-ink">
+                                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 4.97 6.06 12.39 6.32 12.68.37.41 1.01.41 1.38 0C12.94 21.39 19 13.97 19 9a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z"/></svg>
+                                    </span>
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <div className="font-medium truncate">{c.displayName}</div>
+                                        <span className={classNames("inline-flex items-center rounded-full px-2 py-0.5 text-[11px] border", geocoded ? "bg-success-bg text-success-ink border-success-border" : "bg-neutral-100 text-neutral-700 border-neutral-200")}>{geocoded ? "Geocoded" : "Not geocoded"}</span>
+                                      </div>
+                                      <div className="mt-0.5 text-[11px] text-neutral-500 truncate">
+                                        {geocoded ? <>Lat {Number(c.lat).toFixed(4)}, Lon {Number(c.lon).toFixed(4)}</> : "Add via Search to enable radius"}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="text-xs text-neutral-600 hover:text-neutral-800 hover:underline shrink-0 self-start order-2 sm:order-none sm:ml-auto"
+                                    onClick={() => setCities(cities.filter((_, i) => i !== idx))}
+                                    aria-label={`Remove ${c.displayName}`}
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                                {geocoded ? (
+                                  <div className="mt-3 grid w-full min-w-0 grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3 overflow-hidden">
+                                    <label className="text-xs text-neutral-600 sm:col-span-2">Radius</label>
+                                    <div className="flex items-center justify-between sm:hidden">
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          aria-label="Decrease radius"
+                                          className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                                          onClick={() => {
+                                            const cur = toDisplayDistance(c.radiusKm);
+                                            const next = Math.max(1, cur - 1);
+                                            setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
+                                          }}
+                                        >
+                                          −
+                                        </button>
+                                        <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700 whitespace-nowrap">
+                                          {toDisplayDistance(c.radiusKm)} {distanceUnit}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          aria-label="Increase radius"
+                                          className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                                          onClick={() => {
+                                            const cur = toDisplayDistance(c.radiusKm);
+                                            const next = Math.min(100, cur + 1);
+                                            setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
+                                          }}
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div className="min-w-0 w-full max-w-full sm:col-span-8 sm:self-center">
+                                      <input
+                                        type="range"
+                                        min={1}
+                                        max={100}
+                                        value={toDisplayDistance(c.radiusKm)}
+                                        onChange={(e) => {
+                                          const val = Number(e.target.value);
+                                          setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(val) } : ci));
+                                        }}
+                                        className="block w-full min-w-0 max-w-full"
+                                      />
+                                    </div>
+                                    <div className="hidden sm:flex items-center justify-end gap-2 sm:col-span-2">
+                                      <button
+                                        type="button"
+                                        aria-label="Decrease radius"
+                                        className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                                        onClick={() => {
+                                          const cur = toDisplayDistance(c.radiusKm);
+                                          const next = Math.max(1, cur - 1);
+                                          setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
+                                        }}
+                                      >
+                                        −
+                                      </button>
+                                      <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white px-2 py-0.5 text-xs text-neutral-700 whitespace-nowrap">
+                                        {toDisplayDistance(c.radiusKm)} {distanceUnit}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        aria-label="Increase radius"
+                                        className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                                        onClick={() => {
+                                          const cur = toDisplayDistance(c.radiusKm);
+                                          const next = Math.min(100, cur + 1);
+                                          setCities(cities.map((ci, i) => i === idx ? { ...ci, radiusKm: fromDisplayDistance(next) } : ci));
+                                        }}
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : null}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </>
                   )}
+
                   <div className="mt-6 flex justify-between">
                     <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(6)}>Back</button>
                     <button type="button" className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white", !canGoStep8 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")} disabled={!canGoStep8} onClick={() => setStep(8)}>Continue</button>
@@ -1541,7 +1811,13 @@ export default function OnboardingPage() {
             >
               <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
                 <div>
-                  <div className="text-sm font-medium text-neutral-800">8. Logo & assets</div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 8 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>8. Logo & assets</span>
+                  </div>
+                  {step > 8 && (
+                    <div className="text-xs text-neutral-600 mt-0.5 truncate">{logoFile ? "Logo set" : "No logo"} • {assetFiles.length} asset{assetFiles.length === 1 ? "" : "s"}</div>
+                  )}
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                   <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-700">Optional</span>
@@ -1549,23 +1825,146 @@ export default function OnboardingPage() {
               </summary>
               <div className="border-t border-neutral-200">
                 <div className="p-4 sm:p-5">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-sm font-medium">Logo file (optional)</label>
-                      <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} className="mt-1 block w-full text-sm" />
-                      <label className="mt-2 inline-flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={noLogoYet} onChange={(e) => setNoLogoYet(e.target.checked)} />
-                        <span>I don't have a logo yet</span>
+                  {/* Logo uploader */}
+                  <div>
+                    <label className="block text-sm font-medium">Logo</label>
+                    <div className="mt-2 flex items-center gap-3">
+                      <input
+                        id="logo-file"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const f = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                          setLogoFile(f);
+                        }}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="logo-file"
+                        className="group inline-flex items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-3 py-2 shadow-soft hover:border-success cursor-pointer"
+                      >
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" />
+                          </svg>
+                        </span>
+                        <div>
+                          <div className="text-sm text-neutral-800">Click to upload</div>
+                          <div className="text-[11px] text-neutral-500">PNG or SVG, up to 2MB</div>
+                        </div>
+                      </label>
+                      {logoFile && (
+                        <div className="flex items-center gap-2">
+                          <img src={URL.createObjectURL(logoFile)} alt="Logo preview" className="h-12 w-12 rounded border border-neutral-200 object-contain bg-white" />
+                          <button type="button" className="text-xs text-neutral-600 hover:underline" onClick={() => setLogoFile(null)}>Remove</button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-1 text-[11px] text-neutral-500">Transparent background preferred.</div>
+                    <label className="mt-2 inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={noLogoYet} onChange={(e) => setNoLogoYet(e.target.checked)} />
+                      <span>I don't have a logo yet</span>
+                    </label>
+                  </div>
+
+                  {/* Favicon uploader (optional) */}
+                  <div className="mt-5">
+                    <label className="block text-sm font-medium">Favicon (optional)</label>
+                    <div className="mt-2 flex items-center gap-3">
+                      <input
+                        id="favicon-file"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const f = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                          setFaviconFile(f);
+                        }}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="favicon-file"
+                        className="group inline-flex items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-3 py-2 shadow-soft hover:border-success cursor-pointer"
+                      >
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" />
+                          </svg>
+                        </span>
+                        <div>
+                          <div className="text-sm text-neutral-800">Click to upload</div>
+                          <div className="text-[11px] text-neutral-500">Square, 48×48px+</div>
+                        </div>
+                      </label>
+                      {faviconFile && (
+                        <div className="flex items-center gap-2">
+                          <img src={URL.createObjectURL(faviconFile)} alt="Favicon preview" className="h-8 w-8 rounded border border-neutral-200 object-contain bg-white" />
+                          <button type="button" className="text-xs text-neutral-600 hover:underline" onClick={() => setFaviconFile(null)}>Remove</button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-1 text-[11px] text-neutral-500">Use a simple mark for best results.</div>
+                  </div>
+
+                  {/* Assets uploader */}
+                  <div className="mt-5">
+                    <label className="block text-sm font-medium">Additional assets</label>
+                    <div className="mt-2">
+                      <input
+                        id="asset-files"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => {
+                          const picked = Array.from(e.target.files || []);
+                          setAssetFiles((prev) => {
+                            const merged = [...prev, ...picked];
+                            const map = new Map<string, File>();
+                            for (const f of merged) map.set(`${f.name}:${f.size}`, f);
+                            return Array.from(map.values());
+                          });
+                          (e.target as HTMLInputElement).value = "";
+                        }}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="asset-files"
+                        className="group flex w-full items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-4 py-3 shadow-soft hover:border-success cursor-pointer max-w-xl"
+                      >
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5l6-6 4 4 5-5 3 3" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 20h18" />
+                          </svg>
+                        </span>
+                        <div className="text-left">
+                          <div className="text-sm text-neutral-800">Click to upload images</div>
+                          <div className="text-[11px] text-neutral-500">JPG, PNG, up to 10 files</div>
+                        </div>
                       </label>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium">Favicon (optional)</label>
-                      <input type="file" accept="image/*,.ico" onChange={(e) => setFaviconFile(e.target.files?.[0] || null)} className="mt-1 block w-full text-sm" />
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium">Other assets (optional)</label>
-                    <input type="file" multiple onChange={(e) => setAssetFiles(Array.from(e.target.files || []))} className="mt-1 block w-full text-sm" />
+                    {assetFiles.length > 0 ? (
+                      <ul className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {assetFiles.map((f, i) => (
+                          <li key={`${f.name}-${i}`} className="group relative rounded border border-neutral-200 bg-white p-2 shadow-soft">
+                            <img src={URL.createObjectURL(f)} alt={f.name} className="h-20 w-full object-cover rounded" />
+                            <div className="mt-1 truncate text-[11px] text-neutral-600" title={f.name}>{f.name}</div>
+                            <button
+                              type="button"
+                              className="absolute top-1 right-1 hidden group-hover:inline-flex items-center justify-center rounded bg-black/60 px-1.5 py-0.5 text-[11px] text-white"
+                              onClick={() => setAssetFiles(assetFiles.filter((_, idx) => idx !== i))}
+                              aria-label={`Remove ${f.name}`}
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="mt-2 rounded-lg border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600 shadow-soft">No assets uploaded yet.</div>
+                    )}
+                    <div className="mt-1 text-[11px] text-neutral-500">Upload photos, graphics, or brand assets. You can add more later.</div>
                   </div>
 
                   <div className="mt-6 flex items-center justify-between">
