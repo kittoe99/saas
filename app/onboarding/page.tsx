@@ -431,8 +431,19 @@ export default function OnboardingPage() {
         body: JSON.stringify({ user_id: user.id, data: payload }),
       });
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j?.error || "Failed to save onboarding");
+        let msg = "Failed to save onboarding";
+        try {
+          const ct = res.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            const j = await res.json();
+            msg = j?.error || msg;
+          } else {
+            const t = await res.text();
+            msg = t || msg;
+          }
+        } catch {}
+        console.error("/api/onboarding error:", msg);
+        throw new Error(msg);
       }
       router.push("/dashboard");
     } catch (e: any) {
@@ -1533,9 +1544,58 @@ export default function OnboardingPage() {
                     })}
                   </div>
                   <div className="mt-3 flex gap-2 max-w-md">
-                    <input value={newService} onChange={(e) => setNewService(e.target.value)} placeholder="Add custom service" className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success" />
-                    <button type="button" className={classNames("rounded-md px-3 py-2 text-sm text-white", newService.trim() ? "bg-success-accent hover:opacity-90" : "bg-neutral-300 cursor-not-allowed")} disabled={!newService.trim()} onClick={() => { const v = newService.trim(); if (!v) return; setSelectedServices((prev) => prev.includes(v) ? prev : [...prev, v]); setNewService(""); }}>Add</button>
+                    <input
+                      value={newService}
+                      onChange={(e) => setNewService(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const v = newService.trim();
+                          if (!v) return;
+                          setSelectedServices((prev) => {
+                            const has = prev.some((s) => s.toLowerCase() === v.toLowerCase());
+                            return has ? prev : [...prev, v];
+                          });
+                          setNewService("");
+                        }
+                      }}
+                      placeholder="Add custom service"
+                      className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                    />
+                    <button
+                      type="button"
+                      className={classNames("rounded-md px-3 py-2 text-sm text-white", newService.trim() ? "bg-success-accent hover:opacity-90" : "bg-neutral-300 cursor-not-allowed")}
+                      disabled={!newService.trim()}
+                      onClick={() => {
+                        const v = newService.trim();
+                        if (!v) return;
+                        setSelectedServices((prev) => {
+                          const has = prev.some((s) => s.toLowerCase() === v.toLowerCase());
+                          return has ? prev : [...prev, v];
+                        });
+                        setNewService("");
+                      }}
+                    >
+                      Add
+                    </button>
                   </div>
+                  {selectedServices.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {selectedServices.map((svc, i) => (
+                        <div key={`${svc}-${i}`} className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white pl-2 pr-2 py-1 shadow-sm">
+                          <span className="text-xs text-neutral-800">{svc}</span>
+                          <button
+                            type="button"
+                            className="ml-1 rounded p-1 text-[11px] text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100"
+                            aria-label={`Remove ${svc}`}
+                            onClick={() => setSelectedServices((prev) => prev.filter((s) => s !== svc))}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="mt-6 flex justify-between">
                     <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(5)}>Back</button>
@@ -1828,11 +1888,23 @@ export default function OnboardingPage() {
                   {/* Logo uploader */}
                   <div>
                     <label className="block text-sm font-medium">Logo</label>
+                    <label className="mt-2 inline-flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={noLogoYet}
+                        onChange={(e) => {
+                          setNoLogoYet(e.target.checked);
+                          if (e.target.checked) setLogoFile(null);
+                        }}
+                      />
+                      <span>I don't have a logo yet</span>
+                    </label>
                     <div className="mt-2 flex items-center gap-3">
                       <input
                         id="logo-file"
                         type="file"
                         accept="image/*"
+                        disabled={noLogoYet}
                         onChange={(e) => {
                           const f = e.target.files && e.target.files[0] ? e.target.files[0] : null;
                           setLogoFile(f);
@@ -1841,7 +1913,11 @@ export default function OnboardingPage() {
                       />
                       <label
                         htmlFor="logo-file"
-                        className="group inline-flex items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-3 py-2 shadow-soft hover:border-success cursor-pointer"
+                        aria-disabled={noLogoYet}
+                        className={classNames(
+                          "group inline-flex items-center gap-3 rounded-lg border border-dashed border-neutral-300 bg-white px-3 py-2 shadow-soft cursor-pointer",
+                          noLogoYet ? "opacity-50 pointer-events-none" : "hover:border-success"
+                        )}
                       >
                         <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 group-hover:bg-success-bg group-hover:text-success-ink">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
@@ -1854,7 +1930,7 @@ export default function OnboardingPage() {
                           <div className="text-[11px] text-neutral-500">PNG or SVG, up to 2MB</div>
                         </div>
                       </label>
-                      {logoFile && (
+                      {!noLogoYet && logoFile && (
                         <div className="flex items-center gap-2">
                           <img src={URL.createObjectURL(logoFile)} alt="Logo preview" className="h-12 w-12 rounded border border-neutral-200 object-contain bg-white" />
                           <button type="button" className="text-xs text-neutral-600 hover:underline" onClick={() => setLogoFile(null)}>Remove</button>
@@ -1862,10 +1938,6 @@ export default function OnboardingPage() {
                       )}
                     </div>
                     <div className="mt-1 text-[11px] text-neutral-500">Transparent background preferred.</div>
-                    <label className="mt-2 inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" checked={noLogoYet} onChange={(e) => setNoLogoYet(e.target.checked)} />
-                      <span>I don't have a logo yet</span>
-                    </label>
                   </div>
 
                   {/* Favicon uploader (optional) */}
