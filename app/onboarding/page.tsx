@@ -552,15 +552,6 @@ export default function OnboardingPage() {
   }, [siteAdded, skipped, hasCurrent]);
 
   // Animated reveal wrapper for step-by-step UX
-  if (gateChecking) {
-    return (
-      <main className="min-h-[100dvh] flex items-center justify-center bg-white">
-        <span className="text-sm text-neutral-500">Checking your account…</span>
-      </main>
-    );
-  }
-  
-  // Animated reveal wrapper for step-by-step UX
   function StepBlock({ show, children }: { show: boolean; children: React.ReactNode }) {
     const [visible, setVisible] = useState(show);
     useEffect(() => {
@@ -1032,7 +1023,23 @@ export default function OnboardingPage() {
 
   // Full onboarding UI
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8 sm:py-10">
+    <div className="relative mx-auto max-w-6xl px-6 py-8 sm:py-10" aria-busy={gateChecking}>
+      {gateChecking && (
+        <div
+          className="absolute inset-0 z-10 grid place-items-center bg-white/70 backdrop-blur-[1px]"
+          aria-live="polite"
+          aria-atomic="true"
+          role="status"
+        >
+          <div className="flex items-center gap-3 rounded-md border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+            <svg className="h-4 w-4 animate-spin text-success-ink" viewBox="0 0 24 24" aria-hidden>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+            <span className="text-sm text-neutral-800">Checking access…</span>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
