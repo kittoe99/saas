@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 // Lightweight utility like in get-started
@@ -238,7 +238,6 @@ const PRIMARY_GOALS = ["Leads", "Sales", "Bookings", "Community", "Content"];
 export default function OnboardingPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [gateChecking, setGateChecking] = useState(true);
   const [showFromGetStarted, setShowFromGetStarted] = useState(false);
   const [siteType, setSiteType] = useState<SiteType | null>(null);
@@ -399,11 +398,14 @@ export default function OnboardingPage() {
 
   // Detect if user arrived from get-started success to show a soft prompt
   useEffect(() => {
-    const from = searchParams?.get("from");
-    if (from === "get-started") {
-      setShowFromGetStarted(true);
-    }
-  }, [searchParams]);
+    if (typeof window === "undefined") return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get("from") === "get-started") {
+        setShowFromGetStarted(true);
+      }
+    } catch {}
+  }, []);
 
   // Finish handler (navigate after successful completion)
   async function handleFinish() {
