@@ -237,6 +237,7 @@ const PRIMARY_GOALS = ["Leads", "Sales", "Bookings", "Community", "Content"];
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const [gateChecking, setGateChecking] = useState(true);
   const [siteType, setSiteType] = useState<SiteType | null>(null);
   const [category, setCategory] = useState<string>("");
   const [name, setName] = useState("");
@@ -364,6 +365,35 @@ export default function OnboardingPage() {
   // Allow finishing without Step 8 uploads; still enforce type-specific required fields if any
   const canFinish = isTypeSpecificValid(siteType, typeSpecific);
 
+  // Gate: require auth and skip to success if onboarding already exists
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const user = auth?.user;
+        if (!user) {
+          if (!cancelled) router.replace("/login");
+          return;
+        }
+        // Check if onboarding row already exists
+        try {
+          const res = await fetch(`/api/onboarding?user_id=${user.id}`, { cache: "no-store" });
+          if (res.ok) {
+            const j = await res.json().catch(() => null);
+            if (!cancelled && j?.row) {
+              router.replace("/dashboard/onboarding/success");
+              return;
+            }
+          }
+        } catch {}
+      } finally {
+        if (!cancelled) setGateChecking(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [router]);
+
   // Finish handler (navigate after successful completion)
   async function handleFinish() {
     if (!canFinish || saving) return;
@@ -471,7 +501,7 @@ export default function OnboardingPage() {
         console.error("/api/onboarding error:", msg);
         throw new Error(msg);
       }
-      router.push("/onboarding/success");
+      router.push("/dashboard/onboarding/success");
     } catch (e: any) {
       setError(e?.message || "Something went wrong while finishing onboarding.");
     } finally {
@@ -521,6 +551,15 @@ export default function OnboardingPage() {
     // no-op
   }, [siteAdded, skipped, hasCurrent]);
 
+  // Animated reveal wrapper for step-by-step UX
+  if (gateChecking) {
+    return (
+      <main className="min-h-[100dvh] flex items-center justify-center bg-white">
+        <span className="text-sm text-neutral-500">Checking your account…</span>
+      </main>
+    );
+  }
+  
   // Animated reveal wrapper for step-by-step UX
   function StepBlock({ show, children }: { show: boolean; children: React.ReactNode }) {
     const [visible, setVisible] = useState(show);

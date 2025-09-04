@@ -1,6 +1,33 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
+// GET /api/onboarding?user_id=...
+// Returns the onboarding row for the given user_id, if present
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const user_id = searchParams.get('user_id') || undefined;
+    if (!user_id) {
+      return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
+    }
+    const supabase = getSupabaseServer();
+    const { data: row, error } = await supabase
+      .from('onboarding')
+      .select('*')
+      .eq('user_id', user_id)
+      .maybeSingle();
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    if (!row) {
+      return NextResponse.json({ ok: true, row: null }, { status: 200 });
+    }
+    return NextResponse.json({ ok: true, row }, { status: 200 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 });
+  }
+}
+
 // POST /api/onboarding
 // Body: { user_id: string; data: any }
 // Upserts onboarding data per user
