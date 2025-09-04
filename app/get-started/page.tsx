@@ -414,11 +414,43 @@ function StepCheckout({
         if (!selectedPlan) return;
         setCheckoutError(null);
         setCheckoutLoading(true);
-        await new Promise((r) => setTimeout(r, 1200));
-        setCheckoutLoading(false);
-        setMockPaid(true);
-        // After successful (mock) payment, go to success page with next step choice
-        router.push("/get-started/success");
+        try {
+          // Simulate processing time
+          await new Promise((r) => setTimeout(r, 1200));
+
+          // Ensure user is authenticated and get user_id
+          const { data: auth } = await supabase.auth.getUser();
+          const user = auth?.user;
+          if (!user) {
+            router.push("/login?next=/get-started");
+            return;
+          }
+
+          // Build submission payload
+          const submission = {
+            personal: data,
+            billing,
+            planId: selectedPlan,
+          };
+
+          // Persist to API (server will write to Supabase)
+          const res = await fetch("/api/get-started", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: user.id, plan: selectedPlan, data: submission }),
+          });
+          if (!res.ok) {
+            const j = await res.json().catch(() => ({}));
+            throw new Error(j?.error || "Failed to save get-started submission");
+          }
+
+          setMockPaid(true);
+          router.push("/get-started/success");
+        } catch (e: any) {
+          setCheckoutError(e?.message || "Something went wrong while processing your payment.");
+        } finally {
+          setCheckoutLoading(false);
+        }
       }
 
       function handleBillingChange<K extends keyof BillingInfo>(key: K, value: BillingInfo[K]) {
