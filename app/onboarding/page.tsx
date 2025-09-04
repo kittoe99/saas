@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import Loader from "@/app/components/Loader";
 
 // Lightweight utility like in get-started
 function classNames(...args: Array<string | false | null | undefined>) {
@@ -1038,20 +1039,7 @@ export default function OnboardingPage() {
   return (
     <div className="relative mx-auto max-w-6xl px-6 py-8 sm:py-10" aria-busy={gateChecking}>
       {gateChecking && (
-        <div
-          className="absolute inset-0 z-10 grid place-items-center bg-white/70 backdrop-blur-[1px]"
-          aria-live="polite"
-          aria-atomic="true"
-          role="status"
-        >
-          <div className="flex items-center gap-3 rounded-md border border-neutral-200 bg-white px-3 py-2 shadow-sm">
-            <svg className="h-4 w-4 animate-spin text-success-ink" viewBox="0 0 24 24" aria-hidden>
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-            </svg>
-            <span className="text-sm text-neutral-800">Checking access…</span>
-          </div>
-        </div>
+        <Loader fullScreen message="Checking access..." />
       )}
       {showFromGetStarted && !gateChecking && (
         <div className="mb-4 rounded-md border border-success-bg/60 bg-success-bg/20 p-3 text-sm text-neutral-900 flex items-start justify-between gap-3" role="status" aria-live="polite">

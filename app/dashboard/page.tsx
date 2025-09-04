@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import Loader from "@/app/components/Loader";
 
 function classNames(...args: Array<string | false | null | undefined>) {
   return args.filter(Boolean).join(" ");
@@ -51,6 +52,17 @@ export default function DashboardPage() {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      // no-op, still navigate away
+    } finally {
+      window.location.replace("/login");
+    }
+  };
 
   // Auth guard: redirect to /login if there is no session
   useEffect(() => {
@@ -137,9 +149,7 @@ export default function DashboardPage() {
   // Show a lightweight loading state until auth check completes
   if (!authChecked) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-neutral-600">
-        Checking authentication...
-      </div>
+      <Loader fullScreen message="Checking authentication..." />
     );
   }
 
@@ -152,8 +162,24 @@ export default function DashboardPage() {
             H
           </div>
           <div className="text-sm text-neutral-600">Dashboard</div>
+          {/* Mobile logout */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="ml-auto sm:hidden px-3 py-1.5 rounded-md border border-neutral-300 bg-white text-neutral-900 text-sm hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+          >
+            Logout
+          </button>
           {/* Desktop tabs moved to sidebar */}
-          <div className="ml-auto hidden sm:flex items-center gap-2" />
+          <div className="ml-auto hidden sm:flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-3 py-1.5 rounded-md border border-neutral-300 bg-white text-neutral-900 text-sm hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
