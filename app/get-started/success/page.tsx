@@ -45,24 +45,48 @@ export default function GetStartedSuccessPage() {
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/dashboard"
+              href="/onboarding?from=get-started"
               className="inline-flex items-center gap-2 rounded-md bg-success-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                <path d="M3.75 4.5A2.25 2.25 0 0 1 6 2.25h12A2.25 2.25 0 0 1 20.25 4.5v3.75A2.25 2.25 0 0 1 18 10.5H6a2.25 2.25 0 0 1-2.25-2.25V4.5Z" />
-                <path fillRule="evenodd" d="M3.75 15A2.25 2.25 0 0 1 6 12.75h12A2.25 2.25 0 0 1 20.25 15v3.75A2.25 2.25 0 0 1 18 21H6a2.25 2.25 0 0 1-2.25-2.25V15Zm3-1.5a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Zm3 0a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M2.25 12a9.75 9.75 0 1 1 19.5 0 9.75 9.75 0 0 1-19.5 0Zm6.72-1.28a.75.75 0 0 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l6-6a.75.75 0 1 0-1.06-1.06L11 12.94 8.97 10.72Z" clipRule="evenodd" />
               </svg>
-              Go to dashboard
+              Continue onboarding
             </Link>
 
-            <Link
-              href="/get-started"
+            <a
+              href="https://apps.apple.com/app/id1234567890"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-sm transition hover:bg-neutral-50"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h7.125M10.5 6A1.875 1.875 0 0 1 8.625 4.125m1.875 1.875A1.875 1.875 0 0 0 8.625 8.25M10.5 6H5.25m5.25 12h7.125m-7.125 0A1.875 1.875 0 0 1 8.625 16.125m1.875 1.875A1.875 1.875 0 0 0 8.625 20.25m1.875-2.25H5.25M3.75 12h16.5" />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                <path d="M16.365 1.43c.03 1.03-.38 2.02-1.07 2.76-.73.77-1.92 1.37-3.06 1.29-.13-1 .42-2.03 1.1-2.71.77-.79 2.09-1.37 3.03-1.34zM20.32 17.07c-.56 1.3-.82 1.86-1.53 3-.99 1.59-2.39 3.58-4.14 3.6-1.74.02-2.2-1.16-4.12-1.16-1.92 0-2.43 1.14-4.16 1.18-1.73.03-3.05-1.72-4.04-3.3C.8 17.12.15 13.62 1.7 11.3c1.13-1.68 2.92-1.68 3.67-1.7 1.76-.03 3.1 1.17 4.11 1.17 1 0 2.78-1.45 4.69-1.24.8.03 3.06.32 4.51 2.37-.12.08-2.69 1.57-2.46 4.17.24 2.74 2.64 3.65 2.68 3.66z" />
               </svg>
-              Review steps
+              Download on the App Store
+            </a>
+
+            <a
+              href="https://play.google.com/store/apps/details?id=com.example.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-sm transition hover:bg-neutral-50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                <path d="M3.6 1.8a1.5 1.5 0 0 0-1.35 2.2l7.2 9-7.2 9A1.5 1.5 0 0 0 3.6 24l12.6-7.2 3.9 4.88a1.5 1.5 0 0 0 2.55-1.09V3.4A1.5 1.5 0 0 0 20.1 2.3L16.2 7.18 3.6 0Z" />
+              </svg>
+              Get it on Google Play
+            </a>
+
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-sm transition hover:bg-neutral-50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                <path d="M11.25 3.75a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 .75.75v7.5a.75.75 0 0 1-1.5 0V5.56l-6.22 6.22a.75.75 0 1 1-1.06-1.06L17.44 4.5h-5.44a.75.75 0 0 1-.75-.75Z" />
+                <path d="M3 6.75A2.25 2.25 0 0 1 5.25 4.5h6a.75.75 0 0 1 0 1.5h-6A.75.75 0 0 0 4.5 6.75v12A.75.75 0 0 0 5.25 19.5h12a.75.75 0 0 0 .75-.75v-6a.75.75 0 0 1 1.5 0v6A2.25 2.25 0 0 1 17.25 21H5.25A2.25 2.25 0 0 1 3 18.75v-12Z" />
+              </svg>
+              I'll do this later
             </Link>
           </div>
 

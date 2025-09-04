@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 type PersonalInfo = {
   firstName: string;
@@ -322,6 +324,8 @@ function StepCheckout({
 // Removed duplicate/broken GetStartedPage definition block above. The valid definition starts below.
 
     export default function GetStartedPage() {
+      const router = useRouter();
+      const [gateChecking, setGateChecking] = useState(true);
       const [step, setStep] = useState<Step>(1);
       const [data, setData] = useState<PersonalInfo>({
         firstName: "",
@@ -362,6 +366,24 @@ function StepCheckout({
       const step3Ref = useRef<HTMLDivElement | null>(null);
       const step4Ref = useRef<HTMLDivElement | null>(null);
 
+      // Auth gate: require login
+      useEffect(() => {
+        let active = true;
+        (async () => {
+          try {
+            const { data } = await supabase.auth.getUser();
+            const user = data?.user;
+            if (!user) {
+              router.push("/login?next=/get-started");
+              return;
+            }
+          } finally {
+            if (active) setGateChecking(false);
+          }
+        })();
+        return () => { active = false; };
+      }, [router]);
+
       // Auto-scroll disabled per design: keep position stable between steps
       useEffect(() => {
         // no-op
@@ -395,6 +417,8 @@ function StepCheckout({
         await new Promise((r) => setTimeout(r, 1200));
         setCheckoutLoading(false);
         setMockPaid(true);
+        // After successful (mock) payment, go to success page with next step choice
+        router.push("/get-started/success");
       }
 
       function handleBillingChange<K extends keyof BillingInfo>(key: K, value: BillingInfo[K]) {
@@ -402,7 +426,18 @@ function StepCheckout({
       }
 
       return (
-        <div className="mx-auto max-w-5xl px-6 py-10">
+        <div className="relative mx-auto max-w-5xl px-6 py-10" aria-busy={gateChecking}>
+          {gateChecking && (
+            <div className="absolute inset-0 z-10 grid place-items-center bg-white/70 backdrop-blur-[1px]" role="status" aria-live="polite" aria-atomic="true">
+              <div className="flex items-center gap-3 rounded-md border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+                <svg className="h-4 w-4 animate-spin text-success-ink" viewBox="0 0 24 24" aria-hidden>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+                <span className="text-sm text-neutral-800">Checking account…</span>
+              </div>
+            </div>
+          )}
           <h1 className="text-2xl font-semibold">Get Started</h1>
           <p className="mt-1 text-sm text-gray-600">Complete a few quick steps to continue your account setup.</p>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 // Lightweight utility like in get-started
@@ -237,7 +237,10 @@ const PRIMARY_GOALS = ["Leads", "Sales", "Bookings", "Community", "Content"];
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [gateChecking, setGateChecking] = useState(true);
+  const [showFromGetStarted, setShowFromGetStarted] = useState(false);
   const [siteType, setSiteType] = useState<SiteType | null>(null);
   const [category, setCategory] = useState<string>("");
   const [name, setName] = useState("");
@@ -394,6 +397,14 @@ export default function OnboardingPage() {
     return () => { cancelled = true; };
   }, [router]);
 
+  // Detect if user arrived from get-started success to show a soft prompt
+  useEffect(() => {
+    const from = searchParams?.get("from");
+    if (from === "get-started") {
+      setShowFromGetStarted(true);
+    }
+  }, [searchParams]);
+
   // Finish handler (navigate after successful completion)
   async function handleFinish() {
     if (!canFinish || saving) return;
@@ -501,7 +512,7 @@ export default function OnboardingPage() {
         console.error("/api/onboarding error:", msg);
         throw new Error(msg);
       }
-      router.push("/dashboard/onboarding/success");
+      router.push(pathname?.startsWith("/get-started") ? "/get-started/success" : "/dashboard/onboarding/success");
     } catch (e: any) {
       setError(e?.message || "Something went wrong while finishing onboarding.");
     } finally {
@@ -1038,6 +1049,22 @@ export default function OnboardingPage() {
             </svg>
             <span className="text-sm text-neutral-800">Checking access…</span>
           </div>
+        </div>
+      )}
+      {showFromGetStarted && !gateChecking && (
+        <div className="mb-4 rounded-md border border-success-bg/60 bg-success-bg/20 p-3 text-sm text-neutral-900 flex items-start justify-between gap-3" role="status" aria-live="polite">
+          <div className="flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="mt-0.5 h-5 w-5 text-success-ink">
+              <path fillRule="evenodd" d="M2.25 12a9.75 9.75 0 1 1 19.5 0 9.75 9.75 0 0 1-19.5 0Zm9-4.5a.75.75 0 0 1 .75.75v3.75H15a.75.75 0 0 1 0 1.5h-3.75V18a.75.75 0 0 1-1.5 0v-3.75H6a.75.75 0 0 1 0-1.5h3.75V8.25a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <div className="font-medium">Great, your account is set! Let’s start onboarding.</div>
+              <div className="text-neutral-700">Begin with step 1 below. You can pause anytime and continue in the mobile app.</div>
+            </div>
+          </div>
+          <button onClick={() => setShowFromGetStarted(false)} className="shrink-0 rounded-md border border-transparent px-2 py-1 text-neutral-700 hover:bg-neutral-100" aria-label="Dismiss">
+            ✕
+          </button>
         </div>
       )}
       {/* Header */}
