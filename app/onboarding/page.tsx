@@ -471,7 +471,7 @@ export default function OnboardingPage() {
         console.error("/api/onboarding error:", msg);
         throw new Error(msg);
       }
-      router.push("/dashboard");
+      router.push("/onboarding/success");
     } catch (e: any) {
       setError(e?.message || "Something went wrong while finishing onboarding.");
     } finally {
