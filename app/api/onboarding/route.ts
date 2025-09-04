@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { getSupabaseServer } from '@/lib/supabaseServer';
 
 // POST /api/onboarding
 // Body: { user_id: string; data: any }
@@ -19,7 +19,10 @@ export async function POST(req: Request) {
 
     const payload = { user_id, data } as { user_id: string; data: any };
 
-    const { error } = await supabaseServer
+    // lazy init client to surface env issues as JSON
+    const supabase = getSupabaseServer();
+
+    const { error } = await supabase
       .from('onboarding')
       .upsert(payload, { onConflict: 'user_id' })
       .single();
@@ -28,7 +31,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     // Read back the row to confirm what was written (debug aid)
-    const { data: row, error: readErr } = await supabaseServer
+    const { data: row, error: readErr } = await supabase
       .from('onboarding')
       .select('*')
       .eq('user_id', user_id)

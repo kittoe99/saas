@@ -425,10 +425,36 @@ export default function OnboardingPage() {
         createdAt: new Date().toISOString(),
       };
 
+      // Deep prune helper to remove empty/null values so we don't store noise
+      const prune = (value: any): any => {
+        if (value == null) return undefined;
+        if (typeof value === "string") {
+          const v = value.trim();
+          return v.length === 0 ? undefined : v;
+        }
+        if (Array.isArray(value)) {
+          const pruned = value
+            .map((v) => prune(v))
+            .filter((v) => v !== undefined);
+          return pruned.length === 0 ? undefined : pruned;
+        }
+        if (typeof value === "object") {
+          const out: any = {};
+          for (const [k, v] of Object.entries(value)) {
+            const pv = prune(v);
+            if (pv !== undefined) out[k] = pv;
+          }
+          return Object.keys(out).length === 0 ? undefined : out;
+        }
+        return value;
+      };
+
+      const cleaned = prune(payload) ?? {};
+
       const res = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id, data: payload }),
+        body: JSON.stringify({ user_id: user.id, data: cleaned }),
       });
       if (!res.ok) {
         let msg = "Failed to save onboarding";
