@@ -127,6 +127,45 @@ function servicesFor(siteType: SiteType | null, category: string): string[] {
   return base.length ? base : ["Custom service"];
 }
 
+// Suggested pages per site type and category
+const BASE_PAGES: Partial<Record<SiteType, string[]>> = {
+  Ecommerce: ["Home", "Shop", "Product", "Cart", "Checkout", "Returns", "Contact", "FAQ"],
+  SaaS: ["Home", "Features", "Pricing", "Docs", "Changelog", "Blog", "Contact"],
+  Agency: ["Home", "Services", "Work", "About", "Testimonials", "Contact", "Careers"],
+  "Small business": ["Home", "Services", "Pricing", "About", "Booking", "FAQ", "Contact"],
+  Portfolio: ["Home", "Work", "Case studies", "About", "Blog", "Contact"],
+  Blog: ["Home", "Categories", "About", "Newsletter", "Contact"],
+  Nonprofit: ["Home", "Mission", "Programs", "Donate", "Volunteer", "Events", "Contact"],
+  Community: ["Home", "Forums", "Events", "Members", "Rules", "Contact"],
+  "Personal brand": ["Home", "About", "Speaking", "Coaching", "Newsletter", "Contact"],
+  "Hobby site": ["Home", "Articles", "Guides", "Gallery", "About", "Contact"],
+};
+
+const CATEGORY_PAGES: Record<string, string[]> = {
+  Restaurants: ["Home", "Menu", "Reservations", "Order online", "Catering", "About", "Contact"],
+  Transportation: ["Home", "Services", "Fleet", "Get a quote", "FAQ", "Contact"],
+  "Home Services": ["Home", "Services", "Pricing", "Booking", "Service areas", "Testimonials", "Contact"],
+  Retail: ["Home", "Shop", "Locations", "Repairs", "Returns", "Contact"],
+  "Health & Wellness": ["Home", "Treatments", "Practitioners", "Book appointment", "Insurance", "Contact"],
+  "Professional Services": ["Home", "Services", "Case studies", "Pricing", "Blog", "Contact"],
+  Design: ["Home", "Work", "Services", "About", "Contact"],
+  Development: ["Home", "Services", "Projects", "Blog", "Contact"],
+  Photography: ["Home", "Portfolio", "Packages", "Booking", "Contact"],
+  Tech: ["Home", "Reviews", "Guides", "Blog", "Contact"],
+  Education: ["Home", "Programs", "Admissions", "Events", "Contact"],
+  Apparel: ["Home", "Shop", "Lookbook", "Sizing", "Returns", "Contact"],
+  Electronics: ["Home", "Repairs", "Pricing", "Book service", "FAQ", "Contact"],
+};
+
+function pagesFor(siteType: SiteType | null, category: string): string[] {
+  const cat = CATEGORY_PAGES[category] || [];
+  if (cat.length) return cat;
+  const base = siteType ? (BASE_PAGES[siteType] || []) : [];
+  return base.length ? base : [
+    "Home", "About", "Services", "Pricing", "Portfolio", "Blog", "Contact", "FAQ", "Testimonials"
+  ];
+}
+
 // Config for type-specific questions (Option A)
 type TypeQuestion =
   | { kind: "text"; key: string; label: string; placeholder?: string; required?: boolean }
@@ -315,6 +354,13 @@ export default function OnboardingPage() {
   const [siteAdded, setSiteAdded] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const [saving, setSaving] = useState(false);
+  // New Step 7: Design & Content Vision
+  const [impressions, setImpressions] = useState<string[]>([]);
+  const [newImpression, setNewImpression] = useState("");
+  const [envisionedPages, setEnvisionedPages] = useState<string[]>([]);
+  const [newPageName, setNewPageName] = useState("");
+  const [designStyles, setDesignStyles] = useState<string[]>([]);
+  const [emotionalImpact, setEmotionalImpact] = useState<string[]>([]);
   // Back navigation confirm modal
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   // Auto-scroll refs
@@ -355,18 +401,29 @@ export default function OnboardingPage() {
   const step4Done = !!siteType && !!name.trim() && (hasCurrent === "no" || (hasCurrent === "yes" && (siteAdded || skipped)));
   const step5Done = (businessPhone.trim().length >= 7 || /\S+@\S+\.\S+/.test(businessEmail)) && !!contactMethod;
   const step6Done = selectedServices.length > 0;
-  const step7Done = areasNotApplicable || cities.length > 0; // allow N/A or at least one area
-  // Step 8 uploads are optional for all users
-  const step8Done = true;
+  // New Step 7 completion: any meaningful vision input present
+  const step7Done = (envisionedPages.length >= 3) || (designStyles.length >= 1) || (emotionalImpact.length >= 1);
+  const step8Done = areasNotApplicable || cities.length > 0; // Service areas
+  // Step 9 uploads are optional for all users
+  const step9Done = true;
   const canGoStep2 = step1Done;
   const canGoStep3 = step2Done;
   const canGoStep4 = step3Done;
   const canGoStep5 = step4Done;
   const canGoStep6 = step5Done;
-  const canGoStep7 = step6Done; // proceed to areas
-  const canGoStep8 = step7Done; // proceed to logo & assets
-  // Allow finishing without Step 8 uploads; still enforce type-specific required fields if any
+  const canGoStep7 = step6Done; // proceed to vision
+  const canGoStep8 = step7Done; // proceed to areas
+  const canGoStep9 = step8Done; // proceed to logo & assets
+  // Allow finishing without Step 9 uploads; still enforce type-specific required fields if any
   const canFinish = isTypeSpecificValid(siteType, typeSpecific);
+
+  // Prefill envisioned pages when entering Step 7 (do not overwrite user input)
+  useEffect(() => {
+    if (step === 7 && envisionedPages.length === 0) {
+      const suggested = pagesFor(siteType, category).slice(0, 3);
+      if (suggested.length) setEnvisionedPages(suggested);
+    }
+  }, [step, siteType, category]);
 
   // Gate: require auth and skip to success if onboarding already exists
   useEffect(() => {
@@ -438,6 +495,10 @@ export default function OnboardingPage() {
         cities,
         areasNotApplicable,
         primaryColors,
+        impressions,
+        envisionedPages,
+        designStyles,
+        emotionalImpact,
         contactMethod,
         social: { x: socialX, linkedin: socialLinkedIn, instagram: socialInstagram, facebook: socialFacebook },
         typeSpecific,
@@ -531,8 +592,9 @@ export default function OnboardingPage() {
     { id: 4, label: "Existing site", completed: step4Done },
     { id: 5, label: "Business & contact", completed: step5Done },
     { id: 6, label: "Services & details", completed: step6Done },
-    { id: 7, label: "Service areas", completed: step7Done },
-    { id: 8, label: "Logo & assets", completed: step8Done },
+    { id: 7, label: "Design & content vision", completed: step7Done },
+    { id: 8, label: "Service areas", completed: step8Done },
+    { id: 9, label: "Logo & assets", completed: step9Done },
   ];
 
   // Minimal nudge scrolling: only scroll enough so the element is slightly in view
@@ -1694,7 +1756,7 @@ export default function OnboardingPage() {
               </div>
             </details>
 
-            {/* Step 7: Service areas */}
+            {/* Step 7: Design & content vision */}
             <details
               open={step === 7}
               className={classNames(
@@ -1708,9 +1770,129 @@ export default function OnboardingPage() {
                 <div>
                   <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
                     {step > 7 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
-                    <span>7. Service areas</span>
+                    <span>7. Design & content vision</span>
                   </div>
                   {step > 7 && (
+                    <div className="text-xs text-neutral-600 mt-0.5 truncate">
+                      {(() => {
+                        const parts: string[] = [];
+                        if (envisionedPages.length) parts.push(envisionedPages.slice(0, 3).join(", "));
+                        if (designStyles.length) parts.push(designStyles.slice(0, 3).join(", "));
+                        if (emotionalImpact.length) parts.push(emotionalImpact.slice(0, 3).join(", "));
+                        return parts.join(" • ") || "Vision captured";
+                      })()}
+                    </div>
+                  )}
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 7 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 7 ? "Completed" : step === 7 ? "In progress" : "Locked"}</span>
+                </div>
+              </summary>
+              <div className="border-t border-neutral-200">
+                <div className="p-4 sm:p-5">
+
+                  {/* Envisioned pages */}
+                  <div className="mt-5">
+                    <label className="block text-sm font-medium">Pages you imagine (add 3+)</label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {pagesFor(siteType, category).map((p) => {
+                        const selected = envisionedPages.includes(p);
+                        return (
+                          <button key={p} type="button" onClick={() => setEnvisionedPages((prev) => selected ? prev.filter((x) => x !== p) : [...prev, p])} className={classNames("rounded-full border px-3 py-1.5 text-sm", selected ? "bg-success-accent/20 border-success text-success-ink" : "border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50")}>{p}</button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-2 flex gap-2 max-w-md">
+                      <input
+                        value={newPageName}
+                        onChange={(e) => setNewPageName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const v = newPageName.trim();
+                            if (!v) return;
+                            setEnvisionedPages((prev) => prev.some((x) => x.toLowerCase() === v.toLowerCase()) ? prev : [...prev, v]);
+                            setNewPageName("");
+                          }
+                        }}
+                        placeholder="Add custom page (press Enter)"
+                        className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-success-accent/70 focus:border-success"
+                      />
+                      <button
+                        type="button"
+                        className={classNames("rounded-md px-3 py-2 text-sm text-white", newPageName.trim() ? "bg-success-accent hover:opacity-90" : "bg-neutral-300 cursor-not-allowed")}
+                        disabled={!newPageName.trim()}
+                        onClick={() => {
+                          const v = newPageName.trim();
+                          if (!v) return;
+                          setEnvisionedPages((prev) => prev.some((x) => x.toLowerCase() === v.toLowerCase()) ? prev : [...prev, v]);
+                          setNewPageName("");
+                        }}
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+
+                  <hr className="my-6 border-neutral-200" />
+
+                  {/* Design styles */}
+                  <div className="mt-5">
+                    <label className="block text-sm font-medium">Preferred design styles</label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {[
+                        "Modern","Minimal","Elegant","Bold","Playful","Corporate","Editorial","Techy","Warm","Artistic"
+                      ].map((s) => {
+                        const selected = designStyles.includes(s);
+                        return (
+                          <button key={s} type="button" onClick={() => setDesignStyles((prev) => selected ? prev.filter((x) => x !== s) : [...prev, s])} className={classNames("rounded-full border px-3 py-1.5 text-sm", selected ? "bg-success-accent/20 border-success text-success-ink" : "border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50")}>{s}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <hr className="my-6 border-neutral-200" />
+
+                  {/* Emotional impact */}
+                  <div className="mt-5">
+                    <label className="block text-sm font-medium">Desired emotional impact</label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {[
+                        "Trustworthy","Exciting","Calm","Friendly","Premium","Inspiring","Approachable","Confident","Joyful","Serious"
+                      ].map((e) => {
+                        const selected = emotionalImpact.includes(e);
+                        return (
+                          <button key={e} type="button" onClick={() => setEmotionalImpact((prev) => selected ? prev.filter((x) => x !== e) : [...prev, e])} className={classNames("rounded-full border px-3 py-1.5 text-sm", selected ? "bg-success-accent/20 border-success text-success-ink" : "border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50")}>{e}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-between">
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(6)}>Back</button>
+                    <button type="button" className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white", !canGoStep8 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")} disabled={!canGoStep8} onClick={() => setStep(8)}>Continue</button>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            {/* Step 8: Service areas */}
+            <details
+              open={step === 8}
+              className={classNames(
+                "relative rounded-xl border shadow-soft shadow-hover",
+                step > 8 ? "bg-success-bg border-success" : step >= 8 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+              )}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep8) setStep(8); if (!canGoStep8) el.open = false; }}
+            >
+              {step > 8 && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-success-accent" />}
+              <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
+                    {step > 8 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>8. Service areas</span>
+                  </div>
+                  {step > 8 && (
                     <div className="text-xs text-neutral-600 mt-0.5 truncate">
                       {areasNotApplicable ? "N/A" : (
                         <>
@@ -1721,7 +1903,7 @@ export default function OnboardingPage() {
                   )}
                 </div>
                 <div className="ml-auto flex items-center gap-3">
-                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 7 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 7 ? "Completed" : step === 7 ? "In progress" : "Locked"}</span>
+                  <span className={classNames("text-xs rounded-full px-2 py-0.5", step > 8 ? "bg-success-bg text-success-ink" : "bg-neutral-100 text-neutral-700")}>{step > 8 ? "Completed" : step === 8 ? "In progress" : "Locked"}</span>
                 </div>
               </summary>
               <div className="border-t border-neutral-200">
@@ -1942,29 +2124,29 @@ export default function OnboardingPage() {
                   )}
 
                   <div className="mt-6 flex justify-between">
-                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(6)}>Back</button>
-                    <button type="button" className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white", !canGoStep8 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")} disabled={!canGoStep8} onClick={() => setStep(8)}>Continue</button>
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(7)}>Back</button>
+                    <button type="button" className={classNames("inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white", !canGoStep9 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90")} disabled={!canGoStep9} onClick={() => setStep(9)}>Continue</button>
                   </div>
                 </div>
               </div>
             </details>
 
-            {/* Step 8: Logo & assets */}
+            {/* Step 9: Logo & assets */}
             <details
-              open={step === 8}
+              open={step === 9}
               className={classNames(
                 "relative rounded-xl border shadow-soft shadow-hover",
-                step >= 8 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+                step >= 9 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
               )}
-              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep8) setStep(8); if (!canGoStep8) el.open = false; }}
+              onToggle={(e) => { const el = e.currentTarget as HTMLDetailsElement; if (el.open && canGoStep9) setStep(9); if (!canGoStep9) el.open = false; }}
             >
               <summary className="flex items-center justify-between gap-3 cursor-pointer select-none px-4 py-3">
                 <div>
                   <div className="text-sm font-medium text-neutral-800 flex items-center gap-2">
-                    {step > 8 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
-                    <span>8. Logo & assets</span>
+                    {step > 9 && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success-accent text-white text-[11px]">✓</span>}
+                    <span>9. Logo & assets</span>
                   </div>
-                  {step > 8 && (
+                  {step > 9 && (
                     <div className="text-xs text-neutral-600 mt-0.5 truncate">{logoFile ? "Logo set" : "No logo"} • {assetFiles.length} asset{assetFiles.length === 1 ? "" : "s"}</div>
                   )}
                 </div>
@@ -2129,7 +2311,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="mt-6 flex items-center justify-between">
-                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(7)}>Back</button>
+                    <button type="button" className="text-sm text-neutral-600 hover:underline" onClick={() => setStep(8)}>Back</button>
                     <div className="flex items-center gap-3">
                       {error && <span className="text-sm text-red-600">{error}</span>}
                       <button
