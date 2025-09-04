@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { getSupabaseServer } from '@/lib/supabaseServer';
 
 // GET /api/auth-users?email=...
 // Returns: { exists: boolean }
@@ -10,7 +10,8 @@ export async function GET(req: Request) {
   if (!email && !user_id) {
     return NextResponse.json({ error: 'Missing email or user_id' }, { status: 400 });
   }
-  const query = supabaseServer.from('auth_users').select('user_id,email').limit(1);
+  const supabase = getSupabaseServer();
+  const query = supabase.from('auth_users').select('user_id,email').limit(1);
   const { data, error } = user_id
     ? await query.eq('user_id', user_id)
     : await query.eq('email', email!);
@@ -34,7 +35,8 @@ export async function POST(req: Request) {
     const payload: { email?: string; user_id?: string } = {};
     if (email) payload.email = email;
     if (user_id) payload.user_id = user_id;
-    const { error } = await supabaseServer
+    const supabase = getSupabaseServer();
+    const { error } = await supabase
       .from('auth_users')
       .upsert(payload, { onConflict: user_id ? 'user_id' : 'email' })
       .single();

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { getSupabaseServer } from '@/lib/supabaseServer';
 
 export async function POST(req: Request) {
   try {
@@ -10,7 +10,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const { error } = await supabaseServer.from('contact_submissions').insert({
+    const supabase = getSupabaseServer();
+    const { error } = await supabase.from('contact_submissions').insert({
       name,
       email,
       subject,
