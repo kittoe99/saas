@@ -29,10 +29,18 @@ export async function POST(req: Request) {
       if (!email) return NextResponse.json({ error: 'No email found on profile' }, { status: 400 });
     }
 
-    // Create Vercel team using a normalized name derived from email
+    // Create Vercel team using a normalized name + slug derived from email
     const raw = (email || '').toLowerCase();
-    const name = raw.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || 'team';
-    const team = await vercelPost<any>('/v2/teams', { name });
+    const base = raw.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const name = base.slice(0, 48) || 'team';
+    // Vercel requires a `slug` now: 3-32 chars, lowercase, alphanumeric or hyphen, must start/end alphanumeric
+    let slug = base.replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, '');
+    if (!slug || slug.length < 3) {
+      const rand = Math.random().toString(36).slice(2, 6);
+      slug = `team-${rand}`;
+    }
+    slug = slug.slice(0, 32);
+    const team = await vercelPost<any>('/v2/teams', { name, slug });
     const teamId: string | undefined = team?.id;
     if (!teamId) {
       return NextResponse.json({ error: 'Vercel did not return a team id' }, { status: 502 });
