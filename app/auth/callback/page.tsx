@@ -48,6 +48,21 @@ function AuthCallbackInner() {
             }
           }
         }
+
+        // Best-effort: create a Vercel team for this user on the server
+        try {
+          const { data: u } = await supabase.auth.getUser();
+          const user = u?.user;
+          if (user?.id) {
+            await fetch("/api/vercel/teams", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ user_id: user.id }),
+              cache: "no-store",
+            }).catch(() => {});
+          }
+        } catch {}
+
         setStatus({ kind: "success", message: "Email verified. Redirecting..." });
         setTimeout(goNext, 600);
       } catch (e: any) {
