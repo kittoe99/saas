@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { vercelPost } from '@/lib/vercel';
+import { vercelPostNoTeam } from '@/lib/vercel';
 
 // POST /api/vercel/teams
 // Body: { user_id?: string; email?: string }
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       slug = `team-${rand}`;
     }
     slug = slug.slice(0, 32);
-    const team = await vercelPost<any>('/v2/teams', { name, slug });
+    const team = await vercelPostNoTeam<any>('/v2/teams', { name, slug });
     const teamId: string | undefined = team?.id;
     if (!teamId) {
       return NextResponse.json({ error: 'Vercel did not return a team id' }, { status: 502 });

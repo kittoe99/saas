@@ -61,6 +61,29 @@ export async function vercelPost<T = any>(path: string, body: any, query?: Recor
   return vercelFetch<T>(url, { method: 'POST', body: JSON.stringify(body) });
 }
 
+// For endpoints that must be called at USER scope (no team context), e.g., creating a team
+export async function vercelPostNoTeam<T = any>(path: string, body: any): Promise<T> {
+  const token = ensureToken();
+  const url = `${VERCEL_API_BASE}${path}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Vercel API error ${res.status}: ${text || res.statusText}`);
+  }
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) return res.json();
+  // @ts-ignore
+  return (await res.text()) as unknown as T;
+}
+
 export type ListDeploymentsParams = {
   projectId?: string;
   teamId?: string;
