@@ -64,13 +64,18 @@ export default function DashboardPage() {
     }
   };
 
-  // Auth guard: redirect to /login if there is no session
+  // Auth guard: redirect to /login if there is no session (preserve next)
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return;
       if (!data.session) {
-        window.location.replace("/login");
+        try {
+          const next = `${window.location.pathname}${window.location.search}`;
+          window.location.replace(`/login?next=${encodeURIComponent(next)}`);
+        } catch {
+          window.location.replace("/login");
+        }
       } else {
         // capture email for greeting
         const { data: u } = await supabase.auth.getUser();

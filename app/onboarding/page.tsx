@@ -445,7 +445,14 @@ export default function OnboardingPage() {
         const { data: auth } = await supabase.auth.getUser();
         const user = auth?.user;
         if (!user) {
-          if (!cancelled) router.replace("/login");
+          if (!cancelled) {
+            try {
+              const next = `${window.location.pathname}${window.location.search}`;
+              router.replace(`/login?next=${encodeURIComponent(next)}`);
+            } catch {
+              router.replace("/login");
+            }
+          }
           return;
         }
         // If a website_id is provided, check onboarding for that website only
@@ -490,7 +497,12 @@ export default function OnboardingPage() {
       if (!user) {
         setError("Please sign in to finish onboarding.");
         setSaving(false);
-        router.push("/login");
+        try {
+          const next = `${window.location.pathname}${window.location.search}`;
+          router.push(`/login?next=${encodeURIComponent(next)}`);
+        } catch {
+          router.push("/login");
+        }
         return;
       }
 

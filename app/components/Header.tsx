@@ -9,6 +9,7 @@ export default function Header() {
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const router = useRouter();
+  const [loginHref, setLoginHref] = useState<string>("/login");
   const featuresMenuRef = useRef<HTMLDivElement | null>(null);
   const toolsMenuRef = useRef<HTMLDivElement | null>(null);
   const featuresCloseTimerRef = useRef<number | null>(null);
@@ -54,6 +55,16 @@ export default function Header() {
       cancelFeaturesClose();
       cancelToolsClose();
     };
+  }, []);
+
+  // Compute login link with next param
+  useEffect(() => {
+    try {
+      const next = `${window.location.pathname}${window.location.search}`;
+      setLoginHref(`/login?next=${encodeURIComponent(next)}`);
+    } catch {
+      setLoginHref(`/login`);
+    }
   }, []);
 
   return (
@@ -224,7 +235,7 @@ export default function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </a>
-            <a href="/login" className="px-3 lg:px-4 py-2 rounded-md bg-success-accent text-white text-sm lg:text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
+            <a href={loginHref} className="px-3 lg:px-4 py-2 rounded-md bg-success-accent text-white text-sm lg:text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
               Login
             </a>
           </div>
@@ -345,7 +356,7 @@ export default function Header() {
                   </svg>
                 </a>
                 <a
-                  href="/login"
+                  href={loginHref}
                   className="w-full px-4 py-2.5 rounded-md bg-success-accent text-white text-base text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                   onClick={() => setOpen(false)}
                 >

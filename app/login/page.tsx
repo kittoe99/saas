@@ -2,9 +2,11 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
+  const params = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -14,11 +16,12 @@ export default function LoginPage() {
   const [unverified, setUnverified] = useState(false);
 
   // Compute a safe redirect URL back to this app
-  const redirectTo = useMemo(() => {
-    if (typeof window === "undefined") return undefined;
-    // Use auth callback to finalize the session, then continue to dashboard
-    return `${window.location.origin}/auth/callback?next=/dashboard`;
-  }, []);
+  const { next, redirectTo } = useMemo(() => {
+    if (typeof window === "undefined") return { next: "/dashboard", redirectTo: undefined as string | undefined };
+    const n = params?.get("next") || "/dashboard";
+    const rt = `${window.location.origin}/auth/callback?next=${encodeURIComponent(n)}`;
+    return { next: n, redirectTo: rt };
+  }, [params]);
 
   async function signInWithGoogle() {
     try {
@@ -55,7 +58,7 @@ export default function LoginPage() {
         if (error) throw error;
         // If email confirmed, user will be signed in; otherwise Supabase may require confirmation
         setSuccess("Signed in successfully. Redirecting...");
-        window.location.replace("/dashboard");
+        window.location.replace(next);
       } else {
         // Check our auth-users table first
         try {
@@ -111,7 +114,7 @@ export default function LoginPage() {
           setSuccess("Check your email for a verification link to activate your account");
         } else {
           setSuccess("Account created. Redirecting...");
-          window.location.replace("/dashboard");
+          window.location.replace(next);
         }
       }
     } catch (e: any) {
