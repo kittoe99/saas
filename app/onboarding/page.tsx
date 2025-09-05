@@ -395,6 +395,8 @@ export default function OnboardingPage() {
 
   // Step orchestration
   const [step, setStep] = useState(1);
+  // Website context (onboarding is per-website)
+  const [websiteId, setWebsiteId] = useState<string | null>(null);
   const step1Done = !!siteType;
   const step2Done = step1Done && category.trim().length > 0;
   const step3Done = name.trim().length >= 2;
@@ -417,6 +419,16 @@ export default function OnboardingPage() {
   // Allow finishing without Step 9 uploads; still enforce type-specific required fields if any
   const canFinish = isTypeSpecificValid(siteType, typeSpecific);
 
+  // Read website_id from URL if provided
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const wid = sp.get("website_id");
+      if (wid) setWebsiteId(wid);
+    } catch {}
+  }, []);
+
   // Prefill envisioned pages when entering Step 7 (do not overwrite user input)
   useEffect(() => {
     if (step === 7 && envisionedPages.length === 0) {
@@ -436,23 +448,25 @@ export default function OnboardingPage() {
           if (!cancelled) router.replace("/login");
           return;
         }
-        // Check if onboarding row already exists
-        try {
-          const res = await fetch(`/api/onboarding?user_id=${user.id}`, { cache: "no-store" });
-          if (res.ok) {
-            const j = await res.json().catch(() => null);
-            if (!cancelled && j?.row) {
-              router.replace("/dashboard/onboarding/success");
-              return;
+        // If a website_id is provided, check onboarding for that website only
+        if (websiteId) {
+          try {
+            const res = await fetch(`/api/onboarding?website_id=${websiteId}`, { cache: "no-store" });
+            if (res.ok) {
+              const j = await res.json().catch(() => null);
+              if (!cancelled && j?.row) {
+                router.replace(`/dashboard/onboarding/success?website_id=${websiteId}`);
+                return;
+              }
             }
-          }
-        } catch {}
+          } catch {}
+        }
       } finally {
         if (!cancelled) setGateChecking(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [router]);
+  }, [router, websiteId]);
 
   // Detect if user arrived from get-started success to show a soft prompt
   useEffect(() => {
@@ -559,7 +573,7 @@ export default function OnboardingPage() {
       const res = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id, data: cleaned }),
+        body: JSON.stringify({ user_id: user.id, website_id: websiteId || undefined, data: cleaned }),
       });
       if (!res.ok) {
         let msg = "Failed to save onboarding";

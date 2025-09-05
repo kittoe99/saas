@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
     // Use upsert since user may resubmit
     const { error } = await supabase
-      .from("get_started_submissions")
+      .from("plans")
       .upsert(payload, { onConflict: "user_id" })
       .single();
 
