@@ -1,11 +1,11 @@
 "use client";
 
 import { supabase } from "@/lib/supabaseClient";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage() {
+function LoginInner() {
   const params = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,6 @@ export default function LoginPage() {
       setError(e?.message || "Failed to start Google sign-in");
       setLoading(false);
     }
-  }
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -236,5 +235,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center px-4 pt-8"><div className="text-sm text-neutral-600">Loading sign in…</div></div>}>
+      <LoginInner />
+    </Suspense>
   );
 }
