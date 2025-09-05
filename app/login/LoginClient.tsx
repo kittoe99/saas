@@ -1,11 +1,12 @@
 "use client";
 
 import { supabase } from "@/lib/supabaseClient";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-function LoginInner() {
-  const getSearch = () => (typeof window !== "undefined" ? window.location.search : "");
+export default function LoginClient() {
+  const params = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -17,11 +18,10 @@ function LoginInner() {
   // Compute a safe redirect URL back to this app
   const { next, redirectTo } = useMemo(() => {
     if (typeof window === "undefined") return { next: "/dashboard", redirectTo: undefined as string | undefined };
-    const sp = new URLSearchParams(getSearch());
-    const n = sp.get("next") || "/dashboard";
+    const n = params?.get("next") || "/dashboard";
     const rt = `${window.location.origin}/auth/callback?next=${encodeURIComponent(n)}`;
     return { next: n, redirectTo: rt };
-  }, []);
+  }, [params]);
 
   async function signInWithGoogle() {
     try {
@@ -44,6 +44,7 @@ function LoginInner() {
       setError(e?.message || "Failed to start Google sign-in");
       setLoading(false);
     }
+  }
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -235,13 +236,5 @@ function LoginInner() {
         </p>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center px-4 pt-8"><div className="text-sm text-neutral-600">Loading sign in…</div></div>}>
-      <LoginInner />
-    </Suspense>
   );
 }
