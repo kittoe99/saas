@@ -19,7 +19,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing user_id (sign in required)' }, { status: 400 });
     }
 
-    const chat = await v0.chats.create(v0_project_id ? { message, projectId: v0_project_id } : { message });
+    const chat: any = await (v0 as any).chats.create(
+      v0_project_id ? { message, projectId: v0_project_id } : { message }
+    );
+    const demoUrl = chat?.latestVersion?.demoUrl ?? null;
+    const files = chat?.latestVersion?.files ?? null;
 
     // Persist chat with strict error handling
     const supabase = getSupabaseServer();
@@ -30,8 +34,8 @@ export async function POST(req: Request) {
         website_id: website_id ?? null,
         v0_project_id: v0_project_id ?? null,
         v0_chat_id: (chat as any).id,
-        demo_url: (chat as any).demo ?? null,
-        files: (chat as any).files ? (chat as any).files : null,
+        demo_url: demoUrl,
+        files: files,
       })
       .single();
     if (persistErr) {
@@ -39,11 +43,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      {
-        id: (chat as any).id,
-        demo: (chat as any).demo, // URL for iframe embedding per docs
-        files: (chat as any).files ?? null,
-      },
+      { id: chat.id, demo: demoUrl, files: files },
       { status: 200 }
     );
   } catch (e: any) {

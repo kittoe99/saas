@@ -27,6 +27,8 @@ export default function V0Page() {
   const [chatFiles, setChatFiles] = useState<any[] | null>(null);
   const [creatingChat, setCreatingChat] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [continueMsg, setContinueMsg] = useState<string>("Refine the header styles and add a CTA button");
+  const [continuing, setContinuing] = useState(false);
 
   // Deployment state
   const [deployProjectId, setDeployProjectId] = useState<string>("");
@@ -36,6 +38,10 @@ export default function V0Page() {
   const [deploying, setDeploying] = useState(false);
   const [deployError, setDeployError] = useState<string | null>(null);
   const [versionId, setVersionId] = useState<string>("");
+
+  // Deployments state
+  const [loadingDeployments, setLoadingDeployments] = useState(false);
+  const [deployments, setDeployments] = useState<any[]>([]);
 
   // Listing state (projects & chats)
   const [loadingProjects, setLoadingProjects] = useState(false);
@@ -71,6 +77,89 @@ export default function V0Page() {
       return { error: json?.error || `Request failed: ${res.status}` } as any;
     }
     return json as ApiResult<T>;
+  }
+
+  async function pollChatPreview(targetChatId: string, { attempts = 10, delayMs = 3000 } = {}) {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(`/api/v0/chats/${encodeURIComponent(targetChatId)}`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.demo) {
+          setChatDemo(data.demo);
+          setChatFiles(data.files || null);
+          if (selectedProjectId) await loadProjectChats(selectedProjectId);
+          return true;
+        }
+      } catch {}
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    return false;
+  }
+
+  async function refreshChat() {
+    if (!chatId) return;
+    try {
+      const res = await fetch(`/api/v0/chats/${encodeURIComponent(chatId)}`, { method: 'GET' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setChatDemo(data?.demo || "");
+        setChatFiles(data?.files || null);
+        if (selectedProjectId) {
+          await loadProjectChats(selectedProjectId);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function refreshDeployment(depId: string) {
+    if (!depId) return;
+    try {
+      // Hit our refresh endpoint which also upserts status/url in DB
+      await fetch(`/api/v0/deployments/${encodeURIComponent(depId)}`, { method: 'GET' });
+      // Then reload list to get latest url/status
+      await loadMyDeployments();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function pollDeploymentUrl(depId: string, { attempts = 12, delayMs = 5000 } = {}) {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        await fetch(`/api/v0/deployments/${encodeURIComponent(depId)}`);
+        await loadMyDeployments();
+        const found = deployments.find((d) => d.v0_deployment_id === depId);
+        if (found?.url) return true;
+      } catch {}
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    return false;
+  }
+
+  async function handleContinueChat() {
+    setContinuing(true);
+    setChatError(null);
+    try {
+      if (!chatId) throw new Error('No chat selected');
+      const result = await postJSON<{ id: string; demo?: string; files?: any[] }>(
+        "/api/v0/chats/send",
+        {
+          chatId,
+          message: continueMsg,
+          user_id: userId || undefined,
+          website_id: websiteId || undefined,
+        }
+      );
+      if ((result as any).error) throw new Error((result as any).error);
+      setChatDemo((result as any).demo || "");
+      setChatFiles((result as any).files || null);
+    } catch (e: any) {
+      setChatError(e?.message || 'Failed to continue chat');
+    } finally {
+      setContinuing(false);
+    }
   }
 
   async function loadRecentChats() {
@@ -159,9 +248,14 @@ export default function V0Page() {
         }
       );
       if ((result as any).error) throw new Error((result as any).error);
-      setChatId((result as any).id);
+      const newChatId = (result as any).id as string;
+      setChatId(newChatId);
       setChatDemo((result as any).demo || "");
       setChatFiles((result as any).files || null);
+      // Auto-poll for demo if not immediately available
+      if (!(result as any).demo) {
+        pollChatPreview(newChatId, { attempts: 10, delayMs: 3000 });
+      }
     } catch (e: any) {
       setChatError(e?.message || "Failed to create chat");
     } finally {
@@ -184,10 +278,14 @@ export default function V0Page() {
         }
       );
       if ((result as any).error) throw new Error((result as any).error);
-      setChatId((result as any).id);
+      const newChatId = (result as any).id as string;
+      setChatId(newChatId);
       setChatDemo((result as any).demo || "");
       setChatFiles((result as any).files || null);
       await loadProjectChats(selectedProjectId);
+      if (!(result as any).demo) {
+        pollChatPreview(newChatId, { attempts: 10, delayMs: 3000 });
+      }
     } catch (e: any) {
       setChatError(e?.message || "Failed to create chat");
     } finally {
@@ -207,13 +305,36 @@ export default function V0Page() {
         website_id: websiteId || undefined,
       });
       if ((result as any).error) throw new Error((result as any).error);
-      setDeploymentId((result as any).id);
+      const depId = (result as any).id as string;
+      setDeploymentId(depId);
       setDeploymentStatus((result as any).deployment?.status || "");
       setDeploymentUrl((result as any).deployment?.url || "");
+      // Auto-poll for deployment URL if missing
+      if (!(result as any).deployment?.url) {
+        pollDeploymentUrl(depId, { attempts: 12, delayMs: 5000 });
+      }
     } catch (e: any) {
       setDeployError(e?.message || "Failed to create deployment");
     } finally {
       setDeploying(false);
+    }
+  }
+
+  async function loadMyDeployments() {
+    if (!userId) return;
+    setLoadingDeployments(true);
+    try {
+      const { data, error } = await supabase
+        .from('v0_deployments')
+        .select('id, v0_deployment_id, v0_project_id, status, url, metadata, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      setDeployments(data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingDeployments(false);
     }
   }
 
@@ -239,6 +360,53 @@ export default function V0Page() {
             onChange={(e) => setWebsiteId(e.target.value)}
           />
         </label>
+      </section>
+
+      <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-3">
+        <div className="text-sm font-medium text-neutral-800">Recent Deployments</div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={loadMyDeployments}
+            disabled={!userId || loadingDeployments}
+            className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm disabled:opacity-60"
+          >
+            {loadingDeployments ? 'Loading…' : 'Load Deployments'}
+          </button>
+        </div>
+        {deployments.length > 0 ? (
+          <div className="space-y-3">
+            {deployments.map((d) => (
+              <div key={d.id} className="rounded-md border p-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">Deployment <span className="font-mono">{d.v0_deployment_id}</span></div>
+                    <div className="text-xs text-neutral-500">Project: <span className="font-mono">{d.v0_project_id}</span> • {new Date(d.created_at).toLocaleString()}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-xs">Status: <span className="font-mono">{d.status || '—'}</span></div>
+                    <button
+                      type="button"
+                      onClick={() => refreshDeployment(d.v0_deployment_id)}
+                      className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+                {d.url && (
+                  <div className="mt-2 space-y-2">
+                    <div className="text-xs">URL: <a href={d.url} target="_blank" rel="noreferrer" className="underline">{d.url}</a></div>
+                    <iframe src={d.url} width="100%" height={320} className="rounded-md border" />
+                    <div className="text-[11px] text-neutral-500">Note: Some deployments set headers to block embedding in iframes. If the preview is blank, use the URL link above to open in a new tab.</div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-neutral-600">No deployments loaded.</div>
+        )}
       </section>
 
       <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-3">
@@ -434,9 +602,37 @@ export default function V0Page() {
         >
           {creatingChat ? "Creating..." : "Create Chat"}
         </button>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="block text-sm">
+            Continue message
+            <input
+              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2"
+              value={continueMsg}
+              onChange={(e) => setContinueMsg(e.target.value)}
+            />
+          </label>
+          <div className="flex items-end">
+            <button
+              onClick={handleContinueChat}
+              disabled={continuing || !userId || !chatId}
+              className="inline-flex items-center justify-center rounded-md bg-neutral-900 text-white px-4 py-2 text-sm disabled:opacity-60"
+            >
+              {continuing ? 'Continuing…' : 'Continue Chat'}
+            </button>
+          </div>
+        </div>
         {chatId && (
           <div className="space-y-2">
             <div className="text-sm text-neutral-700">Chat ID: <span className="font-mono">{chatId}</span></div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={refreshChat}
+                className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs"
+              >
+                Refresh Chat Preview
+              </button>
+            </div>
             {chatDemo && (
               <div className="space-y-2">
                 <div className="text-sm text-neutral-700">Demo preview:</div>

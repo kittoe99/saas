@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         v0_project_id: projectId,
         v0_deployment_id: (deployment as any).id,
         status: (deployment as any).status ?? null,
-        url: (deployment as any).url ?? null,
+        url: (deployment as any).webUrl ?? (deployment as any).url ?? null,
         metadata: {
           ...(body?.metadata ?? {}),
           chatId: chatId ?? null,
