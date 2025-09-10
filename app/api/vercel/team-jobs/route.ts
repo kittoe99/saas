@@ -3,7 +3,8 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { vercelPost } from '@/lib/vercel';
 
 // POST /api/vercel/team-jobs
-// Processes pending vercel_team_jobs: creates Vercel team using email as name, then updates profiles.site_team
+// Processes profiles that are missing a Vercel team: creates a Vercel team using profile email as name,
+// then updates profiles.site_team with the created team id.
 // Optional body: { limit?: number }
 
 // Allow GET to run the same processor (e.g., Vercel Cron GET)
@@ -17,25 +18,25 @@ export async function POST(req: Request) {
     const limit = Math.max(1, Math.min(Number(body?.limit ?? 10), 50));
 
     const supabase = getSupabaseServer();
-
-    // Fetch pending jobs
-    const { data: jobs, error: jobsErr } = await supabase
-      .from('vercel_team_jobs')
-      .select('id,user_id,email,attempts')
-      .eq('status', 'pending')
+    // Fetch profiles needing a team (no queue table)
+    const { data: profiles, error: profErr } = await supabase
+      .from('profiles')
+      .select('id,email,site_team')
+      .is('site_team', null)
+      .not('email', 'is', null)
       .order('created_at', { ascending: true })
       .limit(limit);
 
-    if (jobsErr) {
-      return NextResponse.json({ error: `Failed to fetch jobs: ${jobsErr.message}` }, { status: 500 });
+    if (profErr) {
+      return NextResponse.json({ error: `Failed to fetch profiles: ${profErr.message}` }, { status: 500 });
     }
 
-    const results: Array<{ id: string; ok: boolean; error?: string; team_id?: string }> = [];
+    const results: Array<{ user_id: string; ok: boolean; error?: string; team_id?: string }> = [];
 
-    for (const job of jobs || []) {
+    for (const prof of profiles || []) {
       try {
         // Create team on Vercel
-        const team = await vercelPost<any>('/v2/teams', { name: (job.email || '').toLowerCase() });
+        const team = await vercelPost<any>('/v2/teams', { name: (prof.email || '').toLowerCase() });
         const teamId: string | undefined = team?.id;
         if (!teamId) {
           throw new Error('Vercel did not return a team id');
@@ -45,32 +46,14 @@ export async function POST(req: Request) {
         const { error: upErr } = await supabase
           .from('profiles')
           .update({ site_team: teamId })
-          .eq('id', job.user_id);
+          .eq('id', prof.id);
         if (upErr) throw new Error(`Failed to save team to profile: ${upErr.message}`);
 
-        // Mark job success
-        const { error: markErr } = await supabase
-          .from('vercel_team_jobs')
-          .update({ status: 'success', last_error: null, attempts: job.attempts + 1 })
-          .eq('id', job.id);
-        if (markErr) throw new Error(`Failed to mark job success: ${markErr.message}`);
-
-        results.push({ id: job.id, ok: true, team_id: teamId });
+        results.push({ user_id: prof.id, ok: true, team_id: teamId });
       } catch (e: any) {
         const message = e?.message || 'Unknown error';
-        // Mark job error and increment attempts; keep as pending for retry up to 5 attempts, else set status error
-        const attempts = (job.attempts ?? 0) + 1;
-        const status = attempts >= 5 ? 'error' : 'pending';
-        const { error: markErr } = await supabase
-          .from('vercel_team_jobs')
-          .update({ status, attempts, last_error: message })
-          .eq('id', job.id);
-        if (markErr) {
-          // If even marking fails, include that note but continue
-          results.push({ id: job.id, ok: false, error: `${message}; also failed to mark: ${markErr.message}` });
-        } else {
-          results.push({ id: job.id, ok: false, error: message });
-        }
+        // Just report the failure for this profile
+        results.push({ user_id: prof.id, ok: false, error: message });
       }
     }
 

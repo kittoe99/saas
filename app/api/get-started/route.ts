@@ -20,19 +20,43 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseServer();
 
-    const payload = { user_id, plan: plan ?? null, data } as { user_id: string; plan: string | null; data: any };
-
-    // Use upsert since user may resubmit
-    const { error } = await supabase
-      .from("plans")
-      .upsert(payload, { onConflict: "user_id" })
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    // 1) Ensure there is a website for this user (create one if none exists)
+    const { data: existingSites, error: siteErr } = await supabase
+      .from("websites")
+      .select("id")
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    if (siteErr) {
+      return NextResponse.json({ error: siteErr.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    let website_id: string | undefined = existingSites?.[0]?.id;
+    if (!website_id) {
+      const { data: created, error: createErr } = await supabase
+        .from("websites")
+        .insert([{ user_id, plan: plan ?? null, status: "draft" }])
+        .select("id")
+        .single();
+      if (createErr) {
+        return NextResponse.json({ error: createErr.message }, { status: 500 });
+      }
+      website_id = created.id as string;
+    } else if (plan) {
+      // Update plan on the existing website (optional best-effort)
+      await supabase.from("websites").update({ plan }).eq("id", website_id);
+    }
+
+    // 2) Upsert onboarding for this website/user with provided data
+    const { error: obErr } = await supabase
+      .from("onboarding")
+      .upsert({ website_id, user_id, data }, { onConflict: "website_id" })
+      .single();
+    if (obErr) {
+      return NextResponse.json({ error: obErr.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, website_id }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Server error" }, { status: 500 });
   }
