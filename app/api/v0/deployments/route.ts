@@ -10,8 +10,20 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const projectId = (body?.projectId as string | undefined)?.trim();
     const chatId = (body?.chatId as string | undefined)?.trim();
-    const versionId = (body?.versionId as string | undefined)?.trim();
+    let versionId = (body?.versionId as string | undefined)?.trim();
     if (!projectId) return NextResponse.json({ error: 'Missing projectId' }, { status: 400 });
+
+    // Auto-resolve latest versionId when only chatId is provided
+    if (!versionId && chatId) {
+      try {
+        const resp: any = await (v0 as any).chats.findVersions({ chatId, limit: 1 });
+        const list = resp?.versions || resp?.data || resp || [];
+        const latest = Array.isArray(list) ? list[0] : (list?.items?.[0] || null);
+        versionId = latest?.id || latest?.versionId || undefined;
+      } catch (e: any) {
+        // If we can't resolve, we'll fall back to the explicit requirement below
+      }
+    }
     if (!chatId && !versionId) return NextResponse.json({ error: 'Missing chatId or versionId' }, { status: 400 });
 
     const args: any = { projectId };

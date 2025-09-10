@@ -35,6 +35,7 @@ export default function V0Page() {
   const [deploymentUrl, setDeploymentUrl] = useState<string>("");
   const [deploying, setDeploying] = useState(false);
   const [deployError, setDeployError] = useState<string | null>(null);
+  const [versionId, setVersionId] = useState<string>("");
 
   // Listing state (projects & chats)
   const [loadingProjects, setLoadingProjects] = useState(false);
@@ -200,7 +201,8 @@ export default function V0Page() {
     try {
       const result = await postJSON<{ id: string; deployment: any }>("/api/v0/deployments", {
         projectId: deployProjectId || selectedProjectId,
-        chatId: (selectedChatId || chatId) || undefined,
+        chatId: versionId ? undefined : ((selectedChatId || chatId) || undefined),
+        versionId: versionId || undefined,
         user_id: userId || undefined,
         website_id: websiteId || undefined,
       });
@@ -455,7 +457,7 @@ export default function V0Page() {
 
       <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-3">
         <div className="text-sm font-medium text-neutral-800">3) Deploy</div>
-        <div className="text-xs text-neutral-600">Note: Deployment requires a chatId or versionId. This page will pass the Chat ID created above automatically.</div>
+        <div className="text-xs text-neutral-600">Note: Deployment requires a versionId (preferred by v0) or a chatId. If you have a specific versionId, paste it below.</div>
         {deployError && <div className="text-sm text-red-700">{deployError}</div>}
         <label className="block text-sm">
           v0 Project ID
@@ -464,6 +466,15 @@ export default function V0Page() {
             placeholder="project id"
             value={deployProjectId}
             onChange={(e) => setDeployProjectId(e.target.value)}
+          />
+        </label>
+        <label className="block text-sm">
+          Version ID (preferred)
+          <input
+            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2"
+            placeholder="version id"
+            value={versionId}
+            onChange={(e) => setVersionId(e.target.value)}
           />
         </label>
         <button
