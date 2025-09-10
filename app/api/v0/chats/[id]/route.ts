@@ -4,7 +4,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer'
 
 // GET /api/v0/chats/[id]
 // Fetch latest chat details from v0, persist demoUrl/files, and return them
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, { params }: any) {
   try {
     const id = params?.id?.trim()
     if (!id) return NextResponse.json({ error: 'Missing chat id' }, { status: 400 })

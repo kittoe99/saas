@@ -4,7 +4,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer'
 
 // GET /api/v0/deployments/[id]
 // Fetch latest deployment details from v0 and upsert URL/status into DB
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, { params }: any) {
   try {
     const id = params?.id?.trim()
     if (!id) return NextResponse.json({ error: 'Missing deployment id' }, { status: 400 })
