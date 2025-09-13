@@ -223,7 +223,7 @@ export default function DashboardOnboardingPage() {
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 h-36 font-mono text-xs"
             value={theme}
             onChange={(e) => setTheme(e.target.value)}
-            placeholder="{ \"colors\": { ... }, \"typography\": { ... } }"
+            placeholder="Paste theme JSON here (colors, typography, radii, shadows, forms, buttons, dark mode)"
           />
         </label>
         <button
