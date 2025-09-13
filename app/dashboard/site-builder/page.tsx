@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { resolveIndustry, getBlueprint } from "@/lib/blueprints";
 
 type ApiResult<T = any> = { ok?: boolean; error?: string } & T;
 
@@ -29,6 +30,12 @@ export default function SiteBuilderPage() {
   // Loaded onboarding (raw) for summary display
   const [onboarding, setOnboarding] = useState<any | null>(null);
 
+  // Local-only simulated build state (no API calls)
+  const [simBusy, setSimBusy] = useState<boolean>(false);
+  const [simProgress, setSimProgress] = useState<number>(0); // 0-100
+  const [simStage, setSimStage] = useState<string>("Idle");
+  const [simDone, setSimDone] = useState<boolean>(false);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
   }, []);
@@ -53,7 +60,7 @@ export default function SiteBuilderPage() {
           const data = j?.row?.data || {};
           setOnboarding(data);
           const st = (data?.siteType as string | undefined) || '';
-          const mapped = mapSiteTypeToIndustry(st);
+          const mapped = resolveIndustry(st);
           if (mapped) setIndustry(mapped);
           const a: any = {};
           const businessName = (data?.name as string | undefined) || 'New Site';
@@ -70,22 +77,13 @@ export default function SiteBuilderPage() {
     })();
   }, [userId]);
 
-  function mapSiteTypeToIndustry(st: string): string {
-    const key = (st || '').toLowerCase();
-    if (key.includes('saas')) return 'SaaS';
-    if (key.includes('ecommerce')) return 'eCommerce';
-    if (key.includes('agency')) return 'Agency';
-    if (key.includes('business') || key.includes('service')) return 'Local Service';
-    return 'SaaS';
-  }
-
   // All build actions and chat continuation are intentionally disabled here
 
   function safeParseJSON(s: string) {
     try { return s ? JSON.parse(s) : undefined } catch { return undefined }
   }
 
-  function buildInitialMessage(data: any): string {
+  function buildInitialMessage(data: any, resolved: string): string {
     if (!data || typeof data !== 'object') return '';
     const brandName = (data?.name || data?.brand?.name || 'New Site').toString();
     const tagline = (data?.tagline || '').toString();
@@ -107,7 +105,7 @@ export default function SiteBuilderPage() {
     const preferredDomain = (data?.preferredDomain || '').toString();
     const competitors = Array.isArray(data?.competitors) ? data.competitors.filter((v: string) => v && v.trim().length).join(', ') : '';
 
-    return `Build a website for a cleaning company using the details below. Follow the System Prompt (theme) strictly.\n\nBusiness\n- Name: ${brandName}\n- Tagline: ${tagline || 'Professional Cleaning Services'}\n- Type/Category: ${[siteType, category].filter(Boolean).join(' / ') || '—'}\n- Audience: ${audience || '—'}\n- Tone: ${tone}\n\nPages (create routes and files)\n- Create: ${pages || 'home, about, contact'}\n- Include 404, privacy, terms if not listed.\n\nKey Sections (fill with sensible placeholders if content is missing)\n- Hero: value prop + supporting line + primary CTA.\n- Services: list of ${services || 'core services'} with short descriptions.\n- Pricing: 2–4 plan cards (Basic/Standard/Premium) unless specified.\n- Social proof: testimonials or placeholder quotes.\n- FAQ: 6–8 Q/A pairs.\n- Contact: ${contactMethod || 'form'} with solid-fields spec.\n\nTheme & UX (must follow the System Prompt)\n- Terracotta palette (#C0452C primary, hover #A53A24), background #FCFAF7, text #2D2A26/#6B6660.\n- Forms: solid fields, 1.5px #DDDAD6 border, 8px radius, focus ring 0 0 0 3px rgba(192,69,44,.2).\n- Components: radii per spec; shadows for elevation; minimal borders.\n- Typography: Geist; headings 600; body 16px/1.6; labels 500 with 0.02em.\n\nContent & Data\n- Services: ${services || '—'}\n- Contact: method ${contactMethod || 'form'}; email ${email || '—'}; phone ${phone || '—'}\n- Social: ${socials.join(' | ') || '—'}\n- Areas served: ${areas || '—'}\n- Domain preference: ${preferredDomain || '—'}\n- Competitors (for positioning; do not copy): ${competitors || '—'}\n\nRequirements\n- Accessibility: WCAG AA; visible focus states; adequate contrast.\n- Responsive layout for mobile/tablet/desktop.\n- SEO: meta title/description; OpenGraph defaults.\n- If inputs are missing, scaffold placeholders and TODO comments.\n\nDeliverables\n- Working version preview that reflects the above, using the System Prompt theme exactly.`;
+    return `Build a website for a ${resolved} business using the details below. Follow the System Prompt (theme) strictly.\n\nBusiness\n- Name: ${brandName}\n- Tagline: ${tagline || 'Professional services'}\n- Type/Category: ${[siteType, category].filter(Boolean).join(' / ') || '—'}\n- Audience: ${audience || '—'}\n- Tone: ${tone}\n\nPages (create routes and files)\n- Create: ${pages || 'home, about, contact'}\n- Include 404, privacy, terms if not listed.\n\nKey Sections (fill with sensible placeholders if content is missing)\n- Hero: value prop + supporting line + primary CTA.\n- Services/Offering: ${services || 'core offerings'} with short descriptions.\n- Pricing/Packages (if relevant): 2–4 plan cards unless specified.\n- Social proof: testimonials or placeholder quotes.\n- FAQ: 6–8 Q/A pairs.\n- Contact: ${contactMethod || 'form'} with solid-fields spec.\n\nTheme & UX (must follow the System Prompt)\n- Terracotta palette (#C0452C primary, hover #A53A24), background #FCFAF7, text #2D2A26/#6B6660.\n- Forms: solid fields, 1.5px #DDDAD6 border, 8px radius, focus ring 0 0 0 3px rgba(192,69,44,.2).\n- Components: radii per spec; shadows for elevation; minimal borders.\n- Typography: Geist; headings 600; body 16px/1.6; labels 500 with 0.02em.\n\nContent & Data\n- Services: ${services || '—'}\n- Contact: method ${contactMethod || 'form'}; email ${email || '—'}; phone ${phone || '—'}\n- Social: ${socials.join(' | ') || '—'}\n- Areas served: ${areas || '—'}\n- Domain preference: ${preferredDomain || '—'}\n- Competitors (for positioning; do not copy): ${competitors || '—'}\n\nRequirements\n- Accessibility: WCAG AA; visible focus states; adequate contrast.\n- Responsive layout for mobile/tablet/desktop.\n- SEO: meta title/description; OpenGraph defaults.\n- If inputs are missing, scaffold placeholders and TODO comments.\n\nDeliverables\n- Working version preview that reflects the above, using the System Prompt theme exactly.`;
   }
 
   return (
@@ -122,219 +120,56 @@ export default function SiteBuilderPage() {
         )}
       </header>
 
-      <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-4 bg-white">
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-medium text-neutral-800">Onboarding summary</div>
-          {websiteId && (
-            <div className="text-[11px] text-neutral-500">Website ID: <span className="font-mono">{websiteId}</span></div>
-          )}
-        </div>
-        {!onboarding ? (
-          <div className="text-xs text-neutral-600">Loading your onboarding details…</div>
-        ) : (
-          <div className="grid gap-4">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-700 font-semibold">
-                {(onboarding?.name || '—').toString().slice(0,1).toUpperCase()}
-              </div>
-              <div>
-                <div className="text-base font-medium text-neutral-900">{onboarding?.name || '—'}</div>
-                <div className="text-xs text-neutral-500">{onboarding?.tagline || 'No tagline provided'}</div>
-              </div>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <div className="rounded-lg border border-neutral-200 bg-white p-3">
-                <div className="text-[11px] text-neutral-500">Site Type</div>
-                <div className="text-sm text-neutral-800 mt-0.5">{onboarding?.siteType || '—'}</div>
-              </div>
-              <div className="rounded-lg border border-neutral-200 bg-white p-3">
-                <div className="text-[11px] text-neutral-500">Category</div>
-                <div className="text-sm text-neutral-800 mt-0.5">{onboarding?.category || '—'}</div>
-              </div>
-              <div className="rounded-lg border border-neutral-200 bg-white p-3">
-                <div className="text-[11px] text-neutral-500">Contact</div>
-                <div className="text-sm text-neutral-800 mt-0.5">{onboarding?.contactMethod || '—'}</div>
-                <div className="text-[11px] text-neutral-600 mt-0.5 space-y-0.5">
-                  {onboarding?.businessEmail && <div>Email: {onboarding.businessEmail}</div>}
-                  {onboarding?.businessPhone && <div>Phone: {onboarding.businessPhone}</div>}
-                </div>
-              </div>
-            </div>
-            {(onboarding?.social?.x || onboarding?.social?.linkedin || onboarding?.social?.instagram || onboarding?.social?.facebook) && (
-              <div>
-                <div className="text-[11px] text-neutral-500 mb-1">Social</div>
-                <div className="flex flex-wrap gap-2 text-[11px] text-neutral-700">
-                  {onboarding?.social?.x && <a className="underline" href={onboarding.social.x} target="_blank" rel="noreferrer">X / Twitter</a>}
-                  {onboarding?.social?.linkedin && <a className="underline" href={onboarding.social.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
-                  {onboarding?.social?.instagram && <a className="underline" href={onboarding.social.instagram} target="_blank" rel="noreferrer">Instagram</a>}
-                  {onboarding?.social?.facebook && <a className="underline" href={onboarding.social.facebook} target="_blank" rel="noreferrer">Facebook</a>}
-                </div>
-              </div>
-            )}
-            {Array.isArray(onboarding?.envisionedPages) && onboarding.envisionedPages.length > 0 && (
-              <div>
-                <div className="text-[11px] text-neutral-500 mb-1">Pages</div>
-                <div className="flex flex-wrap gap-2">
-                  {onboarding.envisionedPages.slice(0, 16).map((p: string, i: number) => (
-                    <span key={`${p}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">
-                      {p}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {Array.isArray(onboarding?.selectedServices) && onboarding.selectedServices.length > 0 && (
-              <div>
-                <div className="text-[11px] text-neutral-500 mb-1">Services</div>
-                <div className="flex flex-wrap gap-2">
-                  {onboarding.selectedServices.slice(0, 16).map((s: string, i: number) => (
-                    <span key={`${s}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {Array.isArray(onboarding?.primaryColors) && onboarding.primaryColors.length > 0 && (
-              <div>
-                <div className="text-[11px] text-neutral-500 mb-1">Brand Colors</div>
-                <div className="flex flex-wrap gap-2">
-                  {onboarding.primaryColors.map((c: string, i: number) => (
-                    <span key={`${c}-${i}`} className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">
-                      <span className="inline-block h-3 w-3 rounded-full border" style={{ backgroundColor: c }} /> {c}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {Array.isArray(onboarding?.cities) && onboarding.cities.length > 0 && (
-              <div>
-                <div className="text-[11px] text-neutral-500 mb-1">Service Areas</div>
-                <div className="flex flex-col gap-1 text-xs text-neutral-700">
-                  {onboarding.cities.slice(0, 8).map((ci: any, i: number) => (
-                    <div key={`${ci?.displayName || ci?.name || i}-${i}`} className="flex items-center justify-between">
-                      <span className="truncate mr-2">{ci?.displayName || ci?.name || '—'}</span>
-                      {typeof ci?.radiusKm === 'number' && (
-                        <span className="inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px]">{Math.round(ci.radiusKm)} km</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {(onboarding?.businessAddress || onboarding?.timeZone || onboarding?.businessHours) && (
-              <div className="grid gap-2 sm:grid-cols-3">
-                <div className="rounded-lg border border-neutral-200 bg-white p-3">
-                  <div className="text-[11px] text-neutral-500">Address</div>
-                  <div className="text-xs text-neutral-800 mt-0.5 min-h-[1.25rem]">{onboarding?.businessAddress || '—'}</div>
-                </div>
-                <div className="rounded-lg border border-neutral-200 bg-white p-3">
-                  <div className="text-[11px] text-neutral-500">Time Zone</div>
-                  <div className="text-xs text-neutral-800 mt-0.5 min-h-[1.25rem]">{onboarding?.timeZone || '—'}</div>
-                </div>
-                <div className="rounded-lg border border-neutral-200 bg-white p-3">
-                  <div className="text-[11px] text-neutral-500">Business Hours</div>
-                  <div className="text-xs text-neutral-800 mt-0.5 min-h-[1.25rem]">{onboarding?.businessHours || '—'}</div>
-                </div>
-              </div>
-            )}
-            {(Array.isArray(onboarding?.voiceTone) || Array.isArray(onboarding?.designStyles) || Array.isArray(onboarding?.impressions) || Array.isArray(onboarding?.emotionalImpact)) && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {Array.isArray(onboarding?.voiceTone) && onboarding.voiceTone.length > 0 && (
-                  <div>
-                    <div className="text-[11px] text-neutral-500 mb-1">Voice & Tone</div>
-                    <div className="flex flex-wrap gap-2">
-                      {onboarding.voiceTone.map((t: string, i: number) => (
-                        <span key={`${t}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {Array.isArray(onboarding?.designStyles) && onboarding.designStyles.length > 0 && (
-                  <div>
-                    <div className="text-[11px] text-neutral-500 mb-1">Design Styles</div>
-                    <div className="flex flex-wrap gap-2">
-                      {onboarding.designStyles.map((t: string, i: number) => (
-                        <span key={`${t}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {Array.isArray(onboarding?.impressions) && onboarding.impressions.length > 0 && (
-                  <div>
-                    <div className="text-[11px] text-neutral-500 mb-1">Visual Impressions</div>
-                    <div className="flex flex-wrap gap-2">
-                      {onboarding.impressions.map((t: string, i: number) => (
-                        <span key={`${t}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {Array.isArray(onboarding?.emotionalImpact) && onboarding.emotionalImpact.length > 0 && (
-                  <div>
-                    <div className="text-[11px] text-neutral-500 mb-1">Emotional Impact</div>
-                    <div className="flex flex-wrap gap-2">
-                      {onboarding.emotionalImpact.map((t: string, i: number) => (
-                        <span key={`${t}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {(onboarding?.preferredDomain || Array.isArray(onboarding?.competitors) || onboarding?.contentSources) && (
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div>
-                  <div className="text-[11px] text-neutral-500 mb-1">Preferred Domain</div>
-                  <div className="text-xs text-neutral-800">{onboarding?.preferredDomain || '—'}</div>
-                </div>
-                {Array.isArray(onboarding?.competitors) && onboarding.competitors.some((v: string) => v && v.trim().length) && (
-                  <div className="sm:col-span-2">
-                    <div className="text-[11px] text-neutral-500 mb-1">Competitors</div>
-                    <div className="flex flex-wrap gap-2">
-                      {onboarding.competitors.filter((v: string) => v && v.trim().length).slice(0, 10).map((c: string, i: number) => (
-                        <span key={`${c}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{c}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {onboarding?.contentSources && (
-                  <div className="sm:col-span-3">
-                    <div className="text-[11px] text-neutral-500 mb-1">Content Sources</div>
-                    <div className="text-xs text-neutral-800 whitespace-pre-wrap break-words">{onboarding.contentSources}</div>
-                  </div>
-                )}
-              </div>
-            )}
-            {(onboarding?.languages || onboarding?.primaryLanguage) && (
-              <div>
-                <div className="text-[11px] text-neutral-500 mb-1">Languages</div>
-                <div className="flex flex-wrap gap-2">
-                  {Array.isArray(onboarding?.languages) && onboarding.languages.map((l: string, i: number) => (
-                    <span key={`${l}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{l}</span>
-                  ))}
-                  {onboarding?.primaryLanguage && (
-                    <span className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">Primary: {onboarding.primaryLanguage}</span>
-                  )}
-                </div>
-              </div>
-            )}
+      {/* Start Building - Test UI (primary view) */}
+      {(!step || step === 'start') && (
+        <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-neutral-900">Start Building</h2>
+            <p className="text-sm text-neutral-600">We’ll use your onboarding details and our theme system to build your site. This is a test UI — no live build yet.</p>
           </div>
-        )}
-        <div className="pt-4">
-          <button
-            onClick={() => {
-              const qp = new URLSearchParams();
-              if (websiteId) qp.set('website_id', websiteId);
-              qp.set('step', 'init');
-              router.push(`/dashboard/site-builder?${qp.toString()}`);
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
-          >
-            Continue
-          </button>
-        </div>
-      </section>
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+            <div className="text-sm font-medium text-neutral-800">Build Progress</div>
+            <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
+              <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
+            </div>
+            <div className="mt-2 text-xs text-neutral-600">{simStage}</div>
+          </div>
+          {!simDone ? (
+            <button
+              onClick={() => {
+                if (simBusy) return;
+                setSimBusy(true);
+                setSimStage('Initializing project…');
+                setSimProgress(8);
+                setTimeout(() => { setSimStage('Creating chat…'); setSimProgress(22); }, 900);
+                setTimeout(() => { setSimStage('Generating first version…'); setSimProgress(55); }, 1800);
+                setTimeout(() => { setSimStage('Preparing preview…'); setSimProgress(78); }, 2700);
+                setTimeout(() => { setSimStage('Finalizing build…'); setSimProgress(92); }, 3600);
+                setTimeout(() => { setSimStage('Build complete'); setSimProgress(100); setSimDone(true); setSimBusy(false); }, 4600);
+              }}
+              className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
+              disabled={simBusy}
+            >
+              {simBusy ? 'Building…' : 'Start Building'}
+            </button>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-neutral-600">Build completed successfully. You can continue.</div>
+              <button
+                onClick={() => {
+                  const qp = new URLSearchParams();
+                  if (websiteId) qp.set('website_id', websiteId);
+                  qp.set('step', 'init');
+                  router.push(`/dashboard/site-builder?${qp.toString()}`);
+                }}
+                className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
+              >
+                Continue
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {step === 'init' && (
         <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-4 bg-white">
@@ -385,9 +220,48 @@ export default function SiteBuilderPage() {
             <div className="space-y-2">
               <div className="text-[11px] text-neutral-500">Initial Chat Message</div>
               <pre className="whitespace-pre-wrap text-xs leading-relaxed rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-neutral-800 max-h-72 overflow-auto">
-{buildInitialMessage(onboarding)}
+{buildInitialMessage(onboarding, industry)}
               </pre>
             </div>
+          </div>
+          {/* Industry Blueprint Summary */}
+          <div className="pt-2 rounded-lg border border-neutral-200 bg-white p-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium text-neutral-800">Industry Blueprint</div>
+              <div className="text-[11px] text-neutral-500">Resolved: {industry}</div>
+            </div>
+            {(() => {
+              const bp = getBlueprint(industry);
+              return (
+                <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <div className="text-[11px] text-neutral-500 mb-1">Required Pages</div>
+                    <div className="flex flex-wrap gap-2">
+                      {bp.pages.slice(0, 24).map((p) => (
+                        <span key={p} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-neutral-500 mb-1">Sections per Page (guideline)</div>
+                    <div className="max-h-52 overflow-auto rounded-md border border-neutral-200 bg-neutral-50 p-2 text-[11px] text-neutral-800">
+                      {Object.entries(bp.sections).map(([page, secs]) => (
+                        <div key={page} className="mb-2">
+                          <div className="font-medium">{page}</div>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {secs.map((s) => (
+                              <span key={`${page}-${s}`} className="inline-flex items-center rounded border border-neutral-200 bg-white px-1.5 py-0.5 text-[10px] text-neutral-700">{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
           <div className="pt-4">
             <button
