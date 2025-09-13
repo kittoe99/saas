@@ -89,8 +89,22 @@ export async function POST(req: Request) {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({})
         })
         const j = await r.json().catch(() => ({} as any))
-        if (!r.ok) return NextResponse.json({ error: j?.error || j?.message || 'Failed to create version from chat' }, { status: r.status })
-        versionId = j?.id || j?.versionId || null
+        if (r.ok) {
+          versionId = j?.id || j?.versionId || null
+        }
+        // Try alternate endpoint /generate if versions didn't work or no id returned
+        if (!versionId) {
+          const r2 = await fetch(`${base}/chats/${encodeURIComponent(site.v0_chat_id)}/generate`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({})
+          })
+          const j2 = await r2.json().catch(() => ({} as any))
+          if (r2.ok) {
+            versionId = j2?.id || j2?.versionId || null
+          }
+          if (!versionId) {
+            return NextResponse.json({ error: j?.error || j?.message || j2?.error || j2?.message || 'Failed to create version from chat' }, { status: !r.ok ? r.status : (!r2.ok ? r2.status : 500) })
+          }
+        }
       }
       if (versionId) {
         await supabase.from('websites').update({ last_version_id: versionId }).eq('id', website_id)
