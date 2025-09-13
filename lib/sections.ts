@@ -4,6 +4,8 @@
 export type SectionKey =
   | "hero"
   | "hero_alt"
+  | "services"
+  | "services_alt"
   // Future: add more keys like "features", "services_grid", "testimonials", "faq", etc.
   ;
 
@@ -65,6 +67,11 @@ const HERO_SNIPPET = `<section className="py-20 bg-white">
   </div>
 </section>`;
 
+// Services section snippet (variant 1)
+const SERVICES_SNIPPET = `<section className=\"py-16\">\n  <div className=\"max-w-6xl mx-auto px-6\">\n    <div className=\"text-center mb-12\">\n      <h2 className=\"text-3xl font-bold text-foreground mb-4\">Our Services</h2>\n      <p className=\"text-lg text-muted-foreground max-w-2xl mx-auto\">\n        Professional services delivered by experienced local experts you can trust\n      </p>\n    </div>\n    \n    <div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8\">\n      {/* Plumbing Service Card */}\n      <div className=\"group relative overflow-hidden rounded-xl bg-card shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1\">\n        <div \n          className=\"h-64 bg-cover bg-center relative\"\n          style={{\n            backgroundImage: \`linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('/images/plumbing-service.jpg')\`\n          }}\n        >\n          <div className=\"absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent\"></div>\n          <div className=\"absolute bottom-0 left-0 right-0 p-6\">\n            <h3 className=\"text-2xl font-bold text-white mb-2\">Plumbing Services</h3>\n            <p className=\"text-white/90 text-sm mb-4\">Expert plumbing repairs, installations, and emergency services available 24/7</p>\n            <button className=\"bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-6 py-2 rounded-lg transition-colors mb-4\">\n              Get Quote\n            </button>\n          </div>\n        </div>\n      </div>\n\n      {/* Add more service cards following the same pattern */}\n    </div>\n  </div>\n</section>`;
+
+// Services section snippet (variant 2)
+const SERVICES_ALT_SNIPPET = `<section className=\"py-16 bg-background\">\n  <div className=\"max-w-6xl mx-auto px-6\">\n    <div className=\"text-center mb-12\">\n      <h2 className=\"text-3xl font-bold text-foreground mb-4\">Our Professional Services</h2>\n      <p className=\"text-lg text-muted-foreground max-w-2xl mx-auto\">\n        Comprehensive local services delivered by experienced professionals you can trust\n      </p>\n    </div>\n\n    <div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8\">\n      {/* Plumbing Services */}\n      <div className=\"relative overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-border\">\n        <div \n          className=\"h-96 bg-cover bg-center relative\"\n          style={{\n            backgroundImage: \`linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('/images/plumbing-service.jpg')\`\n          }}\n        >\n          <div className=\"absolute inset-0 p-8 flex flex-col justify-between\">\n            <div>\n              <h3 className=\"text-2xl font-bold text-white mb-3\">Plumbing Services</h3>\n              <p className=\"text-white/90 mb-6\">Complete plumbing solutions for residential and commercial properties</p>\n            </div>\n\n            <div className=\"space-y-4\">\n              <ul className=\"space-y-2\">\n                <li className=\"flex items-center text-white/90\">\n                  <div className=\"w-2 h-2 bg-accent rounded-full mr-3\"></div>\n                  Emergency repairs & leak detection\n                </li>\n                {/* Add more features */}\n              </ul>\n\n              <button className=\"w-full bg-accent hover:bg-accent/90 text-accent-foreground px-6 py-3 rounded-lg font-semibold transition-colors mb-4\">\n                Get Free Quote\n              </button>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      {/* Add more service cards following the same pattern */}\n    </div>\n  </div>\n</section>`;
 // Second hero variant (as provided)
 const HERO_ALT_SNIPPET = `<section className="relative overflow-hidden rounded-2xl border bg-background p-6 md:p-10">
   <div className="grid items-center gap-8 md:grid-cols-2">
@@ -114,6 +121,18 @@ export const SECTIONS: Record<SectionKey, SectionSnippet> = {
     label: "Hero (Alt)",
     description: "Hero variant with pricing highlight, rating, and illustration card.",
     code: HERO_ALT_SNIPPET,
+  },
+  services: {
+    key: "services",
+    label: "Services",
+    description: "Cards-based services section with background images and CTA.",
+    code: SERVICES_SNIPPET,
+  },
+  services_alt: {
+    key: "services_alt",
+    label: "Services (Alt)",
+    description: "Services variant with darker overlay and feature bullets.",
+    code: SERVICES_ALT_SNIPPET,
   },
 };
 
