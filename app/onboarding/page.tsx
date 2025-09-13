@@ -602,7 +602,11 @@ export default function OnboardingPage() {
         console.error("/api/onboarding error:", msg);
         throw new Error(msg);
       }
-      router.push(pathname?.startsWith("/get-started") ? "/get-started/success" : "/dashboard/onboarding/success");
+      // Redirect to the Dashboard Site Builder page to continue with Site Build → Preview → Deployment
+      const qp = new URLSearchParams();
+      qp.set("auto", "1");
+      if (websiteId) qp.set("website_id", websiteId);
+      router.push(`/dashboard/site-builder?${qp.toString()}`);
     } catch (e: any) {
       setError(e?.message || "Something went wrong while finishing onboarding.");
     } finally {
