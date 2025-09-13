@@ -15,13 +15,49 @@ export async function POST(req: Request) {
 
     // Auto-resolve latest versionId when only chatId is provided
     if (!versionId && chatId) {
+      // SDK attempt: tolerant to different method names
       try {
-        const resp: any = await (v0 as any).chats.findVersions({ chatId, limit: 1 });
-        const list = resp?.versions || resp?.data || resp || [];
-        const latest = Array.isArray(list) ? list[0] : (list?.items?.[0] || null);
-        versionId = latest?.id || latest?.versionId || undefined;
-      } catch (e: any) {
-        // If we can't resolve, we'll fall back to the explicit requirement below
+        const chats: any = (v0 as any)?.chats;
+        if (chats?.findVersions) {
+          const resp = await chats.findVersions({ chatId, limit: 1 });
+          const list = (resp as any)?.versions || (resp as any)?.data || resp || [];
+          const latest = Array.isArray(list) ? list[0] : ((list as any)?.items?.[0] || null);
+          versionId = (latest as any)?.id || (latest as any)?.versionId || undefined;
+        } else if (chats?.versions?.list) {
+          const resp = await chats.versions.list({ chatId, limit: 1 });
+          const list = (resp as any)?.versions || (resp as any)?.data || resp || [];
+          const latest = Array.isArray(list) ? list[0] : ((list as any)?.items?.[0] || null);
+          versionId = (latest as any)?.id || (latest as any)?.versionId || undefined;
+        }
+      } catch {}
+      // REST fallback to resolve latest version
+      if (!versionId) {
+        const apiKey = process.env.V0_API_KEY;
+        const base = process.env.V0_API_BASE || 'https://api.v0.dev';
+        if (apiKey) {
+          try {
+            // Try simple chat fetch that includes latestVersion
+            const r1 = await fetch(`${base}/chats/${encodeURIComponent(chatId)}`, {
+              headers: { 'Authorization': `Bearer ${apiKey}`, 'Accept': 'application/json' },
+            });
+            const j1 = await r1.json().catch(() => ({} as any));
+            if (r1.ok) {
+              versionId = j1?.latestVersion?.id || j1?.chat?.latestVersion?.id || undefined;
+            }
+            // Try explicit versions listing if still missing
+            if (!versionId) {
+              const r2 = await fetch(`${base}/chats/${encodeURIComponent(chatId)}/versions?limit=1`, {
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Accept': 'application/json' },
+              });
+              const j2 = await r2.json().catch(() => ({} as any));
+              if (r2.ok) {
+                const list = j2?.versions || j2?.data || j2 || [];
+                const latest = Array.isArray(list) ? list[0] : (list?.items?.[0] || null);
+                versionId = latest?.id || latest?.versionId || undefined;
+              }
+            }
+          } catch {}
+        }
       }
     }
     if (!chatId && !versionId) return NextResponse.json({ error: 'Missing chatId or versionId' }, { status: 400 });
@@ -29,7 +65,12 @@ export async function POST(req: Request) {
     const args: any = { projectId };
     if (chatId) args.chatId = chatId;
     if (versionId) args.versionId = versionId;
-    const deployment = await v0.deployments.create(args);
+    let deployment: any = null;
+    try {
+      deployment = await (v0 as any).deployments.create(args);
+    } catch (e: any) {
+      return NextResponse.json({ error: e?.message || 'Failed to create deployment via SDK' }, { status: 500 });
+    }
 
     const user_id: string | undefined = body?.user_id;
     const website_id: string | undefined = body?.website_id;
