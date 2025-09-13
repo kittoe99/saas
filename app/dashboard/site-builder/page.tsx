@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { resolveIndustry, getBlueprint } from "@/lib/blueprints";
+import { getSectionCode } from "@/lib/sections";
 
 type ApiResult<T = any> = { ok?: boolean; error?: string } & T;
 
@@ -36,6 +37,7 @@ export default function SiteBuilderPage() {
   const [simStage, setSimStage] = useState<string>("Idle");
   const [simDone, setSimDone] = useState<boolean>(false);
   const [attachedChatId, setAttachedChatId] = useState<string | null>(null);
+  const [heroSent, setHeroSent] = useState<boolean>(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -278,7 +280,7 @@ export default function SiteBuilderPage() {
                 onClick={() => {
                   const qp = new URLSearchParams();
                   if (websiteId) qp.set('website_id', websiteId);
-                  qp.set('step', 'init');
+                  qp.set('step', 'hero');
                   router.push(`/dashboard/site-builder?${qp.toString()}`);
                 }}
                 className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
@@ -394,6 +396,118 @@ export default function SiteBuilderPage() {
               Continue
             </button>
           </div>
+        </section>
+      )}
+
+      {step === 'hero' && (
+        <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-neutral-900">Add Hero Section</h2>
+            <p className="text-sm text-neutral-600">We’ll randomly pick a hero layout and ask v0 to implement it. Live status will appear below.</p>
+          </div>
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+            <div className="text-sm font-medium text-neutral-800">Hero Progress</div>
+            <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
+              <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
+            </div>
+            <div className="mt-2 text-xs text-neutral-600 flex items-center gap-2">
+              {(simBusy && !simDone) && (
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+              )}
+              <span>{simStage}</span>
+            </div>
+          </div>
+          {!heroSent ? (
+            <button
+              onClick={async () => {
+                if (simBusy) return;
+                if (!userId) return;
+                setSimBusy(true);
+                setSimStage('Selecting hero…');
+                setSimProgress(8);
+                try {
+                  const keys = ['hero','hero_alt'] as const;
+                  const pick = keys[Math.floor(Math.random()*keys.length)];
+                  const code = getSectionCode(pick as any);
+                  setSimStage('Sending hero to builder…');
+                  setSimProgress(18);
+                  const r = await fetch('/api/sitebuild/continue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      user_id: userId,
+                      website_id: websiteId,
+                      message: `Design our hero like this: \n\n${code}`,
+                    })
+                  });
+                  const j = await r.json().catch(() => ({} as any));
+                  if (!r.ok) throw new Error(j?.error || 'Failed to send hero');
+                  const cid = j?.chatId as string | undefined;
+                  if (!cid && !attachedChatId) throw new Error('Missing chatId');
+                  const chatToUse = cid || attachedChatId!;
+                  setHeroSent(true);
+                  setSimStage('Waiting for hero preview…');
+                  setSimProgress(30);
+                  const es = new EventSource(`/api/sitebuild/stream?chatId=${encodeURIComponent(chatToUse)}`);
+                  let localProgress = 30;
+                  es.onmessage = (ev) => {
+                    try {
+                      const data = JSON.parse(ev.data || '{}');
+                      if (data?.type === 'stage') {
+                        setSimStage(data.label || 'Working…');
+                        localProgress = Math.min(92, localProgress + 6);
+                        setSimProgress(localProgress);
+                      } else if (data?.type === 'preview') {
+                        setSimStage('Preview updated');
+                        setSimProgress(96);
+                      } else if (data?.type === 'complete') {
+                        setSimStage('Hero added');
+                        setSimProgress(100);
+                        setSimDone(true);
+                        setSimBusy(false);
+                        es.close();
+                      } else if (data?.type === 'timeout') {
+                        setSimStage('Timed out waiting for hero');
+                        setSimBusy(false);
+                        es.close();
+                      } else if (data?.type === 'error') {
+                        setSimStage(`Error: ${data.error}`);
+                        setSimBusy(false);
+                        es.close();
+                      }
+                    } catch {}
+                  };
+                  es.onerror = () => {
+                    setSimStage('Connection error');
+                    setSimBusy(false);
+                    es.close();
+                  };
+                } catch (e: any) {
+                  setSimStage(e?.message || 'Failed to start hero step');
+                  setSimBusy(false);
+                }
+              }}
+              className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
+              disabled={simBusy || !userId}
+            >
+              {simBusy ? 'Working…' : 'Add Hero'}
+            </button>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-neutral-600">Hero step completed. Continue to the next step.</div>
+              <button
+                onClick={() => {
+                  const qp = new URLSearchParams();
+                  if (websiteId) qp.set('website_id', websiteId);
+                  qp.set('step', 'init');
+                  router.push(`/dashboard/site-builder?${qp.toString()}`);
+                }}
+                className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
+              >
+                Continue
+              </button>
+            </div>
+          )}
         </section>
       )}
     </div>
