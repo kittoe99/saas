@@ -102,12 +102,27 @@ export async function POST(req: Request) {
             versionId = j2?.id || j2?.versionId || null
           }
           if (!versionId) {
-            return NextResponse.json({ error: j?.error || j?.message || j2?.error || j2?.message || 'Failed to create version from chat' }, { status: !r.ok ? r.status : (!r2.ok ? r2.status : 500) })
+            // Final attempt: poll chat for latestVersion after server-side generation kicked off
+            for (let i = 0; i < 20 && !versionId; i++) {
+              const gr = await fetch(`${base}/chats/${encodeURIComponent(site.v0_chat_id)}`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Accept': 'application/json' },
+              })
+              const gj = await gr.json().catch(() => ({} as any))
+              if (gr.ok) {
+                versionId = gj?.latestVersion?.id || gj?.chat?.latestVersion?.id || null
+                if (versionId) break
+              }
+              await new Promise((r) => setTimeout(r, 3000))
+            }
+            if (!versionId) {
+              return NextResponse.json({ error: j?.error || j?.message || j2?.error || j2?.message || 'Failed to create version from chat' }, { status: !r.ok ? r.status : (!r2.ok ? r2.status : 500) })
+            }
           }
         }
-      }
-      if (versionId) {
-        await supabase.from('websites').update({ last_version_id: versionId }).eq('id', website_id)
+        if (versionId) {
+          await supabase.from('websites').update({ last_version_id: versionId }).eq('id', website_id)
+        }
       }
     }
 
