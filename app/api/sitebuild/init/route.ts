@@ -39,7 +39,8 @@ export async function POST(req: Request) {
     if (data?.contactMethod) a.contactMethod = data.contactMethod
 
     // Call existing generate orchestrator with deploy=false and instructions override
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/onboarding/generate`, {
+    const { origin } = new URL(req.url)
+    const res = await fetch(`${origin}/api/onboarding/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
