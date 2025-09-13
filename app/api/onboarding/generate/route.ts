@@ -22,7 +22,11 @@ export async function POST(req: Request) {
 
     // Compose blueprint and instructions
     const blueprint = getBlueprint(industry)
-    const projectInstructions = buildProjectInstructions(theme, blueprint)
+    const projectInstructions = (typeof (body as any)?.instructions === 'string' && (body as any).instructions.trim().length)
+      ? (body as any).instructions as string
+      : (typeof theme === 'string' && theme.trim().length)
+        ? (theme as string)
+        : buildProjectInstructions(theme, blueprint)
     const initialPrompt = buildInitialChatPrompt(answers, blueprint, theme)
 
     // 1) Create v0 project

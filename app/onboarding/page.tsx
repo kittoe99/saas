@@ -612,7 +612,6 @@ export default function OnboardingPage() {
 
       // Redirect to the Dashboard Site Builder page to continue with Site Build → Preview → Deployment
       const qp = new URLSearchParams();
-      qp.set("auto", "1");
       if (effectiveWebsiteId) qp.set("website_id", effectiveWebsiteId);
       router.push(`/dashboard/site-builder?${qp.toString()}`);
     } catch (e: any) {
