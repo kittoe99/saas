@@ -41,12 +41,13 @@ export default function SiteBuilderPage() {
   const [servicesSent, setServicesSent] = useState<boolean>(false);
   const [areasSent, setAreasSent] = useState<boolean>(false);
   const [globalSent, setGlobalSent] = useState<boolean>(false);
+  const [stepsState, setStepsState] = useState<Record<string, 'pending' | 'done'> | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
   }, []);
 
-  // Prefill from onboarding using website_id
+  // Prefill from onboarding using website_id and restore step progress
   useEffect(() => {
     (async () => {
       try {
@@ -56,6 +57,37 @@ export default function SiteBuilderPage() {
         if (st) setStep(st);
         if (wid) setWebsiteId(wid);
         if (!userId) return;
+        // Load progress for this website/user
+        if (wid) {
+          const prog = await fetch(`/api/sitebuild/steps?website_id=${encodeURIComponent(wid)}&user_id=${encodeURIComponent(userId)}`, { cache: 'no-store' });
+          const pj = await prog.json().catch(() => ({} as any));
+          let steps: Record<string, 'pending' | 'done'> | null = pj?.steps || null;
+          // Initialize with hero/services done per request if no record
+          if (!steps) {
+            steps = { hero: 'done', services: 'done', areas: 'pending', global: 'pending', deploy: 'pending' };
+            await fetch('/api/sitebuild/steps', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ user_id: userId, website_id: wid, steps })
+            }).catch(() => {});
+          }
+          setStepsState(steps);
+          // Reflect into local flags and route to next pending if current step is missing or completed
+          setHeroSent(steps.hero === 'done');
+          setServicesSent(steps.services === 'done');
+          setAreasSent(steps.areas === 'done');
+          setGlobalSent(steps.global === 'done');
+          const current = st || null;
+          const order = ['hero','services','areas','global','deploy'];
+          const nextPending = order.find(k => (steps as any)[k] !== 'done');
+          if (!current || (current && (steps as any)[current] === 'done')) {
+            if (nextPending) {
+              const qp = new URLSearchParams();
+              if (wid) qp.set('website_id', wid);
+              qp.set('step', nextPending);
+              router.push(`/dashboard/site-builder?${qp.toString()}`);
+            }
+          }
+        }
         // Attempt to resume: check if the website already has a v0_chat_id
         if (wid) {
           const { data: siteRow, error: siteErr } = await supabase
@@ -468,6 +500,12 @@ export default function SiteBuilderPage() {
                         setSimProgress(100);
                         setSimDone(true);
                         setSimBusy(false);
+                        // Persist step completion
+                        try {
+                          const newSteps = { ...(stepsState || {}), hero: 'done' as const };
+                          setStepsState(newSteps);
+                          void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: newSteps }) });
+                        } catch {}
                         es.close();
                       } else if (data?.type === 'timeout') {
                         setSimStage('Timed out waiting for hero');
@@ -580,6 +618,12 @@ export default function SiteBuilderPage() {
                         setSimProgress(100);
                         setSimDone(true);
                         setSimBusy(false);
+                        // Persist step completion
+                        try {
+                          const newSteps = { ...(stepsState || {}), services: 'done' as const };
+                          setStepsState(newSteps);
+                          void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: newSteps }) });
+                        } catch {}
                         es.close();
                       } else if (data?.type === 'timeout') {
                         setSimStage('Timed out waiting for services');
@@ -692,6 +736,12 @@ export default function SiteBuilderPage() {
                         setSimProgress(100);
                         setSimDone(true);
                         setSimBusy(false);
+                        // Persist step completion
+                        try {
+                          const newSteps = { ...(stepsState || {}), areas: 'done' as const };
+                          setStepsState(newSteps);
+                          void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: newSteps }) });
+                        } catch {}
                         es.close();
                       } else if (data?.type === 'timeout') {
                         setSimStage('Timed out waiting for service areas');
@@ -800,6 +850,12 @@ export default function SiteBuilderPage() {
                         setSimProgress(100);
                         setSimDone(true);
                         setSimBusy(false);
+                        // Persist step completion
+                        try {
+                          const newSteps = { ...(stepsState || {}), global: 'done' as const };
+                          setStepsState(newSteps);
+                          void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: newSteps }) });
+                        } catch {}
                         es.close();
                       } else if (data?.type === 'timeout') {
                         setSimStage('Timed out waiting for global update');
