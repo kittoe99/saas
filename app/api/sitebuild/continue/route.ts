@@ -32,31 +32,42 @@ export async function POST(req: Request) {
     }
 
     // Try a variety of SDK methods, tolerant to version differences.
-    let ok = false
+    let didSend = false
+    let didVersion = false
     try {
       const chats: any = (v0 as any)?.chats
       if (chats) {
         if (typeof chats.messages?.create === 'function') {
           await chats.messages.create({ chatId, role: 'user', content: message })
-          ok = true
+          didSend = true
         } else if (typeof chats.send === 'function') {
           await chats.send({ chatId, role: 'user', content: message })
-          ok = true
+          didSend = true
         } else if (typeof chats.createMessage === 'function') {
           await chats.createMessage({ chatId, role: 'user', content: message })
-          ok = true
+          didSend = true
         }
         // Attempt to request a new version if supported
         if (typeof chats.versions?.create === 'function') {
           await chats.versions.create({ chatId })
-          ok = true
+          didVersion = true
         } else if (typeof chats.requestVersion === 'function') {
           await chats.requestVersion({ chatId })
-          ok = true
+          didVersion = true
+        } else if (typeof chats.generate === 'function') {
+          await chats.generate({ chatId })
+          didVersion = true
+        } else if (typeof chats.createVersion === 'function') {
+          await chats.createVersion({ chatId })
+          didVersion = true
         }
       }
     } catch (e) {
       // swallow and fallback; SSE polling may still see updated state if any method succeeded
+    }
+
+    if (!didSend && !didVersion) {
+      return NextResponse.json({ error: 'v0 chat continuation methods are unavailable in the current SDK. Could not send message.' }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, chatId }, { status: 200 })
