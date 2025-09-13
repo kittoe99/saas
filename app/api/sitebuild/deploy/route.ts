@@ -26,16 +26,55 @@ export async function POST(req: Request) {
     if (siteErr) return NextResponse.json({ error: siteErr.message }, { status: 500 })
     if (!site?.v0_project_id) return NextResponse.json({ error: 'No v0_project_id found for website' }, { status: 404 })
 
+    // Ensure we have a versionId. If missing, try to create one from chatId.
+    let versionId: string | null = site.last_version_id || null
+    if (!versionId && site.v0_chat_id) {
+      // Try SDK to create a new version first
+      try {
+        const chats: any = (v0 as any)?.chats
+        if (chats?.versions?.create) {
+          const created = await chats.versions.create({ chatId: site.v0_chat_id })
+          versionId = created?.id || created?.versionId || null
+        } else if (chats?.createVersion) {
+          const created = await chats.createVersion({ chatId: site.v0_chat_id })
+          versionId = created?.id || created?.versionId || null
+        } else if (chats?.generate) {
+          const created = await chats.generate({ chatId: site.v0_chat_id })
+          versionId = created?.id || created?.versionId || null
+        }
+      } catch {}
+      // REST fallback to create version if still missing
+      if (!versionId) {
+        const apiKey = process.env.V0_API_KEY
+        if (!apiKey) return NextResponse.json({ error: 'Missing V0_API_KEY for creating version' }, { status: 500 })
+        const base = process.env.V0_API_BASE || 'https://api.v0.dev'
+        const r = await fetch(`${base}/chats/${encodeURIComponent(site.v0_chat_id)}/versions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({})
+        })
+        const j = await r.json().catch(() => ({} as any))
+        if (!r.ok) return NextResponse.json({ error: j?.error || j?.message || 'Failed to create version from chat' }, { status: r.status })
+        versionId = j?.id || j?.versionId || null
+      }
+      // Persist last_version_id on websites if obtained
+      if (versionId) {
+        await supabase
+          .from('websites')
+          .update({ last_version_id: versionId })
+          .eq('id', website_id)
+      }
+    }
+
     // Try SDK deployment first
     let dep: any = null
     try {
       const payload: any = { projectId: site.v0_project_id }
-      if (site.last_version_id) payload.versionId = site.last_version_id
-      else if (site.v0_chat_id) payload.chatId = site.v0_chat_id
+      if (versionId) payload.versionId = versionId
       if ((v0 as any)?.deployments?.create) {
         dep = await (v0 as any).deployments.create(payload)
       }
-    } catch {}
+    } catch (e) {}
 
     // REST fallback
     if (!dep) {
@@ -48,10 +87,10 @@ export async function POST(req: Request) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({ projectId: site.v0_project_id, versionId: site.last_version_id || undefined, chatId: site.v0_chat_id || undefined })
+        body: JSON.stringify({ projectId: site.v0_project_id, versionId: versionId || undefined })
       })
       const j = await r.json().catch(() => ({} as any))
-      if (!r.ok) return NextResponse.json({ error: j?.error || 'Failed to create deployment' }, { status: r.status })
+      if (!r.ok) return NextResponse.json({ error: j?.error || j?.message || 'Failed to create deployment' }, { status: r.status })
       dep = j
     }
 
