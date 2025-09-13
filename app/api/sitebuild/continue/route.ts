@@ -69,6 +69,9 @@ export async function POST(req: Request) {
     // REST fallbacks (direct V0 API) if SDK surface doesn't match
     // Requires V0_API_KEY in env
     const apiKey = process.env.V0_API_KEY
+    if ((!didSend || !didVersion) && !apiKey) {
+      return NextResponse.json({ error: 'Missing V0_API_KEY on the server. Set it in your server env (.env.local) for REST fallback.' }, { status: 500 })
+    }
     if ((!didSend || !didVersion) && apiKey && chatId) {
       const base = process.env.V0_API_BASE || 'https://api.v0.dev'
       const headers: any = {
