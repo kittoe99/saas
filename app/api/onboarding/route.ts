@@ -16,13 +16,29 @@ export async function GET(req: Request) {
     }
 
     if (website_id) {
-      const { data: row, error } = await supabase
+      const { data: obRow, error } = await supabase
         .from('onboarding')
         .select('*')
         .eq('website_id', website_id)
         .maybeSingle();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json({ ok: true, row: row ?? null }, { status: 200 });
+
+      // Try to supplement from latest onboarding_submissions for completeness
+      const { data: subRow } = await supabase
+        .from('onboarding_submissions')
+        .select('answers')
+        .eq('website_id', website_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const base = (obRow?.data as any) || {};
+      const extra = (subRow?.answers as any) || {};
+      // Shallow merge (do not overwrite defined values in base)
+      const merged: any = { ...extra, ...base };
+      const mergedRow = obRow ? { ...obRow, data: merged } : (Object.keys(merged).length ? { website_id, data: merged } : null);
+
+      return NextResponse.json({ ok: true, row: mergedRow }, { status: 200 });
     }
 
     // Fallback: find most recent website for user and return its onboarding
@@ -35,13 +51,27 @@ export async function GET(req: Request) {
       .maybeSingle();
     if (siteErr) return NextResponse.json({ error: siteErr.message }, { status: 500 });
     if (!site?.id) return NextResponse.json({ ok: true, row: null }, { status: 200 });
-    const { data: row, error: obErr } = await supabase
+    const { data: obRow, error: obErr } = await supabase
       .from('onboarding')
       .select('*')
       .eq('website_id', site.id)
       .maybeSingle();
     if (obErr) return NextResponse.json({ error: obErr.message }, { status: 500 });
-    return NextResponse.json({ ok: true, row: row ?? null }, { status: 200 });
+
+    const { data: subRow } = await supabase
+      .from('onboarding_submissions')
+      .select('answers')
+      .eq('website_id', site.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const base = (obRow?.data as any) || {};
+    const extra = (subRow?.answers as any) || {};
+    const merged: any = { ...extra, ...base };
+    const mergedRow = obRow ? { ...obRow, data: merged } : (Object.keys(merged).length ? { website_id: site.id, data: merged } : null);
+
+    return NextResponse.json({ ok: true, row: mergedRow }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 });
   }

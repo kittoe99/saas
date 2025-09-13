@@ -126,8 +126,23 @@ export default function SiteBuilderPage() {
               <div className="rounded-lg border border-neutral-200 bg-white p-3">
                 <div className="text-[11px] text-neutral-500">Contact</div>
                 <div className="text-sm text-neutral-800 mt-0.5">{onboarding?.contactMethod || '—'}</div>
+                <div className="text-[11px] text-neutral-600 mt-0.5 space-y-0.5">
+                  {onboarding?.businessEmail && <div>Email: {onboarding.businessEmail}</div>}
+                  {onboarding?.businessPhone && <div>Phone: {onboarding.businessPhone}</div>}
+                </div>
               </div>
             </div>
+            {(onboarding?.social?.x || onboarding?.social?.linkedin || onboarding?.social?.instagram || onboarding?.social?.facebook) && (
+              <div>
+                <div className="text-[11px] text-neutral-500 mb-1">Social</div>
+                <div className="flex flex-wrap gap-2 text-[11px] text-neutral-700">
+                  {onboarding?.social?.x && <a className="underline" href={onboarding.social.x} target="_blank" rel="noreferrer">X / Twitter</a>}
+                  {onboarding?.social?.linkedin && <a className="underline" href={onboarding.social.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
+                  {onboarding?.social?.instagram && <a className="underline" href={onboarding.social.instagram} target="_blank" rel="noreferrer">Instagram</a>}
+                  {onboarding?.social?.facebook && <a className="underline" href={onboarding.social.facebook} target="_blank" rel="noreferrer">Facebook</a>}
+                </div>
+              </div>
+            )}
             {Array.isArray(onboarding?.envisionedPages) && onboarding.envisionedPages.length > 0 && (
               <div>
                 <div className="text-[11px] text-neutral-500 mb-1">Pages</div>
@@ -149,6 +164,130 @@ export default function SiteBuilderPage() {
                       {s}
                     </span>
                   ))}
+                </div>
+              </div>
+            )}
+            {Array.isArray(onboarding?.primaryColors) && onboarding.primaryColors.length > 0 && (
+              <div>
+                <div className="text-[11px] text-neutral-500 mb-1">Brand Colors</div>
+                <div className="flex flex-wrap gap-2">
+                  {onboarding.primaryColors.map((c: string, i: number) => (
+                    <span key={`${c}-${i}`} className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">
+                      <span className="inline-block h-3 w-3 rounded-full border" style={{ backgroundColor: c }} /> {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {Array.isArray(onboarding?.cities) && onboarding.cities.length > 0 && (
+              <div>
+                <div className="text-[11px] text-neutral-500 mb-1">Service Areas</div>
+                <div className="flex flex-col gap-1 text-xs text-neutral-700">
+                  {onboarding.cities.slice(0, 8).map((ci: any, i: number) => (
+                    <div key={`${ci?.displayName || ci?.name || i}-${i}`} className="flex items-center justify-between">
+                      <span className="truncate mr-2">{ci?.displayName || ci?.name || '—'}</span>
+                      {typeof ci?.radiusKm === 'number' && (
+                        <span className="inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px]">{Math.round(ci.radiusKm)} km</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(onboarding?.businessAddress || onboarding?.timeZone || onboarding?.businessHours) && (
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="rounded-lg border border-neutral-200 bg-white p-3">
+                  <div className="text-[11px] text-neutral-500">Address</div>
+                  <div className="text-xs text-neutral-800 mt-0.5 min-h-[1.25rem]">{onboarding?.businessAddress || '—'}</div>
+                </div>
+                <div className="rounded-lg border border-neutral-200 bg-white p-3">
+                  <div className="text-[11px] text-neutral-500">Time Zone</div>
+                  <div className="text-xs text-neutral-800 mt-0.5 min-h-[1.25rem]">{onboarding?.timeZone || '—'}</div>
+                </div>
+                <div className="rounded-lg border border-neutral-200 bg-white p-3">
+                  <div className="text-[11px] text-neutral-500">Business Hours</div>
+                  <div className="text-xs text-neutral-800 mt-0.5 min-h-[1.25rem]">{onboarding?.businessHours || '—'}</div>
+                </div>
+              </div>
+            )}
+            {(Array.isArray(onboarding?.voiceTone) || Array.isArray(onboarding?.designStyles) || Array.isArray(onboarding?.impressions) || Array.isArray(onboarding?.emotionalImpact)) && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {Array.isArray(onboarding?.voiceTone) && onboarding.voiceTone.length > 0 && (
+                  <div>
+                    <div className="text-[11px] text-neutral-500 mb-1">Voice & Tone</div>
+                    <div className="flex flex-wrap gap-2">
+                      {onboarding.voiceTone.map((t: string, i: number) => (
+                        <span key={`${t}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {Array.isArray(onboarding?.designStyles) && onboarding.designStyles.length > 0 && (
+                  <div>
+                    <div className="text-[11px] text-neutral-500 mb-1">Design Styles</div>
+                    <div className="flex flex-wrap gap-2">
+                      {onboarding.designStyles.map((t: string, i: number) => (
+                        <span key={`${t}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {Array.isArray(onboarding?.impressions) && onboarding.impressions.length > 0 && (
+                  <div>
+                    <div className="text-[11px] text-neutral-500 mb-1">Visual Impressions</div>
+                    <div className="flex flex-wrap gap-2">
+                      {onboarding.impressions.map((t: string, i: number) => (
+                        <span key={`${t}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {Array.isArray(onboarding?.emotionalImpact) && onboarding.emotionalImpact.length > 0 && (
+                  <div>
+                    <div className="text-[11px] text-neutral-500 mb-1">Emotional Impact</div>
+                    <div className="flex flex-wrap gap-2">
+                      {onboarding.emotionalImpact.map((t: string, i: number) => (
+                        <span key={`${t}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {(onboarding?.preferredDomain || Array.isArray(onboarding?.competitors) || onboarding?.contentSources) && (
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <div className="text-[11px] text-neutral-500 mb-1">Preferred Domain</div>
+                  <div className="text-xs text-neutral-800">{onboarding?.preferredDomain || '—'}</div>
+                </div>
+                {Array.isArray(onboarding?.competitors) && onboarding.competitors.some((v: string) => v && v.trim().length) && (
+                  <div className="sm:col-span-2">
+                    <div className="text-[11px] text-neutral-500 mb-1">Competitors</div>
+                    <div className="flex flex-wrap gap-2">
+                      {onboarding.competitors.filter((v: string) => v && v.trim().length).slice(0, 10).map((c: string, i: number) => (
+                        <span key={`${c}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{c}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {onboarding?.contentSources && (
+                  <div className="sm:col-span-3">
+                    <div className="text-[11px] text-neutral-500 mb-1">Content Sources</div>
+                    <div className="text-xs text-neutral-800 whitespace-pre-wrap break-words">{onboarding.contentSources}</div>
+                  </div>
+                )}
+              </div>
+            )}
+            {(onboarding?.languages || onboarding?.primaryLanguage) && (
+              <div>
+                <div className="text-[11px] text-neutral-500 mb-1">Languages</div>
+                <div className="flex flex-wrap gap-2">
+                  {Array.isArray(onboarding?.languages) && onboarding.languages.map((l: string, i: number) => (
+                    <span key={`${l}-${i}`} className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">{l}</span>
+                  ))}
+                  {onboarding?.primaryLanguage && (
+                    <span className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700">Primary: {onboarding.primaryLanguage}</span>
+                  )}
                 </div>
               </div>
             )}
