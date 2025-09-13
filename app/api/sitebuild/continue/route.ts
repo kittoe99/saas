@@ -37,6 +37,11 @@ export async function POST(req: Request) {
     try {
       const chats: any = (v0 as any)?.chats
       if (chats) {
+        // Official documented method
+        if (typeof chats.sendMessage === 'function') {
+          await chats.sendMessage({ chatId, message })
+          didSend = true
+        }
         if (typeof chats.messages?.create === 'function') {
           await chats.messages.create({ chatId, role: 'user', content: message })
           didSend = true
@@ -47,7 +52,7 @@ export async function POST(req: Request) {
           await chats.createMessage({ chatId, role: 'user', content: message })
           didSend = true
         }
-        // Attempt to request a new version if supported
+        // Attempt to request a new version if supported (often not necessary if sendMessage triggers generation)
         if (typeof chats.versions?.create === 'function') {
           await chats.versions.create({ chatId })
           didVersion = true
