@@ -26,8 +26,10 @@ export async function POST(req: Request) {
     const initialPrompt = buildInitialChatPrompt(answers, blueprint, theme)
 
     // 1) Create v0 project
+    const rawName: string = (answers?.brand?.name || answers?.businessName || 'New Site') as string
+    const cleanName = String(rawName).trim().slice(0, 60) || 'New Site'
     const project: any = await (v0 as any).projects.create({
-      name: answers?.brand?.name || answers?.businessName || 'New Site',
+      name: cleanName,
       description: answers?.tagline || answers?.description || undefined,
       instructions: projectInstructions,
     })
@@ -39,7 +41,7 @@ export async function POST(req: Request) {
         user_id,
         website_id: website_id ?? null,
         v0_project_id: project?.id,
-        name: project?.name ?? (answers?.brand?.name || 'New Site'),
+        name: project?.name ?? cleanName,
       })
       .single()
     if (pErr) return NextResponse.json({ error: `Failed to persist project: ${pErr.message}` }, { status: 500 })
