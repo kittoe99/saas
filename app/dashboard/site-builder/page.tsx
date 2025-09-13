@@ -20,6 +20,7 @@ export default function SiteBuilderPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [websiteId, setWebsiteId] = useState<string | null>(null);
+  const [step, setStep] = useState<string | null>(null);
   const [industry, setIndustry] = useState<string>("SaaS");
   const [answers, setAnswers] = useState<string>("");
   const [theme, setTheme] = useState<string>("");
@@ -38,6 +39,8 @@ export default function SiteBuilderPage() {
       try {
         const url = new URL(window.location.href);
         const wid = url.searchParams.get("website_id");
+        const st = url.searchParams.get("step");
+        if (st) setStep(st);
         if (wid) setWebsiteId(wid);
         if (!userId) return;
         // Prefill answers/industry from onboarding
@@ -293,8 +296,7 @@ export default function SiteBuilderPage() {
             )}
           </div>
         )}
-        <div className="pt-3 flex items-center justify-between">
-          <div className="text-xs text-neutral-600">Review these details. You can proceed when ready.</div>
+        <div className="pt-4">
           <button
             onClick={() => {
               const qp = new URLSearchParams();
@@ -308,6 +310,69 @@ export default function SiteBuilderPage() {
           </button>
         </div>
       </section>
+
+      {step === 'init' && (
+        <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-4 bg-white">
+          <div className="text-sm font-medium text-neutral-800">Init Preview: what we'll send</div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <div className="text-[11px] text-neutral-500">System Prompt (Theme)</div>
+              <pre className="whitespace-pre-wrap text-xs leading-relaxed rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-neutral-800 max-h-72 overflow-auto">
+{`Site theme
+1) Color & Contrast
+- Background: #FCFAF7
+- Terracotta: primary #C0452C, hover/focus #A53A24; subtle bg #F8E9E6
+- Text: primary #2D2A26, secondary #6B6660
+
+2) Typography
+- Font: Geist; Headings 600; Body 16px/1.6; Labels 500 with 0.02em
+
+3) Surfaces & Layers
+- Radii: Cards 12px, Inputs/Buttons 8px
+- Shadows: Card low 0 2px 8px rgba(0,0,0,.08); High 0 8px 30px rgba(0,0,0,.12)
+
+4) Forms (Solid fields)
+- Background #FFF; Border 1.5px #DDDAD6; Radius 8px; Inset shadow
+- Focus ring: 0 0 0 3px rgba(192,69,44,.2) with border #C0452C
+
+5) Buttons
+- Primary: #C0452C; Hover #A53A24; Focus ring as forms; text white 600
+
+6) Borders & Emphasis
+- Prefer elevation/color; use borders sparingly functionally
+
+7) Motion
+- Gentle <300ms; respect reduced-motion
+
+8) Dark Mode
+- Background #1A1A1A; Text #EDEDED; Surfaces #252525/#2D2D2D; Accent #D55A41
+- Inputs: bg #252525; border 1.5px #444; focus 0 0 0 3px rgba(213,90,65,.4)`}
+              </pre>
+            </div>
+            <div className="space-y-2">
+              <div className="text-[11px] text-neutral-500">User Brief (from onboarding)</div>
+              <textarea
+                readOnly
+                className="w-full h-72 rounded-lg border border-neutral-200 bg-neutral-50 p-3 font-mono text-xs text-neutral-800"
+                value={answers}
+              />
+            </div>
+          </div>
+          <div className="pt-4">
+            <button
+              onClick={() => {
+                const qp = new URLSearchParams();
+                if (websiteId) qp.set('website_id', websiteId);
+                qp.set('step', 'pages');
+                router.push(`/dashboard/site-builder?${qp.toString()}`);
+              }}
+              className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
+            >
+              Continue
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
