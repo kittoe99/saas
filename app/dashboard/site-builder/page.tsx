@@ -35,6 +35,7 @@ export default function SiteBuilderPage() {
   const [simProgress, setSimProgress] = useState<number>(0); // 0-100
   const [simStage, setSimStage] = useState<string>("Idle");
   const [simDone, setSimDone] = useState<boolean>(false);
+  const [attachedChatId, setAttachedChatId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -50,6 +51,69 @@ export default function SiteBuilderPage() {
         if (st) setStep(st);
         if (wid) setWebsiteId(wid);
         if (!userId) return;
+        // Attempt to resume: check if the website already has a v0_chat_id
+        if (wid) {
+          const { data: siteRow, error: siteErr } = await supabase
+            .from('websites')
+            .select('v0_chat_id')
+            .eq('id', wid)
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (!siteErr && siteRow?.v0_chat_id) {
+            const cid = siteRow.v0_chat_id as string;
+            setAttachedChatId(cid);
+            // Quick check: is preview already available?
+            try {
+              const res = await fetch(`/api/v0/chats/${encodeURIComponent(cid)}`);
+              const j = await res.json().catch(() => ({} as any));
+              const demo = j?.demo || j?.chat?.demoUrl || j?.chat?.latestVersion?.demoUrl;
+              if (demo) {
+                setSimStage('Build complete');
+                setSimProgress(100);
+                setSimDone(true);
+              } else {
+                // Attach to SSE to wait for completion
+                setSimBusy(true);
+                setSimStage('Resuming build…');
+                setSimProgress(25);
+                const es = new EventSource(`/api/sitebuild/stream?chatId=${encodeURIComponent(cid)}`);
+                let localProgress = 25;
+                es.onmessage = (ev) => {
+                  try {
+                    const data = JSON.parse(ev.data || '{}');
+                    if (data?.type === 'stage') {
+                      setSimStage(data.label || 'Working…');
+                      localProgress = Math.min(90, localProgress + 8);
+                      setSimProgress(localProgress);
+                    } else if (data?.type === 'preview') {
+                      setSimStage('Preview ready');
+                      setSimProgress(96);
+                    } else if (data?.type === 'complete') {
+                      setSimStage('Build complete');
+                      setSimProgress(100);
+                      setSimDone(true);
+                      setSimBusy(false);
+                      es.close();
+                    } else if (data?.type === 'timeout') {
+                      setSimStage('Timed out waiting for preview');
+                      setSimBusy(false);
+                      es.close();
+                    } else if (data?.type === 'error') {
+                      setSimStage(`Error: ${data.error}`);
+                      setSimBusy(false);
+                      es.close();
+                    }
+                  } catch {}
+                };
+                es.onerror = () => {
+                  setSimStage('Connection error');
+                  setSimBusy(false);
+                  es.close();
+                };
+              }
+            } catch {}
+          }
+        }
         // Prefill answers/industry from onboarding
         const ob = await fetch(
           wid ? `/api/onboarding?website_id=${encodeURIComponent(wid)}` : `/api/onboarding?user_id=${encodeURIComponent(userId)}`,
@@ -134,7 +198,12 @@ export default function SiteBuilderPage() {
             <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
               <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
             </div>
-            <div className="mt-2 text-xs text-neutral-600">{simStage}</div>
+            <div className="mt-2 text-xs text-neutral-600 flex items-center gap-2">
+              {(simBusy && !simDone) && (
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+              )}
+              <span>{simStage}</span>
+            </div>
           </div>
           {!simDone ? (
             <button

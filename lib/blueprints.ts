@@ -212,16 +212,15 @@ export function buildProjectInstructions(theme: any, blueprint: Blueprint) {
 
 export function buildInitialChatPrompt(answers: any, blueprint: Blueprint, theme: any) {
   const name = answers?.brand?.name || answers?.businessName || "Site"
-  const audience = answers?.audience || answers?.targetAudience || "target audience"
-  const tone = answers?.tone || answers?.voice || "clear, modern"
-  const pages = blueprint.pages
+  const servicesArr: string[] = Array.isArray(answers?.services)
+    ? answers.services.filter((s: any) => typeof s === 'string' && s.trim().length)
+    : []
+  const servicesLine = servicesArr.length
+    ? `List of services (from onboarding): ${servicesArr.join(", ")}`
+    : undefined
   return [
-    `Build a modern site for ${name} targeting ${audience}.`,
-    `Use the theme tokens and constraints. Tone: ${tone}.`,
-    `Create pages: ${pages.join(", ")}. Add any missing, inferred pages needed for this industry.`,
-    `For each index page that lists items, create a corresponding detail route with clean URL patterns.`,
-    `Global: header with primary CTA, footer with utility links, cookie banner, SEO meta, OpenGraph, JSON-LD schema.`,
-    `Forms: labels visible, focus ring per theme.`,
-    theme ? `Theme summary: ${JSON.stringify(theme)}` : undefined,
+    `Build a modern website for ${name} and follow the System Prompt for site theme.`,
+    `Make sure we have these pages: Home, Services, Contact, About.`,
+    servicesLine,
   ].filter(Boolean).join("\n")
 }
