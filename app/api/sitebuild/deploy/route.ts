@@ -140,7 +140,8 @@ export async function POST(req: Request) {
       })
       const j = await resp.json().catch(() => ({} as any))
       if (resp.ok) {
-        dep = j?.deployment || j
+        const d = j?.deployment || j
+        return NextResponse.json({ ok: true, deploymentId: d?.id ?? null, status: d?.status ?? null, url: d?.webUrl ?? d?.url ?? null }, { status: 200 })
       } else {
         // Fall through to SDK/REST attempts with better error reporting
       }

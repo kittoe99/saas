@@ -92,7 +92,7 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseServer();
     const { error: persistErr } = await supabase.from('v0_deployments')
-      .insert({
+      .upsert({
         user_id,
         website_id: website_id ?? null,
         v0_project_id: projectId,
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
           chatId: chatId ?? null,
           versionId: versionId ?? null,
         },
-      })
+      }, { onConflict: 'v0_deployment_id' })
       .single();
     if (persistErr) {
       return NextResponse.json({ error: `Failed to persist deployment: ${persistErr.message}` }, { status: 500 });
