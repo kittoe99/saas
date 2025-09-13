@@ -316,6 +316,7 @@ export default function SiteBuilderPage() {
                   const qp = new URLSearchParams();
                   if (websiteId) qp.set('website_id', websiteId);
                   qp.set('step', 'hero');
+                  setStep('hero');
                   router.push(`/dashboard/site-builder?${qp.toString()}`);
                 }}
                 className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
@@ -541,6 +542,7 @@ export default function SiteBuilderPage() {
                   const qp = new URLSearchParams();
                   if (websiteId) qp.set('website_id', websiteId);
                   qp.set('step', 'services');
+                  setStep('services');
                   router.push(`/dashboard/site-builder?${qp.toString()}`);
                 }}
                 className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
@@ -659,6 +661,7 @@ export default function SiteBuilderPage() {
                   const qp = new URLSearchParams();
                   if (websiteId) qp.set('website_id', websiteId);
                   qp.set('step', 'areas');
+                  setStep('areas');
                   router.push(`/dashboard/site-builder?${qp.toString()}`);
                 }}
                 className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
@@ -777,6 +780,7 @@ export default function SiteBuilderPage() {
                   const qp = new URLSearchParams();
                   if (websiteId) qp.set('website_id', websiteId);
                   qp.set('step', 'global');
+                  setStep('global');
                   router.push(`/dashboard/site-builder?${qp.toString()}`);
                 }}
                 className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
@@ -891,6 +895,7 @@ export default function SiteBuilderPage() {
                   const qp = new URLSearchParams();
                   if (websiteId) qp.set('website_id', websiteId);
                   qp.set('step', 'deploy');
+                  setStep('deploy');
                   router.push(`/dashboard/site-builder?${qp.toString()}`);
                 }}
                 className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
