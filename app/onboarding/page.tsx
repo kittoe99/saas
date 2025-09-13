@@ -602,10 +602,18 @@ export default function OnboardingPage() {
         console.error("/api/onboarding error:", msg);
         throw new Error(msg);
       }
+      // Parse response to capture the definitive website_id to link the Build page
+      let wrote: any = null;
+      try {
+        const ct = res.headers.get("content-type") || "";
+        if (ct.includes("application/json")) wrote = await res.json();
+      } catch {}
+      const effectiveWebsiteId = (wrote?.website_id as string | undefined) || websiteId || undefined;
+
       // Redirect to the Dashboard Site Builder page to continue with Site Build → Preview → Deployment
       const qp = new URLSearchParams();
       qp.set("auto", "1");
-      if (websiteId) qp.set("website_id", websiteId);
+      if (effectiveWebsiteId) qp.set("website_id", effectiveWebsiteId);
       router.push(`/dashboard/site-builder?${qp.toString()}`);
     } catch (e: any) {
       setError(e?.message || "Something went wrong while finishing onboarding.");

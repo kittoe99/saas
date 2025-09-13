@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     if (cErr) return NextResponse.json({ error: `Failed to persist chat: ${cErr.message}` }, { status: 500 })
 
     // 3) Record onboarding submission (for auditing/traceability)
-    const { error: oErr } = await supabase
+    const { data: obRow, error: oErr } = await supabase
       .from('onboarding_submissions')
       .insert({
         user_id,
@@ -77,8 +77,21 @@ export async function POST(req: Request) {
         v0_chat_id: chat?.id ?? null,
         status: deploy ? 'generated' : 'generated',
       })
+      .select('id')
       .single()
     if (oErr) return NextResponse.json({ error: `Failed to persist onboarding submission: ${oErr.message}` }, { status: 500 })
+
+    // Update websites with v0 links and onboarding submission id
+    if (website_id) {
+      await supabase
+        .from('websites')
+        .update({
+          onboarding_submission_id: obRow?.id ?? null,
+          v0_project_id: project?.id ?? null,
+          v0_chat_id: chat?.id ?? null,
+        })
+        .eq('id', website_id)
+    }
 
     // 4) Optionally deploy
     let deployment: any = null
@@ -113,10 +126,19 @@ export async function POST(req: Request) {
         .eq('user_id', user_id)
         .order('created_at', { ascending: false })
         .limit(1)
+
+      // Also reflect latest ids on websites
+      if (website_id) {
+        await supabase
+          .from('websites')
+          .update({ last_version_id: versionId ?? null, last_deployment_id: deployment?.id ?? null })
+          .eq('id', website_id)
+      }
     }
 
     return NextResponse.json({
       ok: true,
+      website_id: website_id ?? null,
       project: { id: project?.id, name: project?.name },
       chat: { id: chat?.id, demoUrl },
       deployment: deployment ? { id: deployment?.id, status: deployment?.status, url: deployment?.webUrl ?? deployment?.url ?? null } : null,

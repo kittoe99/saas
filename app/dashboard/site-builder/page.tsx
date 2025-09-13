@@ -16,10 +16,14 @@ const STEPS: { key: StepKey; label: string; description: string }[] = [
 
 export default function SiteBuilderPage() {
   const [userId, setUserId] = useState<string | null>(null);
+  const [websiteId, setWebsiteId] = useState<string | null>(null);
   const [industry, setIndustry] = useState<string>("SaaS");
   const [answers, setAnswers] = useState<string>("");
   const [theme, setTheme] = useState<string>("");
-  const [deploy, setDeploy] = useState<boolean>(true);
+  const [deploy] = useState<boolean>(true);
+
+  // Loaded onboarding (raw) for summary display
+  const [onboarding, setOnboarding] = useState<any | null>(null);
 
   const [projectId, setProjectId] = useState<string>("");
   const [chatId, setChatId] = useState<string>("");
@@ -41,16 +45,18 @@ export default function SiteBuilderPage() {
       try {
         const url = new URL(window.location.href);
         const auto = url.searchParams.get("auto");
-        const websiteId = url.searchParams.get("website_id");
+        const wid = url.searchParams.get("website_id");
+        if (wid) setWebsiteId(wid);
         if (!userId) return;
         // Prefill answers/industry from onboarding
         const ob = await fetch(
-          websiteId ? `/api/onboarding?website_id=${encodeURIComponent(websiteId)}` : `/api/onboarding?user_id=${encodeURIComponent(userId)}`,
+          wid ? `/api/onboarding?website_id=${encodeURIComponent(wid)}` : `/api/onboarding?user_id=${encodeURIComponent(userId)}`,
           { cache: "no-store" }
         );
         if (ob.ok) {
           const j = await ob.json().catch(() => ({} as any));
           const data = j?.row?.data || {};
+          setOnboarding(data);
           const st = (data?.siteType as string | undefined) || '';
           const mapped = mapSiteTypeToIndustry(st);
           if (mapped) setIndustry(mapped);
@@ -149,6 +155,7 @@ export default function SiteBuilderPage() {
 
       const payload = {
         user_id: userId || undefined,
+        website_id: websiteId || undefined,
         industry,
         answers: safeParseJSON(answers) ?? {},
         theme: safeParseJSON(theme) ?? undefined,
@@ -212,63 +219,49 @@ export default function SiteBuilderPage() {
       </header>
 
       <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-4 bg-white">
-        <div className="text-sm font-medium text-neutral-800">Build your site from onboarding</div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm">
-            Industry
-            <select
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2"
-              value={industry}
-              onChange={(e) => setIndustry(e.target.value)}
-            >
-              <option>SaaS</option>
-              <option>eCommerce</option>
-              <option>Local Service</option>
-              <option>Agency</option>
-            </select>
-          </label>
-          <label className="block text-sm">
-            Deploy after generate?
-            <select
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2"
-              value={deploy ? "yes" : "no"}
-              onChange={(e) => setDeploy(e.target.value === "yes")}
-            >
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
-          </label>
-        </div>
-        <details className="rounded-lg border border-neutral-200 bg-neutral-50/60 p-3">
-          <summary className="cursor-pointer select-none text-sm font-medium text-neutral-800">Advanced (answers & theme JSON)</summary>
-          <div className="mt-3 grid gap-3">
-            <label className="block text-sm">
-              Onboarding Answers (JSON)
-              <textarea
-                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 h-36 font-mono text-xs"
-                value={answers}
-                onChange={(e) => setAnswers(e.target.value)}
-              />
-            </label>
-            <label className="block text-sm">
-              Theme (JSON, optional)
-              <textarea
-                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 h-36 font-mono text-xs"
-                value={theme}
-                onChange={(e) => setTheme(e.target.value)}
-                placeholder="Paste theme JSON here (colors, typography, radii, shadows, forms, buttons, dark mode)"
-              />
-            </label>
+        <div className="text-sm font-medium text-neutral-800">Review onboarding summary</div>
+        {!onboarding ? (
+          <div className="text-xs text-neutral-600">Loading your onboarding details…</div>
+        ) : (
+          <div className="grid gap-3 text-sm">
+            <div><span className="text-neutral-500">Business:</span> {onboarding?.name || "—"}</div>
+            <div><span className="text-neutral-500">Site Type:</span> {onboarding?.siteType || "—"}</div>
+            {onboarding?.category && <div><span className="text-neutral-500">Category:</span> {onboarding.category}</div>}
+            {Array.isArray(onboarding?.envisionedPages) && onboarding.envisionedPages.length > 0 && (
+              <div>
+                <div className="text-neutral-500">Pages:</div>
+                <ul className="mt-1 list-disc pl-5 text-xs text-neutral-700">
+                  {onboarding.envisionedPages.slice(0, 10).map((p: string, i: number) => (
+                    <li key={`${p}-${i}`}>{p}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {Array.isArray(onboarding?.selectedServices) && onboarding.selectedServices.length > 0 && (
+              <div>
+                <div className="text-neutral-500">Services:</div>
+                <ul className="mt-1 list-disc pl-5 text-xs text-neutral-700">
+                  {onboarding.selectedServices.slice(0, 10).map((s: string, i: number) => (
+                    <li key={`${s}-${i}`}>{s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {onboarding?.contactMethod && (
+              <div><span className="text-neutral-500">Contact method:</span> {onboarding.contactMethod}</div>
+            )}
           </div>
-        </details>
-        <button
-          onClick={handleGenerate}
-          disabled={!userId || busy}
-          className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm disabled:opacity-60 hover:opacity-90"
-        >
-          {busy ? "Building…" : "Build with my onboarding"}
-        </button>
-        {error && <div className="text-sm text-red-700">{error}</div>}
+        )}
+        <div className="pt-2">
+          <button
+            onClick={handleGenerate}
+            disabled={!userId || busy}
+            className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm disabled:opacity-60 hover:opacity-90"
+          >
+            {busy ? "Starting…" : "Continue"}
+          </button>
+          {error && <div className="text-sm text-red-700 mt-2">{error}</div>}
+        </div>
       </section>
 
       <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-4 bg-white">
