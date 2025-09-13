@@ -66,6 +66,43 @@ export async function POST(req: Request) {
       // swallow and fallback; SSE polling may still see updated state if any method succeeded
     }
 
+    // REST fallbacks (direct V0 API) if SDK surface doesn't match
+    // Requires V0_API_KEY in env
+    const apiKey = process.env.V0_API_KEY
+    if ((!didSend || !didVersion) && apiKey && chatId) {
+      const base = process.env.V0_API_BASE || 'https://api.v0.dev'
+      const headers: any = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      }
+      try {
+        if (!didSend) {
+          const r1 = await fetch(`${base}/chats/${encodeURIComponent(chatId)}/messages`, {
+            method: 'POST', headers, body: JSON.stringify({ role: 'user', content: message })
+          })
+          if (r1.ok) didSend = true
+        }
+      } catch {}
+      try {
+        if (!didVersion) {
+          // Try create a new version explicitly
+          const r2 = await fetch(`${base}/chats/${encodeURIComponent(chatId)}/versions`, {
+            method: 'POST', headers, body: JSON.stringify({})
+          })
+          if (r2.ok) didVersion = true
+        }
+      } catch {}
+      try {
+        if (!didVersion) {
+          // Fallback generate endpoint if available
+          const r3 = await fetch(`${base}/chats/${encodeURIComponent(chatId)}/generate`, {
+            method: 'POST', headers, body: JSON.stringify({})
+          })
+          if (r3.ok) didVersion = true
+        }
+      } catch {}
+    }
+
     if (!didSend && !didVersion) {
       const methods: string[] = []
       try {
