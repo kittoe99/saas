@@ -18,16 +18,30 @@ export async function POST(req: Request) {
       // SDK attempt: tolerant to different method names
       try {
         const chats: any = (v0 as any)?.chats;
-        if (chats?.findVersions) {
-          const resp = await chats.findVersions({ chatId, limit: 1 });
-          const list = (resp as any)?.versions || (resp as any)?.data || resp || [];
-          const latest = Array.isArray(list) ? list[0] : ((list as any)?.items?.[0] || null);
-          versionId = (latest as any)?.id || (latest as any)?.versionId || undefined;
-        } else if (chats?.versions?.list) {
-          const resp = await chats.versions.list({ chatId, limit: 1 });
-          const list = (resp as any)?.versions || (resp as any)?.data || resp || [];
-          const latest = Array.isArray(list) ? list[0] : ((list as any)?.items?.[0] || null);
-          versionId = (latest as any)?.id || (latest as any)?.versionId || undefined;
+        // First, try direct chat fetch to read latestVersion
+        if (chats?.get) {
+          const c = await chats.get({ chatId });
+          versionId = c?.latestVersion?.id || c?.chat?.latestVersion?.id || undefined;
+        } else if (chats?.retrieve) {
+          const c = await chats.retrieve({ chatId });
+          versionId = c?.latestVersion?.id || c?.chat?.latestVersion?.id || undefined;
+        } else if (chats?.find) {
+          const c = await chats.find({ chatId });
+          versionId = c?.latestVersion?.id || c?.chat?.latestVersion?.id || undefined;
+        }
+        // If still missing, try listing versions
+        if (!versionId) {
+          if (chats?.findVersions) {
+            const resp = await chats.findVersions({ chatId, limit: 1 });
+            const list = (resp as any)?.versions || (resp as any)?.data || resp || [];
+            const latest = Array.isArray(list) ? list[0] : ((list as any)?.items?.[0] || null);
+            versionId = (latest as any)?.id || (latest as any)?.versionId || undefined;
+          } else if (chats?.versions?.list) {
+            const resp = await chats.versions.list({ chatId, limit: 1 });
+            const list = (resp as any)?.versions || (resp as any)?.data || resp || [];
+            const latest = Array.isArray(list) ? list[0] : ((list as any)?.items?.[0] || null);
+            versionId = (latest as any)?.id || (latest as any)?.versionId || undefined;
+          }
         }
       } catch {}
       // REST fallback to resolve latest version

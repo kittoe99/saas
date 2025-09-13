@@ -115,9 +115,6 @@ export async function POST(req: Request) {
               }
               await new Promise((r) => setTimeout(r, 3000))
             }
-            if (!versionId) {
-              return NextResponse.json({ error: j?.error || j?.message || j2?.error || j2?.message || 'Failed to create version from chat' }, { status: !r.ok ? r.status : (!r2.ok ? r2.status : 500) })
-            }
           }
         }
         if (versionId) {
