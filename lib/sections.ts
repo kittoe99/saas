@@ -6,6 +6,8 @@ export type SectionKey =
   | "hero_alt"
   | "services"
   | "services_alt"
+  | "areas"
+  | "areas_alt"
   // Future: add more keys like "features", "services_grid", "testimonials", "faq", etc.
   ;
 
@@ -133,6 +135,18 @@ export const SECTIONS: Record<SectionKey, SectionSnippet> = {
     label: "Services (Alt)",
     description: "Services variant with darker overlay and feature bullets.",
     code: SERVICES_ALT_SNIPPET,
+  },
+  areas: {
+    key: "areas",
+    label: "Service Areas",
+    description: "List of major cities with CTA.",
+    code: `const ServiceAreasComponent = () => {\n  const majorCities = [\n    { name: "Austin", state: "TX" },\n    { name: "Nashville", state: "TN" },\n    { name: "Boise", state: "ID" },\n    { name: "Raleigh", state: "NC" },\n    { name: "Phoenix", state: "AZ" },\n    { name: "Tampa", state: "FL" },\n    { name: "Charlotte", state: "NC" },\n    { name: "Denver", state: "CO" },\n    { name: "Columbus", state: "OH" },\n    { name: "Salt Lake City", state: "UT" },\n    { name: "Baltimore", state: "MD" }\n  ]\n\n  return (\n    <section className=\"py-16\">\n      <div className=\"max-w-6xl mx-auto px-6\">\n        <div className=\"text-center mb-12\">\n          <h2 className=\"text-4xl font-bold text-slate-800 mb-4\">Service Areas</h2>\n          <p className=\"text-lg text-blue-500 max-w-2xl mx-auto\">\n            Moving help available in these major cities and surrounding areas\n          </p>\n        </div>\n        <div className=\"flex flex-wrap justify-center items-center gap-x-8 gap-y-6 mb-8\">\n          {majorCities.map((city, index) => (\n            <div key={index} className=\"flex items-center space-x-2\">\n              <MapPin className=\"h-4 w-4 text-rose-500 flex-shrink-0\" />\n              <span className=\"text-slate-700 font-medium whitespace-nowrap\">\n                {city.name}, {city.state}\n              </span>\n            </div>\n          ))}\n        </div>\n        <div className=\"text-center\">\n          <Button className=\"bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200\">\n            <Phone className=\"h-4 w-4 mr-2\" />\n            Call (855) 123-MOVE\n          </Button>\n        </div>\n      </div>\n    </section>\n  )\n}`,
+  },
+  areas_alt: {
+    key: "areas_alt",
+    label: "Service Areas (BG)",
+    description: "Service areas with photographic background overlay.",
+    code: `const ServiceAreasWithBackgroundComponent = () => {\n  const majorCities = [\n    { name: "Austin", state: "TX" },\n    { name: "Nashville", state: "TN" },\n    { name: "Boise", state: "ID" },\n    { name: "Raleigh", state: "NC" },\n    { name: "Phoenix", state: "AZ" },\n    { name: "Tampa", state: "FL" },\n    { name: "Charlotte", state: "NC" },\n    { name: "Denver", state: "CO" },\n    { name: "Columbus", state: "OH" },\n    { name: "Salt Lake City", state: "UT" },\n    { name: "Baltimore", state: "MD" }\n  ]\n\n  return (\n    <section \n      className=\"py-16 relative overflow-hidden\"\n      style={{\n        backgroundImage: \"url('/aerial-view-of-denver-colorado-metropolitan-area.jpg')\",\n        backgroundSize: \"cover\",\n        backgroundPosition: \"center\",\n        backgroundRepeat: \"no-repeat\"\n      }}\n    >\n      <div className=\"absolute inset-0 bg-slate-900/75\"></div>\n      <div className=\"max-w-6xl mx-auto px-6 relative z-10\">\n        <div className=\"text-center mb-12\">\n          <h2 className=\"text-4xl font-bold text-white mb-4\">Service Areas</h2>\n          <p className=\"text-lg text-blue-200 max-w-2xl mx-auto\">\n            Moving help available in these major cities and surrounding areas\n          </p>\n        </div>\n        <div className=\"flex flex-wrap justify-center items-center gap-x-8 gap-y-6 mb-8\">\n          {majorCities.map((city, index) => (\n            <div key={index} className=\"flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20\">\n              <MapPin className=\"h-4 w-4 text-rose-400 flex-shrink-0\" />\n              <span className=\"text-white font-medium whitespace-nowrap\">\n                {city.name}, {city.state}\n              </span>\n            </div>\n          ))}\n        </div>\n        <div className=\"text-center\">\n          <Button className=\"bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200\">\n            <Phone className=\"h-4 w-4 mr-2\" />\n            Call (855) 123-MOVE\n          </Button>\n        </div>\n      </div>\n    </section>\n  )\n}`,
   },
 };
 

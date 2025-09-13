@@ -39,6 +39,8 @@ export default function SiteBuilderPage() {
   const [attachedChatId, setAttachedChatId] = useState<string | null>(null);
   const [heroSent, setHeroSent] = useState<boolean>(false);
   const [servicesSent, setServicesSent] = useState<boolean>(false);
+  const [areasSent, setAreasSent] = useState<boolean>(false);
+  const [globalSent, setGlobalSent] = useState<boolean>(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -612,7 +614,7 @@ export default function SiteBuilderPage() {
                 onClick={() => {
                   const qp = new URLSearchParams();
                   if (websiteId) qp.set('website_id', websiteId);
-                  qp.set('step', 'init');
+                  qp.set('step', 'areas');
                   router.push(`/dashboard/site-builder?${qp.toString()}`);
                 }}
                 className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
@@ -621,6 +623,309 @@ export default function SiteBuilderPage() {
               </button>
             </div>
           )}
+        </section>
+      )}
+
+      {step === 'areas' && (
+        <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-neutral-900">Add Service Areas Section</h2>
+            <p className="text-sm text-neutral-600">We’ll randomly pick a service areas layout and ask v0 to implement it. Live status will appear below.</p>
+          </div>
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+            <div className="text-sm font-medium text-neutral-800">Service Areas Progress</div>
+            <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
+              <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
+            </div>
+            <div className="mt-2 text-xs text-neutral-600 flex items-center gap-2">
+              {(simBusy && !simDone) && (
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+              )}
+              <span>{simStage}</span>
+            </div>
+          </div>
+          {!areasSent ? (
+            <button
+              onClick={async () => {
+                if (simBusy) return;
+                if (!userId) return;
+                setSimBusy(true);
+                setSimStage('Selecting service areas layout…');
+                setSimProgress(8);
+                try {
+                  const keys = ['areas','areas_alt'] as const;
+                  const pick = keys[Math.floor(Math.random()*keys.length)];
+                  const code = getSectionCode(pick as any);
+                  setSimStage('Sending service areas to builder…');
+                  setSimProgress(18);
+                  const r = await fetch('/api/sitebuild/continue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      user_id: userId,
+                      website_id: websiteId,
+                      message: `Design our service areas section like this: \n\n${code}`,
+                    })
+                  });
+                  const j = await r.json().catch(() => ({} as any));
+                  if (!r.ok) throw new Error(j?.error || 'Failed to send service areas');
+                  const cid = j?.chatId as string | undefined;
+                  if (!cid && !attachedChatId) throw new Error('Missing chatId');
+                  const chatToUse = cid || attachedChatId!;
+                  setAreasSent(true);
+                  setSimStage('Waiting for service areas preview…');
+                  setSimProgress(30);
+                  const es = new EventSource(`/api/sitebuild/stream?chatId=${encodeURIComponent(chatToUse)}`);
+                  let localProgress = 30;
+                  es.onmessage = (ev) => {
+                    try {
+                      const data = JSON.parse(ev.data || '{}');
+                      if (data?.type === 'stage') {
+                        setSimStage(data.label || 'Working…');
+                        localProgress = Math.min(92, localProgress + 6);
+                        setSimProgress(localProgress);
+                      } else if (data?.type === 'preview') {
+                        setSimStage('Preview updated');
+                        setSimProgress(96);
+                      } else if (data?.type === 'complete') {
+                        setSimStage('Service areas added');
+                        setSimProgress(100);
+                        setSimDone(true);
+                        setSimBusy(false);
+                        es.close();
+                      } else if (data?.type === 'timeout') {
+                        setSimStage('Timed out waiting for service areas');
+                        setSimBusy(false);
+                        es.close();
+                      } else if (data?.type === 'error') {
+                        setSimStage(`Error: ${data.error}`);
+                        setSimBusy(false);
+                        es.close();
+                      }
+                    } catch {}
+                  };
+                  es.onerror = () => {
+                    setSimStage('Connection error');
+                    setSimBusy(false);
+                    es.close();
+                  };
+                } catch (e: any) {
+                  setSimStage(e?.message || 'Failed to start service areas step');
+                  setSimBusy(false);
+                }
+              }}
+              className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
+              disabled={simBusy || !userId}
+            >
+              {simBusy ? 'Working…' : 'Add Service Areas'}
+            </button>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-neutral-600">Service areas step completed. Continue to the next step.</div>
+              <button
+                onClick={() => {
+                  const qp = new URLSearchParams();
+                  if (websiteId) qp.set('website_id', websiteId);
+                  qp.set('step', 'global');
+                  router.push(`/dashboard/site-builder?${qp.toString()}`);
+                }}
+                className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
+              >
+                Continue
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
+      {step === 'global' && (
+        <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-neutral-900">Apply Global Elements</h2>
+            <p className="text-sm text-neutral-600">We’ll ask v0 to ensure a service areas section is present on the homepage and that navigation + footer appear on all pages.</p>
+          </div>
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+            <div className="text-sm font-medium text-neutral-800">Global Progress</div>
+            <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
+              <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
+            </div>
+            <div className="mt-2 text-xs text-neutral-600 flex items-center gap-2">
+              {(simBusy && !simDone) && (
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+              )}
+              <span>{simStage}</span>
+            </div>
+          </div>
+          {!globalSent ? (
+            <button
+              onClick={async () => {
+                if (simBusy) return;
+                if (!userId) return;
+                setSimBusy(true);
+                setSimStage('Sending global update…');
+                setSimProgress(12);
+                try {
+                  const message = 'make sure homepage has a "service areas" section, let navigation menu and footer appear in all pages, then add relevant site images';
+                  const r = await fetch('/api/sitebuild/continue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      user_id: userId,
+                      website_id: websiteId,
+                      message,
+                    })
+                  });
+                  const j = await r.json().catch(() => ({} as any));
+                  if (!r.ok) throw new Error(j?.error || 'Failed to send global update');
+                  const cid = j?.chatId as string | undefined;
+                  if (!cid && !attachedChatId) throw new Error('Missing chatId');
+                  const chatToUse = cid || attachedChatId!;
+                  setGlobalSent(true);
+                  setSimStage('Waiting for global update preview…');
+                  setSimProgress(28);
+                  const es = new EventSource(`/api/sitebuild/stream?chatId=${encodeURIComponent(chatToUse)}`);
+                  let localProgress = 28;
+                  es.onmessage = (ev) => {
+                    try {
+                      const data = JSON.parse(ev.data || '{}');
+                      if (data?.type === 'stage') {
+                        setSimStage(data.label || 'Working…');
+                        localProgress = Math.min(92, localProgress + 6);
+                        setSimProgress(localProgress);
+                      } else if (data?.type === 'preview') {
+                        setSimStage('Preview updated');
+                        setSimProgress(96);
+                      } else if (data?.type === 'complete') {
+                        setSimStage('Global elements applied');
+                        setSimProgress(100);
+                        setSimDone(true);
+                        setSimBusy(false);
+                        es.close();
+                      } else if (data?.type === 'timeout') {
+                        setSimStage('Timed out waiting for global update');
+                        setSimBusy(false);
+                        es.close();
+                      } else if (data?.type === 'error') {
+                        setSimStage(`Error: ${data.error}`);
+                        setSimBusy(false);
+                        es.close();
+                      }
+                    } catch {}
+                  };
+                  es.onerror = () => {
+                    setSimStage('Connection error');
+                    setSimBusy(false);
+                    es.close();
+                  };
+                } catch (e: any) {
+                  setSimStage(e?.message || 'Failed to start global step');
+                  setSimBusy(false);
+                }
+              }}
+              className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
+              disabled={simBusy || !userId}
+            >
+              {simBusy ? 'Working…' : 'Apply Global Elements'}
+            </button>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-neutral-600">Global step completed. You can deploy when ready.</div>
+              <button
+                onClick={() => {
+                  const qp = new URLSearchParams();
+                  if (websiteId) qp.set('website_id', websiteId);
+                  qp.set('step', 'deploy');
+                  router.push(`/dashboard/site-builder?${qp.toString()}`);
+                }}
+                className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
+              >
+                Continue
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
+      {step === 'deploy' && (
+        <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-neutral-900">Deploy Site</h2>
+            <p className="text-sm text-neutral-600">This will create a deployment from the latest generated version. We’ll monitor status until the live URL is ready.</p>
+          </div>
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+            <div className="text-sm font-medium text-neutral-800">Deployment Progress</div>
+            <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
+              <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
+            </div>
+            <div className="mt-2 text-xs text-neutral-600 flex items-center gap-2">
+              {(simBusy && !simDone) && (
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+              )}
+              <span>{simStage}</span>
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              if (simBusy) return;
+              if (!userId) return;
+              setSimBusy(true);
+              setSimStage('Creating deployment…');
+              setSimProgress(12);
+              try {
+                const r = await fetch('/api/sitebuild/deploy', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ user_id: userId, website_id: websiteId })
+                });
+                const j = await r.json().catch(() => ({} as any));
+                if (!r.ok) throw new Error(j?.error || 'Failed to start deployment');
+                const depId = j?.deploymentId as string | undefined;
+                if (!depId) throw new Error('Missing deploymentId');
+                setSimStage('Deploying…');
+                setSimProgress(30);
+                const es = new EventSource(`/api/sitebuild/stream?deploymentId=${encodeURIComponent(depId)}`);
+                let localProgress = 30;
+                es.onmessage = (ev) => {
+                  try {
+                    const data = JSON.parse(ev.data || '{}');
+                    if (data?.type === 'stage') {
+                      setSimStage(data.label || 'Working…');
+                      localProgress = Math.min(92, localProgress + 6);
+                      setSimProgress(localProgress);
+                    } else if (data?.type === 'deployed') {
+                      setSimStage(`Deployed: ${data.url}`);
+                      setSimProgress(100);
+                      setSimDone(true);
+                      setSimBusy(false);
+                      es.close();
+                    } else if (data?.type === 'complete') {
+                      // Already handled in deployed event
+                    } else if (data?.type === 'timeout') {
+                      setSimStage('Timed out waiting for deployment');
+                      setSimBusy(false);
+                      es.close();
+                    } else if (data?.type === 'error') {
+                      setSimStage(`Error: ${data.error}`);
+                      setSimBusy(false);
+                      es.close();
+                    }
+                  } catch {}
+                };
+                es.onerror = () => {
+                  setSimStage('Connection error');
+                  setSimBusy(false);
+                  es.close();
+                };
+              } catch (e: any) {
+                setSimStage(e?.message || 'Failed to deploy');
+                setSimBusy(false);
+              }
+            }}
+            className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
+            disabled={simBusy || !userId}
+          >
+            {simBusy ? 'Working…' : 'Deploy Now'}
+          </button>
         </section>
       )}
     </div>
