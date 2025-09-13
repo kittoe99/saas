@@ -67,7 +67,30 @@ export async function POST(req: Request) {
     }
 
     if (!didSend && !didVersion) {
-      return NextResponse.json({ error: 'v0 chat continuation methods are unavailable in the current SDK. Could not send message.' }, { status: 500 })
+      const methods: string[] = []
+      try {
+        const chats: any = (v0 as any)?.chats
+        if (chats) {
+          for (const k of Object.keys(chats)) {
+            if (typeof (chats as any)[k] === 'function') methods.push(k)
+          }
+          if (chats.messages) {
+            const sub: string[] = []
+            for (const k of Object.keys(chats.messages)) {
+              if (typeof (chats.messages as any)[k] === 'function') sub.push(`messages.${k}`)
+            }
+            methods.push(...sub)
+          }
+          if (chats.versions) {
+            const sub: string[] = []
+            for (const k of Object.keys(chats.versions)) {
+              if (typeof (chats.versions as any)[k] === 'function') sub.push(`versions.${k}`)
+            }
+            methods.push(...sub)
+          }
+        }
+      } catch {}
+      return NextResponse.json({ error: 'v0 chat continuation methods are unavailable in the current SDK. Could not send message.', methods }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, chatId }, { status: 200 })
