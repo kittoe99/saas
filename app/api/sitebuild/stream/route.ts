@@ -4,9 +4,8 @@ function encoder() {
   return new TextEncoder()
 }
 
-async function pollChat(chatId: string) {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || ''
-  const url = `${base}/api/v0/chats/${encodeURIComponent(chatId)}`
+async function pollChat(chatId: string, origin: string) {
+  const url = `${origin}/api/v0/chats/${encodeURIComponent(chatId)}`
   const res = await fetch(url, { cache: 'no-store' })
   // Expected shape: { demo?: string, chat?: {...}, ... }
   const json = await res.json().catch(() => ({} as any))
@@ -21,6 +20,7 @@ export async function GET(req: Request) {
   if (!chatId) {
     return NextResponse.json({ error: 'Missing chatId' }, { status: 400 })
   }
+  const { origin } = new URL(req.url)
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
       try {
         while (attempts < maxAttempts) {
           attempts++
-          const { demo } = await pollChat(chatId)
+          const { demo } = await pollChat(chatId, origin)
           if (demo) {
             send({ type: 'preview', demoUrl: demo })
             send({ type: 'complete' })
