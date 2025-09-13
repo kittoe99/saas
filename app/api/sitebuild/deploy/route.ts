@@ -111,29 +111,53 @@ export async function POST(req: Request) {
       }
     }
 
-    // Try SDK deployment first
-    // At this point, either we already returned (if dep from chat), or we have a versionId
-    dep = null
+    // Preferred path: delegate to internal v0 deployments route for consistency with our app
+    const { origin } = new URL(req.url)
     try {
-      const payload: any = { projectId: site.v0_project_id }
-      if (versionId) payload.versionId = versionId
-      if ((v0 as any)?.deployments?.create) {
-        dep = await (v0 as any).deployments.create(payload)
+      const resp = await fetch(`${origin}/api/v0/deployments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: site.v0_project_id,
+          user_id,
+          website_id,
+          // Provide both when available; the internal route will resolve as needed
+          chatId: site.v0_chat_id || undefined,
+          versionId: versionId || undefined,
+        })
+      })
+      const j = await resp.json().catch(() => ({} as any))
+      if (resp.ok) {
+        dep = j?.deployment || j
+      } else {
+        // Fall through to SDK/REST attempts with better error reporting
       }
-    } catch (e) {}
+    } catch {}
 
-    // REST fallback
+    // Try SDK deployment as a fallback
+    if (!dep) {
+      try {
+        const payload: any = { projectId: site.v0_project_id }
+        if (versionId) payload.versionId = versionId
+        else if (site.v0_chat_id) payload.chatId = site.v0_chat_id
+        if ((v0 as any)?.deployments?.create) {
+          dep = await (v0 as any).deployments.create(payload)
+        }
+      } catch (e) {}
+    }
+
+    // Final REST fallback
     if (!dep) {
       const apiKey = process.env.V0_API_KEY
       if (!apiKey) return NextResponse.json({ error: 'Missing V0_API_KEY for deployment' }, { status: 500 })
       const base = process.env.V0_API_BASE || 'https://api.v0.dev'
+      const payload: any = { projectId: site.v0_project_id }
+      if (versionId) payload.versionId = versionId
+      else if (site.v0_chat_id) payload.chatId = site.v0_chat_id
       const r = await fetch(`${base}/deployments`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({ projectId: site.v0_project_id, versionId: versionId || undefined })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify(payload)
       })
       const j = await r.json().catch(() => ({} as any))
       if (!r.ok) return NextResponse.json({ error: j?.error || j?.message || 'Failed to create deployment' }, { status: r.status })
