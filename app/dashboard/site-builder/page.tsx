@@ -85,6 +85,31 @@ export default function SiteBuilderPage() {
     try { return s ? JSON.parse(s) : undefined } catch { return undefined }
   }
 
+  function buildInitialMessage(data: any): string {
+    if (!data || typeof data !== 'object') return '';
+    const brandName = (data?.name || data?.brand?.name || 'New Site').toString();
+    const tagline = (data?.tagline || '').toString();
+    const siteType = (data?.siteType || '').toString();
+    const category = (data?.category || '').toString();
+    const audience = (data?.primaryGoal || data?.typeSpecific?.icp || '').toString();
+    const tone = Array.isArray(data?.voiceTone) && data.voiceTone.length ? data.voiceTone.join(', ') : 'clear, modern';
+    const pages = Array.isArray(data?.envisionedPages) ? data.envisionedPages.join(', ') : '';
+    const services = Array.isArray(data?.selectedServices) ? data.selectedServices.join(', ') : '';
+    const contactMethod = (data?.contactMethod || '').toString();
+    const email = (data?.businessEmail || '').toString();
+    const phone = (data?.businessPhone || '').toString();
+    const socials: string[] = [];
+    if (data?.social?.x) socials.push(`X/Twitter: ${data.social.x}`);
+    if (data?.social?.linkedin) socials.push(`LinkedIn: ${data.social.linkedin}`);
+    if (data?.social?.instagram) socials.push(`Instagram: ${data.social.instagram}`);
+    if (data?.social?.facebook) socials.push(`Facebook: ${data.social.facebook}`);
+    const areas = Array.isArray(data?.cities) ? data.cities.map((c: any) => c?.displayName || c?.name).filter(Boolean).join(', ') : '';
+    const preferredDomain = (data?.preferredDomain || '').toString();
+    const competitors = Array.isArray(data?.competitors) ? data.competitors.filter((v: string) => v && v.trim().length).join(', ') : '';
+
+    return `Build a website for a cleaning company using the details below. Follow the System Prompt (theme) strictly.\n\nBusiness\n- Name: ${brandName}\n- Tagline: ${tagline || 'Professional Cleaning Services'}\n- Type/Category: ${[siteType, category].filter(Boolean).join(' / ') || '—'}\n- Audience: ${audience || '—'}\n- Tone: ${tone}\n\nPages (create routes and files)\n- Create: ${pages || 'home, about, contact'}\n- Include 404, privacy, terms if not listed.\n\nKey Sections (fill with sensible placeholders if content is missing)\n- Hero: value prop + supporting line + primary CTA.\n- Services: list of ${services || 'core services'} with short descriptions.\n- Pricing: 2–4 plan cards (Basic/Standard/Premium) unless specified.\n- Social proof: testimonials or placeholder quotes.\n- FAQ: 6–8 Q/A pairs.\n- Contact: ${contactMethod || 'form'} with solid-fields spec.\n\nTheme & UX (must follow the System Prompt)\n- Terracotta palette (#C0452C primary, hover #A53A24), background #FCFAF7, text #2D2A26/#6B6660.\n- Forms: solid fields, 1.5px #DDDAD6 border, 8px radius, focus ring 0 0 0 3px rgba(192,69,44,.2).\n- Components: radii per spec; shadows for elevation; minimal borders.\n- Typography: Geist; headings 600; body 16px/1.6; labels 500 with 0.02em.\n\nContent & Data\n- Services: ${services || '—'}\n- Contact: method ${contactMethod || 'form'}; email ${email || '—'}; phone ${phone || '—'}\n- Social: ${socials.join(' | ') || '—'}\n- Areas served: ${areas || '—'}\n- Domain preference: ${preferredDomain || '—'}\n- Competitors (for positioning; do not copy): ${competitors || '—'}\n\nRequirements\n- Accessibility: WCAG AA; visible focus states; adequate contrast.\n- Responsive layout for mobile/tablet/desktop.\n- SEO: meta title/description; OpenGraph defaults.\n- If inputs are missing, scaffold placeholders and TODO comments.\n\nDeliverables\n- Working version preview that reflects the above, using the System Prompt theme exactly.`;
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 space-y-10">
       <header className="space-y-1">
@@ -314,7 +339,7 @@ export default function SiteBuilderPage() {
       {step === 'init' && (
         <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-4 bg-white">
           <div className="text-sm font-medium text-neutral-800">Init Preview: what we'll send</div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <div className="text-[11px] text-neutral-500">System Prompt (Theme)</div>
               <pre className="whitespace-pre-wrap text-xs leading-relaxed rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-neutral-800 max-h-72 overflow-auto">
@@ -356,6 +381,12 @@ export default function SiteBuilderPage() {
                 className="w-full h-72 rounded-lg border border-neutral-200 bg-neutral-50 p-3 font-mono text-xs text-neutral-800"
                 value={answers}
               />
+            </div>
+            <div className="space-y-2">
+              <div className="text-[11px] text-neutral-500">Initial Chat Message</div>
+              <pre className="whitespace-pre-wrap text-xs leading-relaxed rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-neutral-800 max-h-72 overflow-auto">
+{buildInitialMessage(onboarding)}
+              </pre>
             </div>
           </div>
           <div className="pt-4">
