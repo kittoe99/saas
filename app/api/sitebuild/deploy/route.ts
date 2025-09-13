@@ -48,14 +48,33 @@ export async function POST(req: Request) {
         const apiKey = process.env.V0_API_KEY
         if (!apiKey) return NextResponse.json({ error: 'Missing V0_API_KEY for creating version' }, { status: 500 })
         const base = process.env.V0_API_BASE || 'https://api.v0.dev'
-        const r = await fetch(`${base}/chats/${encodeURIComponent(site.v0_chat_id)}/versions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-          body: JSON.stringify({})
-        })
-        const j = await r.json().catch(() => ({} as any))
-        if (!r.ok) return NextResponse.json({ error: j?.error || j?.message || 'Failed to create version from chat' }, { status: r.status })
-        versionId = j?.id || j?.versionId || null
+        // First, try to send a small message to trigger generation
+        try {
+          const chats: any = (v0 as any)?.chats
+          if (chats?.sendMessage) {
+            await chats.sendMessage({ chatId: site.v0_chat_id, message: 'Prepare for deployment: finalize latest version' })
+          } else {
+            await fetch(`${base}/chats/${encodeURIComponent(site.v0_chat_id)}/messages`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+              body: JSON.stringify({ role: 'user', content: 'Prepare for deployment: finalize latest version' })
+            }).catch(() => {})
+          }
+        } catch {}
+        // Poll chat for latestVersion id (up to ~90s)
+        for (let i = 0; i < 30 && !versionId; i++) {
+          const gr = await fetch(`${base}/chats/${encodeURIComponent(site.v0_chat_id)}`, {
+            method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}`, 'Accept': 'application/json' }
+          })
+          const gj = await gr.json().catch(() => ({} as any))
+          if (gr.ok) {
+            versionId = gj?.latestVersion?.id || gj?.chat?.latestVersion?.id || null
+            if (versionId) break
+          }
+          await new Promise((r) => setTimeout(r, 3000))
+        }
+        if (!versionId) {
+          return NextResponse.json({ error: 'Failed to create version from chat (no latestVersion found after polling). Ensure the chat has generated at least one version.' }, { status: 500 })
+        }
       }
       // Persist last_version_id on websites if obtained
       if (versionId) {
