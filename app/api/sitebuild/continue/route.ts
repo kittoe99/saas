@@ -31,127 +31,42 @@ export async function POST(req: Request) {
       chatId = row.v0_chat_id as string
     }
 
-    // Try a variety of SDK methods, tolerant to version differences.
-    let didSend = false
-    let didVersion = false
-    try {
-      const chats: any = (v0 as any)?.chats
-      if (chats) {
-        // Official documented method
-        if (typeof chats.sendMessage === 'function') {
-          await chats.sendMessage({ chatId, message })
-          didSend = true
-        }
-        if (typeof chats.messages?.create === 'function') {
-          await chats.messages.create({ chatId, role: 'user', content: message })
-          didSend = true
-        } else if (typeof chats.send === 'function') {
-          await chats.send({ chatId, role: 'user', content: message })
-          didSend = true
-        } else if (typeof chats.createMessage === 'function') {
-          await chats.createMessage({ chatId, role: 'user', content: message })
-          didSend = true
-        }
-        // Attempt to request a new version if supported (often not necessary if sendMessage triggers generation)
-        if (typeof chats.versions?.create === 'function') {
-          await chats.versions.create({ chatId })
-          didVersion = true
-        } else if (typeof chats.requestVersion === 'function') {
-          await chats.requestVersion({ chatId })
-          didVersion = true
-        } else if (typeof chats.generate === 'function') {
-          await chats.generate({ chatId })
-          didVersion = true
-        } else if (typeof chats.createVersion === 'function') {
-          await chats.createVersion({ chatId })
-          didVersion = true
-        }
-      }
-    } catch (e) {
-      // swallow and fallback; SSE polling may still see updated state if any method succeeded
-    }
-
-    // Attempt internal fallback using our own /api/v0/chats/send route (does SDK/REST internally)
-    if ((!didSend || !didVersion) && chatId && message && user_id) {
-      try {
-        const local = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/v0/chats/send`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chatId, message, user_id, website_id })
-        })
-        const lj = await local.json().catch(() => ({} as any))
-        if (local.ok && !lj?.error) {
-          didSend = true
-        }
-      } catch {}
-    }
-
-    // REST fallbacks (direct V0 API) if SDK surface doesn't match and internal fallback didn't resolve it
-    // Requires V0_API_KEY in env
+    // REST-first approach (avoid SDK entirely)
     const apiKey = process.env.V0_API_KEY
-    if ((!didSend || !didVersion) && !apiKey) {
-      // If we couldn't send and have no API key for REST fallback, return a clear error
-      return NextResponse.json({ error: 'Missing V0_API_KEY on the server. Set it in your server env (.env.local) for REST fallback.' }, { status: 500 })
+    if (!apiKey) {
+      return NextResponse.json({ error: 'Missing V0_API_KEY on the server. Set it in .env.local for REST continuation.' }, { status: 500 })
     }
-    if ((!didSend || !didVersion) && apiKey && chatId) {
-      const base = process.env.V0_API_BASE || 'https://api.v0.dev'
-      const headers: any = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      }
-      try {
-        if (!didSend) {
-          const r1 = await fetch(`${base}/chats/${encodeURIComponent(chatId)}/messages`, {
-            method: 'POST', headers, body: JSON.stringify({ role: 'user', content: message })
-          })
-          if (r1.ok) didSend = true
-        }
-      } catch {}
-      try {
-        if (!didVersion) {
-          // Try create a new version explicitly
-          const r2 = await fetch(`${base}/chats/${encodeURIComponent(chatId)}/versions`, {
-            method: 'POST', headers, body: JSON.stringify({})
-          })
-          if (r2.ok) didVersion = true
-        }
-      } catch {}
-      try {
-        if (!didVersion) {
-          // Fallback generate endpoint if available
-          const r3 = await fetch(`${base}/chats/${encodeURIComponent(chatId)}/generate`, {
-            method: 'POST', headers, body: JSON.stringify({})
-          })
-          if (r3.ok) didVersion = true
-        }
-      } catch {}
+    const base = process.env.V0_API_BASE || 'https://api.v0.dev'
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      'Accept': 'application/json',
     }
 
-    if (!didSend && !didVersion) {
-      const methods: string[] = []
+    // 1) Send user message
+    const r1 = await fetch(`${base}/chats/${encodeURIComponent(chatId!)}/messages`, {
+      method: 'POST', headers, body: JSON.stringify({ role: 'user', content: message })
+    })
+    if (!r1.ok) {
+      const j = await r1.json().catch(() => ({} as any))
+      return NextResponse.json({ error: j?.error || 'Failed to send message (REST)' }, { status: r1.status })
+    }
+
+    // 2) Request a new version explicitly (some APIs may auto-generate on message; this is a nudge)
+    let versionOk = false
+    try {
+      const r2 = await fetch(`${base}/chats/${encodeURIComponent(chatId!)}/versions`, {
+        method: 'POST', headers, body: JSON.stringify({})
+      })
+      versionOk = r2.ok
+    } catch {}
+    if (!versionOk) {
       try {
-        const chats: any = (v0 as any)?.chats
-        if (chats) {
-          for (const k of Object.keys(chats)) {
-            if (typeof (chats as any)[k] === 'function') methods.push(k)
-          }
-          if (chats.messages) {
-            const sub: string[] = []
-            for (const k of Object.keys(chats.messages)) {
-              if (typeof (chats.messages as any)[k] === 'function') sub.push(`messages.${k}`)
-            }
-            methods.push(...sub)
-          }
-          if (chats.versions) {
-            const sub: string[] = []
-            for (const k of Object.keys(chats.versions)) {
-              if (typeof (chats.versions as any)[k] === 'function') sub.push(`versions.${k}`)
-            }
-            methods.push(...sub)
-          }
-        }
+        const r3 = await fetch(`${base}/chats/${encodeURIComponent(chatId!)}/generate`, {
+          method: 'POST', headers, body: JSON.stringify({})
+        })
+        versionOk = r3.ok || versionOk
       } catch {}
-      return NextResponse.json({ error: 'v0 chat continuation methods are unavailable in the current SDK. Could not send message.', methods }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, chatId }, { status: 200 })
