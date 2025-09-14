@@ -294,6 +294,7 @@ export default function SiteBuilderPage() {
             )}
           </div>
           {!simDone ? (
+            <>
             <button
               onClick={async () => {
                 if (simBusy) return;
@@ -368,6 +369,7 @@ export default function SiteBuilderPage() {
                 {startError}
               </div>
             )}
+            </>
           ) : (
             <div className="flex items-center justify-between">
               <div className="text-xs text-neutral-600">Build completed successfully. You can continue.</div>
@@ -519,6 +521,7 @@ export default function SiteBuilderPage() {
             </div>
           </div>
           {!heroSent ? (
+            <>
             <button
               onClick={async () => {
                 if (simBusy) return;
@@ -603,6 +606,12 @@ export default function SiteBuilderPage() {
             >
               {simBusy ? 'Working…' : 'Continue'}
             </button>
+            {heroError && (
+              <div className="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                {heroError}
+              </div>
+            )}
+          </>
           ) : (
             <div className="flex items-center justify-between">
               <div className="text-xs text-neutral-600">Update applied. Continue when ready.</div>
@@ -637,6 +646,7 @@ export default function SiteBuilderPage() {
             </div>
           </div>
           {!servicesSent ? (
+            <>
             <button
               onClick={async () => {
                 if (simBusy) return;
