@@ -149,6 +149,48 @@ export default function SiteBuilderPage() {
 
   const liveStage = simStage || (simBusy ? BUILD_STEPS[buildStepIndex] : '');
 
+  // Debug details for verification
+  const [debugLoading, setDebugLoading] = useState<boolean>(false);
+  const [chatDebug, setChatDebug] = useState<any | null>(null);
+  const [chatRowDebug, setChatRowDebug] = useState<any | null>(null);
+  const [projectRowDebug, setProjectRowDebug] = useState<any | null>(null);
+
+  async function loadDebugInfo() {
+    setDebugLoading(true);
+    try {
+      // Load V0 chat details via internal API (includes demo, latestVersionId, files)
+      if (attachedChatId) {
+        try {
+          const r = await fetch(`/api/v0/chats/${encodeURIComponent(attachedChatId)}`);
+          const j = await r.json().catch(() => ({} as any));
+          if (r.ok) setChatDebug(j);
+        } catch {}
+        // Also load our DB chat row
+        try {
+          const { data: crow } = await supabase
+            .from('v0_chats')
+            .select('id, user_id, website_id, v0_project_id, v0_chat_id, demo_url, created_at')
+            .eq('v0_chat_id', attachedChatId)
+            .maybeSingle();
+          if (crow) setChatRowDebug(crow);
+        } catch {}
+      }
+      // Load our DB project row
+      if (attachedProjectId) {
+        try {
+          const { data: prow } = await supabase
+            .from('v0_projects')
+            .select('id, user_id, website_id, v0_project_id, name, created_at')
+            .eq('v0_project_id', attachedProjectId)
+            .maybeSingle();
+          if (prow) setProjectRowDebug(prow);
+        } catch {}
+      }
+    } finally {
+      setDebugLoading(false);
+    }
+  }
+
   // Collapsed summary card for completed stages
   function CollapsedCard({ title, note }: { title: string; note?: string }) {
     return (
@@ -628,6 +670,49 @@ export default function SiteBuilderPage() {
           >
             Resolve Chat
           </button>
+          <button
+            onClick={loadDebugInfo}
+            className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white text-neutral-900 px-3 py-1.5 text-xs hover:bg-neutral-50"
+            disabled={debugLoading}
+          >
+            {debugLoading ? 'Loading…' : 'Refresh Debug Info'}
+          </button>
+        </div>
+      </section>
+
+      {/* Debug: Current Context */}
+      <section className="rounded-xl border border-neutral-200 p-4 shadow-soft bg-white">
+        <div className="text-sm font-medium text-neutral-800">Debug: Current Context</div>
+        <div className="mt-2 grid gap-3 sm:grid-cols-3 text-xs text-neutral-700">
+          <div>
+            <div className="text-[11px] text-neutral-500">Website</div>
+            <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap rounded border bg-neutral-50 p-2">{websiteId || '—'}</pre>
+          </div>
+          <div>
+            <div className="text-[11px] text-neutral-500">Project</div>
+            <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap rounded border bg-neutral-50 p-2">{attachedProjectId || '—'}</pre>
+          </div>
+          <div>
+            <div className="text-[11px] text-neutral-500">Chat</div>
+            <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap rounded border bg-neutral-50 p-2">{attachedChatId || '—'}</pre>
+          </div>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 text-xs">
+          <div>
+            <div className="text-[11px] text-neutral-500">v0 Chat (internal API)</div>
+            <pre className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap rounded border bg-neutral-50 p-2">{chatDebug ? JSON.stringify(chatDebug, null, 2) : '—'}</pre>
+          </div>
+          <div>
+            <div className="text-[11px] text-neutral-500">DB Rows</div>
+            <details className="rounded border bg-neutral-50 p-2">
+              <summary className="cursor-pointer text-[11px] text-neutral-600">v0_chats row</summary>
+              <pre className="mt-1 max-h-56 overflow-auto whitespace-pre-wrap rounded border bg-white p-2">{chatRowDebug ? JSON.stringify(chatRowDebug, null, 2) : '—'}</pre>
+            </details>
+            <details className="mt-2 rounded border bg-neutral-50 p-2">
+              <summary className="cursor-pointer text-[11px] text-neutral-600">v0_projects row</summary>
+              <pre className="mt-1 max-h-56 overflow-auto whitespace-pre-wrap rounded border bg-white p-2">{projectRowDebug ? JSON.stringify(projectRowDebug, null, 2) : '—'}</pre>
+            </details>
+          </div>
         </div>
       </section>
 
