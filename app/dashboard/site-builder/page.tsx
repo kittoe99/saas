@@ -334,6 +334,14 @@ export default function SiteBuilderPage() {
                   setAttachedChatId(chatId);
                   setSimStage('Waiting for preview…');
                   setSimProgress(25);
+                  // Initialize steps in DB if not present
+                  try {
+                    if (!stepsState) {
+                      const initSteps = { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const;
+                      setStepsState(initSteps as any);
+                      void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: initSteps }) });
+                    }
+                  } catch {}
                   // Poll chat preview via internal API
                   let localProgress = 25;
                   let attempts = 12;
