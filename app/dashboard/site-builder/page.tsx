@@ -1105,7 +1105,7 @@ export default function SiteBuilderPage() {
                   setSimStage('Sending hero to builder…');
                   setSimProgress(18);
                   const chatToUse = await resolveChatId().catch((e) => { throw e; });
-                  const r = await fetch('/api/sitebuild/continue', {
+                  const r = await fetch('/api/v0/chats/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1213,7 +1213,7 @@ export default function SiteBuilderPage() {
                   setSimStage('Sending services to builder…');
                   setSimProgress(18);
                   const chatToUse = await resolveChatId().catch((e) => { throw e; });
-                  const r = await fetch('/api/sitebuild/continue', {
+                  const r = await fetch('/api/v0/chats/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1324,7 +1324,7 @@ export default function SiteBuilderPage() {
                   setSimStage('Sending service areas to builder…');
                   setSimProgress(18);
                   const chatToUse = await resolveChatId().catch((e) => { throw e; });
-                  const r = await fetch('/api/sitebuild/continue', {
+                  const r = await fetch('/api/v0/chats/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1419,7 +1419,7 @@ export default function SiteBuilderPage() {
                 try {
                   const message = 'make sure homepage has a "service areas" section, let navigation menu and footer appear in all pages, then add relevant site images. Also, make nav menu and footer design more appealing on mobile, tab and desktop';
                   const chatToUse = await resolveChatId().catch((e) => { throw e; });
-                  const r = await fetch('/api/sitebuild/continue', {
+                  const r = await fetch('/api/v0/chats/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
