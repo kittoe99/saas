@@ -9,16 +9,24 @@ import { buildInitialChatPrompt, buildProjectInstructions, getBlueprint } from '
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}))
-    const user_id = (body?.user_id as string | undefined) || undefined
+    let user_id = (body?.user_id as string | undefined) || undefined
     const website_id = (body?.website_id as string | undefined) || undefined
     const industry = (body?.industry as string | undefined) || 'Generic'
     const answers = (body?.answers as any) || {}
     const theme = (body?.theme as any) || null
     const deploy = Boolean(body?.deploy)
 
-    if (!user_id) return NextResponse.json({ error: 'Missing user_id' }, { status: 400 })
-
+    // Prefer auth-derived user if not explicitly provided (to avoid passing IDs around)
     const supabase = getSupabaseServer()
+    if (!user_id) {
+      try {
+        const { data } = await supabase.auth.getUser()
+        user_id = data?.user?.id || undefined
+      } catch {}
+    }
+    if (!user_id) return NextResponse.json({ error: 'Missing user (not authenticated)' }, { status: 401 })
+
+    // supabase already initialized above
 
     // Compose blueprint and instructions
     const blueprint = getBlueprint(industry)

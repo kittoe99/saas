@@ -446,6 +446,7 @@ export default function SiteBuilderPage() {
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-neutral-900">Add Hero Section</h2>
             <p className="text-sm text-neutral-600">We’ll randomly pick a hero layout and ask v0 to implement it. Live status will appear below.</p>
+            <p className="text-xs text-amber-800 bg-amber-50 inline-block rounded px-2 py-1 border border-amber-200">Make sure hero has an image.</p>
           </div>
           <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
             <div className="text-sm font-medium text-neutral-800">Hero Progress</div>

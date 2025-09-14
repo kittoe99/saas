@@ -213,14 +213,22 @@ export default function DashboardPage() {
             H
           </div>
           <div className="text-sm text-neutral-600">Dashboard</div>
-          {/* Mobile logout */}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="ml-auto sm:hidden px-3 py-1.5 rounded-md border border-neutral-300 bg-white text-neutral-900 text-sm hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-          >
-            Logout
-          </button>
+          {/* Mobile actions */}
+          <div className="ml-auto sm:hidden flex items-center gap-2">
+            <a
+              href="/dashboard/onboarding"
+              className="px-3 py-1.5 rounded-md bg-success-accent text-white text-sm hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+            >
+              New Site
+            </a>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-3 py-1.5 rounded-md border border-neutral-300 bg-white text-neutral-900 text-sm hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+            >
+              Logout
+            </button>
+          </div>
           {/* Desktop tabs moved to sidebar */}
           <div className="ml-auto hidden sm:flex items-center gap-2">
             <a

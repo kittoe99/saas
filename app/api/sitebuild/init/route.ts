@@ -27,16 +27,64 @@ export async function POST(req: Request) {
     const siteType = (data?.siteType as string | undefined) || ''
     const industry = resolveIndustry(siteType)
 
-    // Compose minimal answers object from onboarding for first run
+    // Compose richer answers object from onboarding for first run
     const a: any = {}
     const businessName = (data?.name as string | undefined) || 'New Site'
     a.brand = { name: businessName, tagline: data?.tagline || undefined }
     a.businessName = businessName
-    a.audience = data?.primaryGoal || data?.typeSpecific?.icp || ''
     a.tone = Array.isArray(data?.voiceTone) && data.voiceTone.length ? data.voiceTone.join(', ') : 'clear, modern'
-    if (Array.isArray(data?.envisionedPages) && data.envisionedPages.length) a.pages = data.envisionedPages
+    // Pages
+    const pages: string[] = []
+    if (Array.isArray(data?.envisionedPages)) pages.push(...data.envisionedPages)
+    if (Array.isArray(data?.mustHavePages)) pages.push(...data.mustHavePages)
+    if (pages.length) a.pages = Array.from(new Set(pages))
+    // Services (names only)
     if (Array.isArray(data?.selectedServices) && data.selectedServices.length) a.services = data.selectedServices
-    if (data?.contactMethod) a.contactMethod = data.contactMethod
+    // Contact (method only; omit PII like email/phone/address)
+    if (data?.contactMethod) a.contact = { method: data.contactMethod }
+    // Hours (optional, non-PII)
+    if (typeof data?.businessHours === 'string' && data.businessHours.trim()) a.businessHours = data.businessHours
+    if (typeof data?.businessHoursMode === 'string' && data.businessHoursMode.trim()) a.businessHoursMode = data.businessHoursMode
+    // Service areas / locations (names only; omit lat/lon)
+    if (Array.isArray(data?.cities) && data.cities.length) {
+      a.serviceAreas = data.cities.map((c: any) => (c?.displayName || c?.name)).filter(Boolean)
+      a.locations = a.serviceAreas
+    } else if (data?.areasNotApplicable) {
+      a.serviceAreas = []
+    }
+    // Brand & theme hints
+    if (Array.isArray(data?.primaryColors) && data.primaryColors.length) a.colors = data.primaryColors
+    if (Array.isArray(data?.voiceTone) && data.voiceTone.length) a.voice = data.voiceTone
+    if (typeof data?.highContrast === 'boolean') a.highContrast = data.highContrast
+    // Domain and content (non-sensitive)
+    if (typeof data?.preferredDomain === 'string' && data.preferredDomain.trim()) a.preferredDomain = data.preferredDomain.trim()
+    if (typeof data?.contentSources === 'string' && data.contentSources.trim()) a.contentSources = data.contentSources
+    // Languages
+    if (Array.isArray(data?.languages) && data.languages.length) a.languages = data.languages
+    if (typeof data?.primaryLanguage === 'string' && data.primaryLanguage.trim()) a.primaryLanguage = data.primaryLanguage
+    // Social and competitors: keep only hostnames to avoid leaking full personal profiles; limit count
+    const toHost = (u: any) => {
+      try { const { hostname } = new URL(String(u)); return hostname || null } catch { return null }
+    }
+    if (data?.social && typeof data.social === 'object') {
+      const s = data.social
+      const hosts = [s.x, s.linkedin, s.instagram, s.facebook].map(toHost).filter(Boolean)
+      if (hosts.length) a.socialHosts = Array.from(new Set(hosts)).slice(0, 4)
+    }
+    if (Array.isArray(data?.competitors) && data.competitors.length) {
+      const hosts = data.competitors.map(toHost).filter(Boolean)
+      if (hosts.length) a.competitorHosts = Array.from(new Set(hosts)).slice(0, 5)
+    }
+
+    // Final optimization: clamp arrays and strings to reasonable sizes
+    const clampArray = (arr: any[], max: number) => Array.isArray(arr) ? arr.slice(0, max) : arr
+    const clampStr = (s: any, max: number) => typeof s === 'string' ? s.slice(0, max) : s
+    if (Array.isArray(a.pages)) a.pages = clampArray(a.pages, 8)
+    if (Array.isArray(a.services)) a.services = clampArray(a.services, 8)
+    if (Array.isArray(a.locations)) a.locations = clampArray(a.locations, 10)
+    if (Array.isArray(a.serviceAreas)) a.serviceAreas = clampArray(a.serviceAreas, 10)
+    if (typeof a.tone === 'string') a.tone = clampStr(a.tone, 120)
+    if (Array.isArray(a.voice)) a.voice = clampArray(a.voice, 3)
 
     // Call existing generate orchestrator with deploy=false and instructions override
     const { origin } = new URL(req.url)
@@ -48,9 +96,12 @@ export async function POST(req: Request) {
         website_id,
         industry,
         answers: a,
-        theme: undefined,
-        deploy: false,
-        instructions: THEME_INSTRUCTIONS,
+        // Provide a light theme object using onboarding selections; generator can blend with defaults
+        theme: {
+          colors: Array.isArray(data?.primaryColors) ? data.primaryColors.slice(0, 2) : [],
+          highContrast: !!data?.highContrast,
+          voiceTone: Array.isArray(data?.voiceTone) ? data.voiceTone : [],
+        },
       })
     })
 
