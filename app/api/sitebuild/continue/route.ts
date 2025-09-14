@@ -8,10 +8,10 @@ import { v0 } from '@/lib/v0'
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({} as any))
-    const user_id: string | undefined = body?.user_id
-    const website_id: string | undefined = body?.website_id
-    let chatId: string | undefined = body?.chatId
-    const message: string | undefined = body?.message
+    const user_id: string | undefined = (body?.user_id as string | undefined) || undefined
+    const website_id: string | undefined = (body?.website_id as string | undefined) || undefined
+    let chatId: string | undefined = (body?.chatId as string | undefined)?.trim() || undefined
+    const message: string | undefined = (body?.message as string | undefined)?.trim() || undefined
 
     if (!user_id) return NextResponse.json({ error: 'Missing user_id' }, { status: 400 })
     if (!message) return NextResponse.json({ error: 'Missing message' }, { status: 400 })
@@ -27,8 +27,9 @@ export async function POST(req: Request) {
         .maybeSingle()
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       if (!row || row.user_id !== user_id) return NextResponse.json({ error: 'Website not found or access denied' }, { status: 403 })
-      if (!row.v0_chat_id) return NextResponse.json({ error: 'No chatId found for website' }, { status: 404 })
-      chatId = row.v0_chat_id as string
+      const fromWeb = (row.v0_chat_id as string | null) || null
+      if (!fromWeb || !fromWeb.trim()) return NextResponse.json({ error: 'No chatId found for website' }, { status: 404 })
+      chatId = fromWeb.trim()
     }
 
     // 1) Prefer internal route that V0 page uses, to mirror its behavior exactly
