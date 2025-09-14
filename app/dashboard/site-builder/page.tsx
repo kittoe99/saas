@@ -720,7 +720,9 @@ export default function SiteBuilderPage() {
                     es.close();
                   };
                 } catch (e: any) {
-                  setSimStage(e?.message || 'Failed to start services step');
+                  const msg = e?.message || 'Failed to start services step';
+                  setSimStage(msg);
+                  setServicesError(msg);
                   setSimBusy(false);
                 }
               }}
@@ -729,6 +731,12 @@ export default function SiteBuilderPage() {
             >
               {simBusy ? 'Working…' : 'Continue'}
             </button>
+            {servicesError && (
+              <div className="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                {servicesError}
+              </div>
+            )}
+            </>
           ) : (
             <div className="flex items-center justify-between">
               <div className="text-xs text-neutral-600">Update applied. Continue when ready.</div>
