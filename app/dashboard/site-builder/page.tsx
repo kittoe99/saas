@@ -305,8 +305,9 @@ export default function SiteBuilderPage() {
                   });
                   const json = await res.json().catch(() => ({} as any));
                   if (!res.ok) throw new Error(json?.error || 'Failed to start build');
-                  const chatId: string | undefined = json?.chatId;
+                  const chatId: string | undefined = json?.chat?.id || json?.chatId;
                   if (!chatId) throw new Error('Missing chatId');
+                  setAttachedChatId(chatId);
                   setSimStage('Waiting for preview…');
                   setSimProgress(25);
                   // Listen to SSE
@@ -525,6 +526,7 @@ export default function SiteBuilderPage() {
                     body: JSON.stringify({
                       user_id: userId,
                       website_id: websiteId,
+                      chatId: attachedChatId || undefined,
                       message: `Design our hero like this: \n\n${code}`,
                     })
                   });
@@ -639,6 +641,7 @@ export default function SiteBuilderPage() {
                     body: JSON.stringify({
                       user_id: userId,
                       website_id: websiteId,
+                      chatId: attachedChatId || undefined,
                       message: `Design our services section like this: \n\n${code}`,
                     })
                   });
