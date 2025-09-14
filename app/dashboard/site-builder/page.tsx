@@ -42,6 +42,7 @@ export default function SiteBuilderPage() {
   const [areasSent, setAreasSent] = useState<boolean>(false);
   const [globalSent, setGlobalSent] = useState<boolean>(false);
   const [stepsState, setStepsState] = useState<Record<string, 'pending' | 'done'> | null>(null);
+  const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -954,11 +955,22 @@ export default function SiteBuilderPage() {
                       localProgress = Math.min(92, localProgress + 6);
                       setSimProgress(localProgress);
                     } else if (data?.type === 'deployed') {
+                      setDeployedUrl(data.url || null);
                       setSimStage(`Deployed: ${data.url}`);
                       setSimProgress(100);
                       setSimDone(true);
                       setSimBusy(false);
+                      // Persist step completion
+                      try {
+                        const newSteps = { ...(stepsState || {}), deploy: 'done' as const };
+                        setStepsState(newSteps);
+                        void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: newSteps }) });
+                      } catch {}
                       es.close();
+                      // Auto-redirect to dashboard after short delay
+                      setTimeout(() => {
+                        router.push('/dashboard');
+                      }, 1800);
                     } else if (data?.type === 'complete') {
                       // Already handled in deployed event
                     } else if (data?.type === 'timeout') {
@@ -987,6 +999,25 @@ export default function SiteBuilderPage() {
           >
             {simBusy ? 'Working…' : 'Deploy Now'}
           </button>
+
+          {deployedUrl && (
+            <div className="mt-4 flex items-center gap-3">
+              <a
+                href={deployedUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-md border border-neutral-200 px-4 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+              >
+                View Live Site
+              </a>
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          )}
         </section>
       )}
     </div>

@@ -52,6 +52,7 @@ export default function DashboardPage() {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [deployments, setDeployments] = useState<Array<{ id: string; url: string | null; status: string | null; created_at: string }>>([]);
 
   // Logout handler
   const handleLogout = async () => {
@@ -100,6 +101,18 @@ export default function DashboardPage() {
       if (!mounted) return;
       setNeedsOnboarding(!data);
       setOnboardingChecked(true);
+      // Load latest deployments for this user to show preview cards
+      const { data: deps } = await supabase
+        .from('v0_deployments')
+        .select('v0_deployment_id, url, status, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (mounted && deps) {
+        setDeployments(
+          deps.map((d: any) => ({ id: d.v0_deployment_id as string, url: d.url as string | null, status: d.status as string | null, created_at: d.created_at as string }))
+        );
+      }
     })();
     return () => { mounted = false; };
   }, [authChecked]);
@@ -327,6 +340,38 @@ export default function DashboardPage() {
 
                   {/* Recent activity placeholder */}
                   <div className="p-4">
+                    {/* Your site(s) */}
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft mb-4">
+                      <div className="text-xs text-neutral-600 mb-2">Your site{deployments.length !== 1 ? 's' : ''}</div>
+                      {deployments.length === 0 ? (
+                        <div className="text-sm text-neutral-700">No deployments yet. Build your site to see it here.</div>
+                      ) : (
+                        <ul className="space-y-2">
+                          {deployments.map((d) => (
+                            <li key={d.id} className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium text-neutral-900 truncate max-w-[12rem]">{d.url ?? 'Pending URL'}</div>
+                                <div className="text-[11px] text-neutral-500">{d.status ?? 'unknown'} • {new Date(d.created_at).toLocaleString()}</div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {d.url && (
+                                  <a href={d.url} target="_blank" rel="noreferrer" className="px-2.5 py-1.5 rounded-md border border-neutral-200 text-[12px] text-neutral-800 hover:bg-neutral-50">View</a>
+                                )}
+                                {d.url && (
+                                  <button
+                                    onClick={async () => { try { await navigator.clipboard.writeText(d.url!); } catch {} }}
+                                    className="px-2.5 py-1.5 rounded-md border border-neutral-200 text-[12px] text-neutral-800 hover:bg-neutral-50"
+                                  >
+                                    Copy URL
+                                  </button>
+                                )}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
                     <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft">
                       <div className="text-xs text-neutral-600 mb-2">Recent</div>
                       <ul className="divide-y divide-neutral-200">
