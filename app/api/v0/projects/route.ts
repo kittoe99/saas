@@ -18,9 +18,28 @@ export async function POST(req: Request) {
     if (body?.description) payload.description = body.description;
     if (body?.icon) payload.icon = body.icon;
     if (body?.env) payload.env = body.env;
-    if (body?.instructions) payload.instructions = body.instructions;
+    if (body?.instructions) {
+      const instr = String(body.instructions);
+      payload.instructions = instr.slice(0, 1000);
+    }
 
-    const project = await v0.projects.create(payload);
+    let project: any = null;
+    try {
+      project = await (v0 as any).projects.create(payload);
+    } catch (e) {
+      // REST fallback
+      const apiKey = process.env.V0_API_KEY;
+      const base = process.env.V0_API_BASE || 'https://api.v0.dev';
+      if (!apiKey) throw e;
+      const r = await fetch(`${base}/projects`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const j = await r.json().catch(() => ({} as any));
+      if (!r.ok) return NextResponse.json({ error: j?.error || 'Failed to create project (REST)' }, { status: r.status });
+      project = j;
+    }
 
     // Persist strictly using the service role client
     const supabase = getSupabaseServer();
