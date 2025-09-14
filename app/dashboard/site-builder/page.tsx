@@ -398,31 +398,130 @@ export default function SiteBuilderPage() {
     })();
   }, [userId]);
 
+  // Auto-resolve chat when entering actionable steps
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!websiteId) return;
+        if (!step || !['hero','services','areas','global','deploy'].includes(step)) return;
+        if (attachedChatId) return;
+        const cid = await resolveChatId();
+        setAttachedChatId(cid);
+      } catch (e: any) {
+        // Surface a soft error only on hero step to guide the user
+        if (step === 'hero') {
+          const msg = e?.message === 'Missing chatId'
+            ? 'Missing chatId — click Start to initialize, or press Resolve below.'
+            : (e?.message || 'Failed to resolve chat');
+          setHeroError(msg);
+        }
+      }
+    })();
+  }, [step, websiteId, userId]);
+
   // All build actions and chat continuation are intentionally disabled here
 
   function safeParseJSON(s: string) {
     try { return s ? JSON.parse(s) : undefined } catch { return undefined }
   }
 
-  // Resolve a chatId to use for continuation, mirroring logic in app/v0/page.tsx
+  // Resolve a chatId to use for continuation, mirroring logic in app/v0/page.tsx, with extra fallbacks.
   async function resolveChatId(): Promise<string> {
-    // Priority: attachedChatId -> by website_id (latest)
+    // 0) In-memory
     if (attachedChatId) return attachedChatId;
-    if (websiteId) {
-      const { data, error } = await supabase
-        .from('v0_chats' as any)
-        .select('v0_chat_id, created_at')
-        .eq('website_id', websiteId)
-        .order('created_at', { ascending: false } as any)
-        .limit(1);
-      if (!error) {
-        const found = (data || [])[0]?.v0_chat_id as string | undefined;
-        if (found) {
-          setAttachedChatId(found);
-          return found;
+
+    // 1) Directly from websites row (authoritative linkage)
+    try {
+      if (websiteId && userId) {
+        const { data: wrow } = await supabase
+          .from('websites' as any)
+          .select('v0_chat_id, v0_project_id')
+          .eq('id', websiteId)
+          .eq('user_id', userId)
+          .maybeSingle();
+        const fromWeb = (wrow as any)?.v0_chat_id as string | undefined;
+        if (fromWeb) {
+          setAttachedChatId(fromWeb);
+          if ((wrow as any)?.v0_project_id && !attachedProjectId) setAttachedProjectId((wrow as any).v0_project_id);
+          return fromWeb;
+        }
+        if ((wrow as any)?.v0_project_id && !attachedProjectId) setAttachedProjectId((wrow as any).v0_project_id);
+      }
+    } catch {}
+
+    // 2) Latest chat by website_id
+    try {
+      if (websiteId) {
+        const { data, error } = await supabase
+          .from('v0_chats' as any)
+          .select('v0_chat_id, created_at')
+          .eq('website_id', websiteId)
+          .order('created_at', { ascending: false } as any)
+          .limit(1);
+        if (!error) {
+          const found = (data || [])[0]?.v0_chat_id as string | undefined;
+          if (found) {
+            setAttachedChatId(found);
+            return found;
+          }
         }
       }
-    }
+    } catch {}
+
+    // 3) Latest chat by project if we have one
+    try {
+      const pid = attachedProjectId;
+      if (pid) {
+        const { data, error } = await supabase
+          .from('v0_chats' as any)
+          .select('v0_chat_id, created_at')
+          .eq('v0_project_id', pid)
+          .order('created_at', { ascending: false } as any)
+          .limit(1);
+        if (!error) {
+          const found = (data || [])[0]?.v0_chat_id as string | undefined;
+          if (found) {
+            setAttachedChatId(found);
+            return found;
+          }
+        }
+      }
+    } catch {}
+
+    // 4) Auto-create a chat if a project exists but no chat was found
+    try {
+      // Ensure we have a projectId to attach the chat to
+      let pid = attachedProjectId || undefined;
+      if (!pid && websiteId && userId) {
+        const { data: prow } = await supabase
+          .from('v0_projects')
+          .select('v0_project_id')
+          .eq('website_id', websiteId)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false } as any)
+          .limit(1)
+          .maybeSingle();
+        if (prow?.v0_project_id) {
+          pid = prow.v0_project_id as string;
+          setAttachedProjectId(pid);
+        }
+      }
+      if (pid) {
+        const initialMessage = buildInitialMessage(onboarding, industry);
+        const cRes = await fetch('/api/v0/chats', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: initialMessage || 'Start building based on the theme and onboarding.', v0_project_id: pid, user_id: userId || undefined, website_id: websiteId || undefined })
+        });
+        const cJson = await cRes.json().catch(() => ({} as any));
+        if (!cRes.ok) throw new Error(cJson?.error || 'Failed to create chat');
+        const newId = cJson?.id as string | undefined;
+        if (newId) {
+          setAttachedChatId(newId);
+          return newId;
+        }
+      }
+    } catch {}
+
     throw new Error('Missing chatId');
   }
 
@@ -526,6 +625,34 @@ export default function SiteBuilderPage() {
           </div>
         </div>
         <div className="text-[11px] text-amber-800">These are sent to v0 on Start. We will remove this block after testing.</div>
+      </section>
+
+      {/* Connection status & quick actions */}
+      <section className="rounded-xl border border-neutral-200 p-4 shadow-soft bg-white">
+        <div className="text-sm font-medium text-neutral-800">Connection</div>
+        <div className="mt-2 grid gap-3 sm:grid-cols-3 text-xs text-neutral-700">
+          <div>Website ID: <span className="font-mono break-all">{websiteId || '—'}</span></div>
+          <div>Project ID: <span className="font-mono break-all">{attachedProjectId || '—'}</span></div>
+          <div>Chat ID: <span className="font-mono break-all">{attachedChatId || '—'}</span></div>
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            onClick={async () => {
+              try {
+                setSimStage('Resolving chat…');
+                const cid = await resolveChatId();
+                setAttachedChatId(cid);
+                setSimStage('Chat resolved');
+              } catch (e: any) {
+                const msg = e?.message === 'Missing chatId' ? 'No existing chat found. Click Start to create one.' : (e?.message || 'Failed to resolve chat');
+                setSimStage(msg);
+              }
+            }}
+            className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white text-neutral-900 px-3 py-1.5 text-xs hover:bg-neutral-50"
+          >
+            Resolve Chat
+          </button>
+        </div>
       </section>
 
       {/* Collapsed summaries of completed stages (in order) */}
