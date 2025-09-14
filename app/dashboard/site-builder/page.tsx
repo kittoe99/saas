@@ -111,6 +111,8 @@ export default function SiteBuilderPage() {
   const [globalSent, setGlobalSent] = useState<boolean>(false);
   const [stepsState, setStepsState] = useState<Record<string, 'pending' | 'done'> | null>(null);
   const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
+  // Guard to avoid duplicate auto-chat creation
+  const [autoChatDone, setAutoChatDone] = useState<boolean>(false);
   // Visible error banners
   const [startError, setStartError] = useState<string | null>(null);
   const [heroError, setHeroError] = useState<string | null>(null);
@@ -190,6 +192,33 @@ export default function SiteBuilderPage() {
               .maybeSingle();
             if (wrow?.v0_chat_id) setAttachedChatId(wrow.v0_chat_id as string);
             if (wrow?.v0_project_id) setAttachedProjectId(wrow.v0_project_id as string);
+            // If project exists but chat is missing, auto-create a chat record now
+            if (wrow?.v0_project_id && !wrow?.v0_chat_id && !autoChatDone) {
+              try {
+                // Load onboarding needed to build the initial message
+                const ob = await fetch(`/api/onboarding?website_id=${encodeURIComponent(wid)}`, { cache: 'no-store' });
+                const j = await ob.json().catch(() => ({} as any));
+                const data = j?.row?.data || {};
+                const initialMsg = buildInitialMessage(data, resolveIndustry(data?.siteType || '')) || 'Initialize chat for this website using the System Prompt.';
+                const cRes = await fetch('/api/v0/chats', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ message: initialMsg, v0_project_id: wrow.v0_project_id, user_id: userId || undefined, website_id: wid })
+                });
+                const cJson = await cRes.json().catch(() => ({} as any));
+                if (cRes.ok && cJson?.id) {
+                  setAttachedChatId(cJson.id as string);
+                  // Ensure v0_chats row is upserted with latest details
+                  try { void fetch(`/api/v0/chats/${encodeURIComponent(cJson.id)}`); } catch {}
+                  // Mark start as done in steps
+                  try {
+                    const newSteps = { ...(stepsState || { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const), start: 'done' as const };
+                    setStepsState(newSteps as any);
+                    void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: wid, steps: newSteps }) });
+                  } catch {}
+                }
+              } catch {}
+              setAutoChatDone(true);
+            }
           } catch {}
         }
         // Load progress for this website/user
