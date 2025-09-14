@@ -43,6 +43,7 @@ function TabIcon({ tab, selected }: { tab: TabKey; selected?: boolean }) {
         </svg>
       );
   }
+
 }
 
 export default function DashboardPage() {
@@ -52,8 +53,9 @@ export default function DashboardPage() {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [deployments, setDeployments] = useState<Array<{ id: string; url: string | null; status: string | null; created_at: string }>>([]);
-  const [incompleteBuilds, setIncompleteBuilds] = useState<Array<{ website_id: string; nextStep: string; steps: Record<string, 'pending'|'done'> }>>([]);
+  const [deployments, setDeployments] = useState<Array<{ id: string; website_id: string | null; url: string | null; status: string | null; created_at: string }>>([]);
+  const [incompleteBuilds, setIncompleteBuilds] = useState<Array<{ website_id: string; name: string | null; nextStep: string; steps: Record<string, 'pending'|'done'> }>>([]);
+  const [websites, setWebsites] = useState<Array<{ id: string; name: string | null; created_at: string }>>([]);
 
   // Logout handler
   const handleLogout = async () => {
@@ -63,6 +65,21 @@ export default function DashboardPage() {
       // no-op, still navigate away
     } finally {
       window.location.replace("/login");
+    }
+  };
+
+  // Create a fresh website and go to onboarding for it
+  const handleCreateNewSite = async () => {
+    try {
+      const res = await fetch('/api/websites/create', { method: 'POST' });
+      const j = await res.json().catch(() => ({} as any));
+      if (!res.ok) throw new Error(j?.error || 'Failed to create website');
+      const wid = j?.website_id as string | undefined;
+      if (!wid) throw new Error('Missing website_id');
+      window.location.href = `/dashboard/onboarding?website_id=${encodeURIComponent(wid)}`;
+    } catch (e) {
+      // fallback to plain onboarding
+      window.location.href = '/dashboard/onboarding';
     }
   };
 
@@ -105,23 +122,26 @@ export default function DashboardPage() {
       // Load latest deployments for this user to show preview cards
       const { data: deps } = await supabase
         .from('v0_deployments')
-        .select('v0_deployment_id, url, status, created_at')
+        .select('v0_deployment_id, website_id, url, status, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(6);
       if (mounted && deps) {
         setDeployments(
-          deps.map((d: any) => ({ id: d.v0_deployment_id as string, url: d.url as string | null, status: d.status as string | null, created_at: d.created_at as string }))
+          deps.map((d: any) => ({ id: d.v0_deployment_id as string, website_id: d.website_id ?? null, url: d.url as string | null, status: d.status as string | null, created_at: d.created_at as string }))
         );
       }
 
       // Load websites for this user and detect unfinished builder steps
       const { data: sites } = await supabase
         .from('websites')
-        .select('id, builder_steps')
+        .select('id, name, builder_steps, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-      const pending: Array<{ website_id: string; nextStep: string; steps: Record<string, 'pending'|'done'> }> = [];
+      if (mounted && sites) {
+        setWebsites((sites as any[]).map(s => ({ id: s.id as string, name: (s.name as string) || null, created_at: s.created_at as string })));
+      }
+      const pending: Array<{ website_id: string; name: string | null; nextStep: string; steps: Record<string, 'pending'|'done'> }> = [];
       if (sites && sites.length) {
         for (const s of sites as any[]) {
           // Prefer site_build_progress entry if exists
@@ -141,7 +161,7 @@ export default function DashboardPage() {
           const order = ['hero','services','areas','global','deploy'];
           const next = order.find((k) => steps[k] !== 'done');
           if (next) {
-            pending.push({ website_id: s.id as string, nextStep: next, steps });
+            pending.push({ website_id: s.id as string, name: (s.name as string) || null, nextStep: next, steps });
           }
         }
       }
@@ -215,12 +235,13 @@ export default function DashboardPage() {
           <div className="text-sm text-neutral-600">Dashboard</div>
           {/* Mobile actions */}
           <div className="ml-auto sm:hidden flex items-center gap-2">
-            <a
-              href="/dashboard/onboarding"
+            <button
+              type="button"
+              onClick={handleCreateNewSite}
               className="px-3 py-1.5 rounded-md bg-success-accent text-white text-sm hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               New Site
-            </a>
+            </button>
             <button
               type="button"
               onClick={handleLogout}
@@ -231,12 +252,13 @@ export default function DashboardPage() {
           </div>
           {/* Desktop tabs moved to sidebar */}
           <div className="ml-auto hidden sm:flex items-center gap-2">
-            <a
-              href="/dashboard/onboarding"
+            <button
+              type="button"
+              onClick={handleCreateNewSite}
               className="px-3 py-1.5 rounded-md bg-success-accent text-white text-sm hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               New Site
-            </a>
+            </button>
             <button
               type="button"
               onClick={handleLogout}
@@ -369,10 +391,10 @@ export default function DashboardPage() {
                     <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft">
                       <div className="text-xs text-neutral-600 mb-2">Quick actions</div>
                       <div className="grid grid-cols-3 gap-2">
-                        <a href="/dashboard/onboarding" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
+                        <button type="button" onClick={handleCreateNewSite} className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><path d="M12 5v14M5 12h14"/></svg>
                           <span className="text-[11px] text-neutral-700">Create new site</span>
-                        </a>
+                        </button>
                         <a href="/dashboard?tab=Website" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
                           <span className="text-[11px] text-neutral-700">Edit site</span>
@@ -399,7 +421,7 @@ export default function DashboardPage() {
                           {incompleteBuilds.map((b) => (
                             <li key={b.website_id} className="flex items-center justify-between gap-3">
                               <div className="min-w-0">
-                                <div className="text-sm font-medium text-amber-900 truncate max-w-[12rem]">Website {b.website_id.slice(0, 8)}…</div>
+                                <div className="text-sm font-medium text-amber-900 truncate max-w-[12rem]">{b.name || `Website ${b.website_id.slice(0, 8)}…`}</div>
                                 <div className="text-[11px] text-amber-800">Next step: {b.nextStep}</div>
                               </div>
                               <a
@@ -472,7 +494,7 @@ export default function DashboardPage() {
                         {incompleteBuilds.map((b) => (
                           <li key={b.website_id} className="py-2 flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <div className="text-sm font-medium text-amber-900 truncate max-w-[28rem]">Website {b.website_id}</div>
+                              <div className="text-sm font-medium text-amber-900 truncate max-w-[28rem]">{b.name || `Website ${b.website_id}`}</div>
                               <div className="text-[12px] text-amber-800">Next step: {b.nextStep}</div>
                             </div>
                             <a
@@ -486,6 +508,44 @@ export default function DashboardPage() {
                       </ul>
                     </div>
                   )}
+
+                  {/* Websites (cards) */}
+                  <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-soft mb-6">
+                    <div className="text-sm font-medium text-neutral-900 mb-1">Websites</div>
+                    {websites.length === 0 ? (
+                      <div className="text-sm text-neutral-700">No websites yet. Click New Site to create one.</div>
+                    ) : (
+                      <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {websites.map((w) => {
+                          const dep = deployments.find(d => (d.website_id === w.id) && d.url);
+                          return (
+                            <li key={w.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+                              <div className="text-sm font-semibold text-neutral-900 truncate" title={w.name || w.id}>{w.name || `Website ${w.id.slice(0,8)}…`}</div>
+                              <div className="text-[11px] text-neutral-500">Created {new Date(w.created_at).toLocaleDateString()}</div>
+                              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                                <a
+                                  href={`/dashboard/site-builder?website_id=${encodeURIComponent(w.id)}`}
+                                  className="px-2.5 py-1.5 rounded-md border border-neutral-300 text-[12px] text-neutral-800 bg-white hover:bg-neutral-100"
+                                >
+                                  Open Builder
+                                </a>
+                                {dep?.url && (
+                                  <a
+                                    href={dep.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-2.5 py-1.5 rounded-md border border-emerald-300 text-[12px] text-emerald-800 bg-white hover:bg-emerald-100"
+                                  >
+                                    View Live
+                                  </a>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
                   {/* Your sites (desktop) */}
                   <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-soft mb-6">
                     <div className="text-sm font-medium text-neutral-900 mb-1">Your site{deployments.length !== 1 ? 's' : ''}</div>

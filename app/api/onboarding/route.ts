@@ -109,36 +109,27 @@ export async function POST(req: Request) {
       if (!owned || owned.user_id !== user_id) {
         return NextResponse.json({ error: 'Website does not exist or is not owned by user' }, { status: 403 });
       }
+      // If a name is provided in onboarding data, update website name for easier identification in Dashboard
+      const newName = typeof data?.name === 'string' && data.name.trim().length ? data.name.trim() : null;
+      if (newName) {
+        await supabase.from('websites').update({ name: newName }).eq('id', website_id);
+      }
     } else {
-      // Ensure a website exists for this user; create draft if none
-      const { data: existingSite, error: siteReadErr } = await supabase
+      // Always create a fresh website for this onboarding session
+      const newSite = {
+        user_id,
+        name: typeof data?.name === 'string' && data.name.trim().length ? data.name.trim() : null,
+        status: 'draft' as const,
+      };
+      const { data: created, error: siteCreateErr } = await supabase
         .from('websites')
+        .insert(newSite)
         .select('id')
-        .eq('user_id', user_id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (siteReadErr) {
-        return NextResponse.json({ error: `Failed to check website: ${siteReadErr.message}` }, { status: 500 });
+        .single();
+      if (siteCreateErr) {
+        return NextResponse.json({ error: `Failed to create website: ${siteCreateErr.message}` }, { status: 500 });
       }
-      if (existingSite?.id) {
-        website_id = existingSite.id as string;
-      } else {
-        const newSite = {
-          user_id,
-          name: typeof data?.name === 'string' && data.name.trim().length ? data.name.trim() : null,
-          status: 'draft' as const,
-        };
-        const { data: created, error: siteCreateErr } = await supabase
-          .from('websites')
-          .insert(newSite)
-          .select('id')
-          .single();
-        if (siteCreateErr) {
-          return NextResponse.json({ error: `Failed to create website: ${siteCreateErr.message}` }, { status: 500 });
-        }
-        website_id = created?.id as string | undefined;
-      }
+      website_id = created?.id as string | undefined;
     }
 
     const payload = { user_id, data, website_id } as { user_id: string; data: any; website_id: string | undefined };

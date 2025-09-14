@@ -610,6 +610,18 @@ export default function OnboardingPage() {
       } catch {}
       const effectiveWebsiteId = (wrote?.website_id as string | undefined) || websiteId || undefined;
 
+      // Initialize site_build_progress so Dashboard can show 'Continue' immediately
+      try {
+        if (effectiveWebsiteId) {
+          const initSteps = { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const;
+          await fetch('/api/sitebuild/steps', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: user.id, website_id: effectiveWebsiteId, steps: initSteps })
+          });
+        }
+      } catch {}
+
       // Redirect to the Dashboard Site Builder page to continue with Site Build → Preview → Deployment
       const qp = new URLSearchParams();
       if (effectiveWebsiteId) qp.set("website_id", effectiveWebsiteId);
