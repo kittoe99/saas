@@ -1020,7 +1020,7 @@ export default function SiteBuilderPage() {
                   setSimStage('Sending hero to builder…');
                   setSimProgress(18);
                   const chatToUse = await resolveChatId().catch((e) => { throw e; });
-                  const r = await fetch('/api/v0/chats/send', {
+                  const r = await fetch('/api/sitebuild/continue', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1031,7 +1031,7 @@ export default function SiteBuilderPage() {
                     })
                   });
                   const j = await r.json().catch(() => ({} as any));
-                  if (!r.ok) throw new Error(j?.error || 'Failed to send hero');
+                  if (!r.ok || j?.error) throw new Error(j?.error || 'Failed to send hero');
                   setHeroSent(true);
                   setSimStage('Waiting for hero preview…');
                   setSimProgress(30);
@@ -1128,7 +1128,7 @@ export default function SiteBuilderPage() {
                   setSimStage('Sending services to builder…');
                   setSimProgress(18);
                   const chatToUse = await resolveChatId().catch((e) => { throw e; });
-                  const r = await fetch('/api/v0/chats/send', {
+                  const r = await fetch('/api/sitebuild/continue', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1139,7 +1139,7 @@ export default function SiteBuilderPage() {
                     })
                   });
                   const j = await r.json().catch(() => ({} as any));
-                  if (!r.ok) throw new Error(j?.error || 'Failed to send services');
+                  if (!r.ok || j?.error) throw new Error(j?.error || 'Failed to send services');
                   setServicesSent(true);
                   setSimStage('Waiting for services preview…');
                   setSimProgress(30);
@@ -1239,7 +1239,7 @@ export default function SiteBuilderPage() {
                   setSimStage('Sending service areas to builder…');
                   setSimProgress(18);
                   const chatToUse = await resolveChatId().catch((e) => { throw e; });
-                  const r = await fetch('/api/v0/chats/send', {
+                  const r = await fetch('/api/sitebuild/continue', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1250,7 +1250,7 @@ export default function SiteBuilderPage() {
                     })
                   });
                   const j = await r.json().catch(() => ({} as any));
-                  if (!r.ok) throw new Error(j?.error || 'Failed to send service areas');
+                  if (!r.ok || j?.error) throw new Error(j?.error || 'Failed to send service areas');
                   setAreasSent(true);
                   setSimStage('Waiting for service areas preview…');
                   setSimProgress(30);
@@ -1334,7 +1334,7 @@ export default function SiteBuilderPage() {
                 try {
                   const message = 'make sure homepage has a "service areas" section, let navigation menu and footer appear in all pages, then add relevant site images. Also, make nav menu and footer design more appealing on mobile, tab and desktop';
                   const chatToUse = await resolveChatId().catch((e) => { throw e; });
-                  const r = await fetch('/api/v0/chats/send', {
+                  const r = await fetch('/api/sitebuild/continue', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1345,7 +1345,7 @@ export default function SiteBuilderPage() {
                     })
                   });
                   const j = await r.json().catch(() => ({} as any));
-                  if (!r.ok) throw new Error(j?.error || 'Failed to send global update');
+                  if (!r.ok || j?.error) throw new Error(j?.error || 'Failed to send global update');
                   setGlobalSent(true);
                   setSimStage('Waiting for global update preview…');
                   setSimProgress(28);
