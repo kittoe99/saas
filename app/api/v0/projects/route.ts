@@ -55,6 +55,15 @@ export async function POST(req: Request) {
     if (persistErr) {
       return NextResponse.json({ error: `Failed to persist project: ${persistErr.message}` }, { status: 500 });
     }
+    // Also stamp the website row to avoid re-creating the project on refresh
+    if (website_id) {
+      await supabase
+        .from('websites' as any)
+        .update({ v0_project_id: (project as any).id })
+        .eq('id', website_id)
+        .eq('user_id', user_id)
+        .single();
+    }
 
     return NextResponse.json({ id: (project as any).id, project }, { status: 200 });
   } catch (e: any) {

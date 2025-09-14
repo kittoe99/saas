@@ -190,10 +190,29 @@ export default function SiteBuilderPage() {
               .eq('id', wid)
               .eq('user_id', userId)
               .maybeSingle();
-            if (wrow?.v0_chat_id) setAttachedChatId(wrow.v0_chat_id as string);
-            if (wrow?.v0_project_id) setAttachedProjectId(wrow.v0_project_id as string);
-            // If project exists but chat is missing, auto-create a chat record now
-            if (wrow?.v0_project_id && !wrow?.v0_chat_id && !autoChatDone) {
+            if (wrow?.v0_chat_id) {
+              setAttachedChatId(wrow.v0_chat_id as string);
+              // Ensure v0_chats is upserted on load if missing
+              try { void fetch(`/api/v0/chats/${encodeURIComponent(wrow.v0_chat_id as string)}`); } catch {}
+            }
+            // Also consult v0_projects in case website row is missing the project id
+            let resolvedProjectId: string | undefined = wrow?.v0_project_id as string | undefined;
+            if (!resolvedProjectId) {
+              try {
+                const { data: prow } = await supabase
+                  .from('v0_projects')
+                  .select('v0_project_id')
+                  .eq('website_id', wid)
+                  .eq('user_id', userId)
+                  .order('created_at', { ascending: false } as any)
+                  .limit(1)
+                  .maybeSingle();
+                if (prow?.v0_project_id) resolvedProjectId = prow.v0_project_id as string;
+              } catch {}
+            }
+            if (resolvedProjectId) setAttachedProjectId(resolvedProjectId);
+            // If a project exists (from website or v0_projects) but chat is missing, auto-create chat now
+            if (resolvedProjectId && !wrow?.v0_chat_id && !autoChatDone) {
               try {
                 // Load onboarding needed to build the initial message
                 const ob = await fetch(`/api/onboarding?website_id=${encodeURIComponent(wid)}`, { cache: 'no-store' });
@@ -202,7 +221,7 @@ export default function SiteBuilderPage() {
                 const initialMsg = buildInitialMessage(data, resolveIndustry(data?.siteType || '')) || 'Initialize chat for this website using the System Prompt.';
                 const cRes = await fetch('/api/v0/chats', {
                   method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ message: initialMsg, v0_project_id: wrow.v0_project_id, user_id: userId || undefined, website_id: wid })
+                  body: JSON.stringify({ message: initialMsg, v0_project_id: resolvedProjectId, user_id: userId || undefined, website_id: wid })
                 });
                 const cJson = await cRes.json().catch(() => ({} as any));
                 if (cRes.ok && cJson?.id) {
