@@ -48,6 +48,8 @@ export default function SiteBuilderPage() {
   const [startError, setStartError] = useState<string | null>(null);
   const [heroError, setHeroError] = useState<string | null>(null);
   const [servicesError, setServicesError] = useState<string | null>(null);
+  // Fallback: allow advancing to hero after chat creation, even if preview is slow
+  const [startCanContinue, setStartCanContinue] = useState<boolean>(false);
 
   // Animated loader steps (similar to Onboarding step 4)
   const BUILD_STEPS = [
@@ -276,6 +278,16 @@ export default function SiteBuilderPage() {
         )}
       </header>
 
+      {/* Collapsed summaries of completed stages (in order) */}
+      {stepsState && (
+        <div className="space-y-2">
+          {stepsState.hero === 'done' && <CollapsedCard title="Initial layout" note="Base structure prepared" />}
+          {stepsState.services === 'done' && <CollapsedCard title="Content updates" note="Key sections adjusted" />}
+          {stepsState.areas === 'done' && <CollapsedCard title="Location setup" note="Coverage details added" />}
+          {stepsState.global === 'done' && <CollapsedCard title="Design polish" note="Consistent nav & footer" />}
+        </div>
+      )}
+
       {/* Start Building - orchestration kickoff */}
       <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
           <div className="space-y-1">
@@ -305,35 +317,61 @@ export default function SiteBuilderPage() {
                 setSimStage('Initializing…');
                 setSimProgress(8);
                 try {
-                  // Create project using onboarding name/desc
-                  const projName = (() => {
-                    const name = (onboarding?.name || onboarding?.brand?.name || 'New Site') as string;
-                    return String(name).trim().slice(0,60) || 'New Site';
-                  })();
-                  const projDesc = (onboarding?.tagline || onboarding?.description || '') as string;
-                  const pRes = await fetch('/api/v0/projects', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: projName, description: projDesc || undefined, user_id: userId || undefined, website_id: websiteId || undefined })
-                  });
-                  const pJson = await pRes.json().catch(() => ({} as any));
-                  if (!pRes.ok) throw new Error(pJson?.error || 'Failed to create project');
-                  const projectId: string | undefined = pJson?.id;
-                  if (!projectId) throw new Error('Missing projectId');
-                  setAttachedProjectId(projectId);
+                  // First, try to reuse existing website-linked project/chat
+                  let projectId: string | undefined = undefined;
+                  let chatId: string | undefined = undefined;
+                  try {
+                    if (userId && websiteId) {
+                      const { data: w } = await supabase
+                        .from('websites' as any)
+                        .select('v0_project_id, v0_chat_id')
+                        .eq('id', websiteId)
+                        .eq('user_id', userId)
+                        .maybeSingle();
+                      projectId = (w as any)?.v0_project_id || undefined;
+                      chatId = (w as any)?.v0_chat_id || undefined;
+                    }
+                  } catch {}
 
-                  // Create chat with initial message
-                  const initialMessage = buildInitialMessage(onboarding, industry);
-                  const cRes = await fetch('/api/v0/chats', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: initialMessage, v0_project_id: projectId, user_id: userId || undefined, website_id: websiteId || undefined })
-                  });
-                  const cJson = await cRes.json().catch(() => ({} as any));
-                  if (!cRes.ok) throw new Error(cJson?.error || 'Failed to create chat');
-                  const chatId: string | undefined = cJson?.id;
-                  if (!chatId) throw new Error('Missing chatId');
-                  setAttachedChatId(chatId);
+                  if (chatId) {
+                    // Reattach to existing chat and poll
+                    setAttachedProjectId(projectId || null);
+                    setAttachedChatId(chatId);
+                    setSimStage('Reattaching to existing build…');
+                    setSimProgress(22);
+                  } else {
+                    // Ensure we have a project; create only if missing
+                    if (!projectId) {
+                      const projName = (() => {
+                        const name = (onboarding?.name || onboarding?.brand?.name || 'New Site') as string;
+                        return String(name).trim().slice(0,60) || 'New Site';
+                      })();
+                      const projDesc = (onboarding?.tagline || onboarding?.description || '') as string;
+                      const pRes = await fetch('/api/v0/projects', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: projName, description: projDesc || undefined, user_id: userId || undefined, website_id: websiteId || undefined })
+                      });
+                      const pJson = await pRes.json().catch(() => ({} as any));
+                      if (!pRes.ok) throw new Error(pJson?.error || 'Failed to create project');
+                      projectId = pJson?.id as string | undefined;
+                      if (!projectId) throw new Error('Missing projectId');
+                    }
+                    setAttachedProjectId(projectId || null);
+                    // Create chat with initial message
+                    const initialMessage = buildInitialMessage(onboarding, industry);
+                    const cRes = await fetch('/api/v0/chats', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ message: initialMessage, v0_project_id: projectId, user_id: userId || undefined, website_id: websiteId || undefined })
+                    });
+                    const cJson = await cRes.json().catch(() => ({} as any));
+                    if (!cRes.ok) throw new Error(cJson?.error || 'Failed to create chat');
+                    chatId = cJson?.id as string | undefined;
+                    if (!chatId) throw new Error('Missing chatId');
+                    setAttachedChatId(chatId);
+                  }
                   setSimStage('Waiting for preview…');
                   setSimProgress(25);
+                  setStartCanContinue(true);
                   // Initialize steps in DB if not present
                   try {
                     if (!stepsState) {
@@ -355,6 +393,14 @@ export default function SiteBuilderPage() {
                           setSimProgress(100);
                           setSimDone(true);
                           setSimBusy(false);
+                          // Auto-advance to hero step
+                          try {
+                            const qp = new URLSearchParams();
+                            if (websiteId) qp.set('website_id', websiteId);
+                            qp.set('step', 'hero');
+                            setStep('hero');
+                            router.push(`/dashboard/site-builder?${qp.toString()}`);
+                          } catch {}
                           break;
                         }
                         setSimStage('Working…');
@@ -363,6 +409,11 @@ export default function SiteBuilderPage() {
                       }
                     } catch {}
                     await new Promise(res => setTimeout(res, 2500));
+                  }
+                  // If not completed within attempts, stop busy to avoid being stuck
+                  if (!simDone) {
+                    setSimStage('Timed out waiting for preview');
+                    setSimBusy(false);
                   }
                 } catch (e: any) {
                   const msg = e?.message || 'Failed to start';
@@ -376,6 +427,23 @@ export default function SiteBuilderPage() {
             >
               {simBusy ? 'Working…' : 'Start'}
             </button>
+            {startCanContinue && !simDone && (
+              <button
+                onClick={() => {
+                  try {
+                    const qp = new URLSearchParams();
+                    if (websiteId) qp.set('website_id', websiteId);
+                    qp.set('step', 'hero');
+                    setStep('hero');
+                    setSimBusy(false);
+                    router.push(`/dashboard/site-builder?${qp.toString()}`);
+                  } catch {}
+                }}
+                className="ml-2 inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white text-neutral-900 px-3 py-2 text-sm hover:bg-neutral-50"
+              >
+                Continue to Hero
+              </button>
+            )}
             {startError && (
               <div className="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
                 {startError}
@@ -401,15 +469,7 @@ export default function SiteBuilderPage() {
           )}
       </section>
 
-      {/* Collapsed summaries of completed stages (in order) */}
-      {stepsState && (
-        <div className="space-y-2">
-          {stepsState.hero === 'done' && <CollapsedCard title="Initial layout" note="Base structure prepared" />}
-          {stepsState.services === 'done' && <CollapsedCard title="Content updates" note="Key sections adjusted" />}
-          {stepsState.areas === 'done' && <CollapsedCard title="Location setup" note="Coverage details added" />}
-          {stepsState.global === 'done' && <CollapsedCard title="Design polish" note="Consistent nav & footer" />}
-        </div>
-      )}
+      
 
       {step === 'init' && (
         <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-4 bg-white">
