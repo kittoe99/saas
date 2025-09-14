@@ -8,6 +8,42 @@ import { getSectionCode } from "@/lib/sections";
 
 type ApiResult<T = any> = { ok?: boolean; error?: string } & T;
 
+// Build a System Prompt (theme) string from onboarding preferences
+function buildThemeFromOnboarding(data: any): string {
+  if (!data || typeof data !== 'object') return '';
+  const colors: string[] = Array.isArray(data?.primaryColors)
+    ? data.primaryColors.filter((c: any) => typeof c === 'string' && c.trim()).slice(0, 3)
+    : Array.isArray(data?.brand?.colors)
+      ? data.brand.colors.filter((c: any) => typeof c === 'string' && c.trim()).slice(0, 3)
+      : [];
+  const font = (data?.fontFamily || data?.font || 'Geist').toString();
+  const highContrast = !!data?.highContrast;
+  const radius = (data?.borderRadius || 8);
+  const lines: string[] = [];
+  lines.push('Site theme');
+  lines.push(`Typography: ${font}; Headings 600; Body 16px/1.6; Labels 500 with 0.02em`);
+  lines.push(`Radii: ${radius}px components`);
+  lines.push(`Contrast: ${highContrast ? 'High' : 'Normal'}`);
+  return lines.join('\n');
+}
+
+// Project System Prompt builder (color-agnostic). Used for v0 project instructions and preview.
+function buildProjectInstructions(data: any, resolved: string, theme: string): string {
+  try {
+    const brandName = (data?.name || data?.brand?.name || 'New Site')?.toString?.() || 'New Site';
+    const siteType = (data?.siteType || '').toString();
+    const category = (data?.category || '').toString();
+    const kind = (resolved || siteType || category || '').trim();
+    const kindPhrase = kind ? `${kind} business` : 'local service business';
+    const parts: string[] = [];
+    if (theme && theme.trim()) parts.push(theme.trim()); else parts.push('Site theme');
+    parts.push(`\nContext: Build a website for a ${kindPhrase}. Brand: ${brandName}.`);
+    return parts.join('\n');
+  } catch {
+    return 'Site theme';
+  }
+}
+
 type StepKey = "submitted" | "generated" | "preview_ready" | "deployed";
 
 const STEPS: { key: StepKey; label: string; description: string }[] = [
@@ -23,7 +59,8 @@ export default function SiteBuilderPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [websiteId, setWebsiteId] = useState<string | null>(null);
   const [step, setStep] = useState<string | null>(null);
-  const [industry, setIndustry] = useState<string>("SaaS");
+  // Let onboarding determine industry; avoid hardcoded "SaaS" defaults
+  const [industry, setIndustry] = useState<string>("");
   const [answers, setAnswers] = useState<string>("");
   const [theme, setTheme] = useState<string>("");
   const [deploy] = useState<boolean>(true);
@@ -239,6 +276,11 @@ export default function SiteBuilderPage() {
           const st = (data?.siteType as string | undefined) || '';
           const mapped = resolveIndustry(st);
           if (mapped) setIndustry(mapped);
+          // Build a theme prompt from onboarding user preferences (colors, fonts, etc.)
+          try {
+            const t = buildThemeFromOnboarding(data);
+            if (t && t.trim()) setTheme(t);
+          } catch {}
           const a: any = {};
           const businessName = (data?.name as string | undefined) || 'New Site';
           a.brand = { name: businessName, tagline: data?.tagline || undefined };
@@ -282,7 +324,46 @@ export default function SiteBuilderPage() {
     const preferredDomain = (data?.preferredDomain || '').toString();
     const competitors = Array.isArray(data?.competitors) ? data.competitors.filter((v: string) => v && v.trim().length).join(', ') : '';
 
-    return `Build a website for a ${resolved} business using the details below. Follow the System Prompt (theme) strictly.\n\nBusiness\n- Name: ${brandName}\n- Tagline: ${tagline || 'Professional services'}\n- Type/Category: ${[siteType, category].filter(Boolean).join(' / ') || '—'}\n- Audience: ${audience || '—'}\n- Tone: ${tone}\n\nPages (create routes and files)\n- Create: ${pages || 'home, about, contact'}\n- Include 404, privacy, terms if not listed.\n\nKey Sections (fill with sensible placeholders if content is missing)\n- Hero: value prop + supporting line + primary CTA.\n- Services/Offering: ${services || 'core offerings'} with short descriptions.\n- Pricing/Packages (if relevant): 2–4 plan cards unless specified.\n- Social proof: testimonials or placeholder quotes.\n- FAQ: 6–8 Q/A pairs.\n- Contact: ${contactMethod || 'form'} with solid-fields spec.\n\nTheme & UX (must follow the System Prompt)\n- Terracotta palette (#C0452C primary, hover #A53A24), background #FCFAF7, text #2D2A26/#6B6660.\n- Forms: solid fields, 1.5px #DDDAD6 border, 8px radius, focus ring 0 0 0 3px rgba(192,69,44,.2).\n- Components: radii per spec; shadows for elevation; minimal borders.\n- Typography: Geist; headings 600; body 16px/1.6; labels 500 with 0.02em.\n\nContent & Data\n- Services: ${services || '—'}\n- Contact: method ${contactMethod || 'form'}; email ${email || '—'}; phone ${phone || '—'}\n- Social: ${socials.join(' | ') || '—'}\n- Areas served: ${areas || '—'}\n- Domain preference: ${preferredDomain || '—'}\n- Competitors (for positioning; do not copy): ${competitors || '—'}\n\nRequirements\n- Accessibility: WCAG AA; visible focus states; adequate contrast.\n- Responsive layout for mobile/tablet/desktop.\n- SEO: meta title/description; OpenGraph defaults.\n- If inputs are missing, scaffold placeholders and TODO comments.\n\nDeliverables\n- Working version preview that reflects the above, using the System Prompt theme exactly.`;
+    const kind = (resolved || siteType || category || '').trim();
+    const kindPhrase = kind ? `${kind} business` : 'local service business';
+    const preface = `Build a website for a ${kindPhrase} using the details below. Follow the System Prompt (theme) strictly.`;
+    const bullets: string[] = [];
+    bullets.push(`Brand: ${brandName}${tagline ? ` — ${tagline}` : ''}`);
+    bullets.push(`Type/Category: ${[siteType, category].filter(Boolean).join(' / ') || '—'}`);
+    bullets.push(`Audience: ${audience || '—'}`);
+    bullets.push(`Tone: ${tone}`);
+    bullets.push(`Pages (create routes and files): ${pages || 'home, Services, Contact, About'}`);
+    bullets.push(`Key Sections (fill with sensible placeholders if content is missing):`);
+    bullets.push(`- Hero: value prop + supporting line + primary CTA.`);
+    bullets.push(`- Services/Offering: ${services || 'core offerings'} with short descriptions.`);
+    bullets.push(`- Social proof: testimonials or placeholder quotes.`);
+    bullets.push(`- FAQ: 6–8 Q/A pairs.`);
+    bullets.push(`- Contact: ${contactMethod || 'form'} with solid-fields spec.`);
+    bullets.push(`Theme & UX (must follow the System Prompt):`);
+    const themeColors = Array.isArray((onboarding as any)?.primaryColors)
+      ? (onboarding as any).primaryColors.filter((c: any) => typeof c === 'string' && c.trim()).slice(0, 3)
+      : Array.isArray((onboarding as any)?.brand?.colors)
+        ? (onboarding as any).brand.colors.filter((c: any) => typeof c === 'string' && c.trim()).slice(0, 3)
+        : [];
+    if (themeColors.length) bullets.push(`- Use these colors as primary palette: ${themeColors.join(', ')}.`);
+    bullets.push(`- Components: respect radii and contrast from the System Prompt; use elevation sparingly; minimal borders.`);
+    bullets.push(`- Typography: Geist or the specified family; headings 600; body 16px/1.6; labels 500 with 0.02em.`);
+    bullets.push(`Content & Data:`);
+    bullets.push(`- Services: ${services || '—'}`);
+    bullets.push(`- Contact: method ${contactMethod || 'form'}; email ${email || '—'}; phone ${phone || '—'}`);
+    bullets.push(`- Social: ${socials.join(' | ') || '—'}`);
+    bullets.push(`- Areas served: ${areas || '—'}`);
+    bullets.push(`- Domain preference: ${preferredDomain || '—'}`);
+    bullets.push(`- Competitors (for positioning; do not copy): ${competitors || '—'}`);
+    bullets.push(`Requirements:`);
+    bullets.push(`- Accessibility: WCAG AA; visible focus states; adequate contrast.`);
+    bullets.push(`- Responsive layout for mobile/tablet/desktop.`);
+    bullets.push(`- SEO: meta title/description; OpenGraph defaults.`);
+    bullets.push(`- If inputs are missing, scaffold placeholders and TODO comments.`);
+    bullets.push(`Deliverables:`);
+    bullets.push(`- Working version preview that reflects the above, using the System Prompt theme exactly.`);
+
+    return `${preface}\n\n${bullets.join('\n')}`;
   }
 
   return (
@@ -296,6 +377,26 @@ export default function SiteBuilderPage() {
           </div>
         )}
       </header>
+
+      {/* Preview Prompts (temporary) */}
+      <section className="rounded-xl border border-amber-200 p-4 shadow-soft space-y-3 bg-amber-50">
+        <div className="text-sm font-medium text-amber-900">Preview Prompts (temporary)</div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <div className="text-xs font-semibold text-amber-900">System Prompt (theme)</div>
+            <pre className="mt-1 whitespace-pre-wrap text-xs leading-relaxed rounded-lg border border-amber-200 bg-white p-3 text-neutral-900 min-h-28">
+{buildProjectInstructions(onboarding, industry, theme)}
+            </pre>
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-amber-900">Chat Prompt (initial)</div>
+            <pre className="mt-1 whitespace-pre-wrap text-xs leading-relaxed rounded-lg border border-amber-200 bg-white p-3 text-neutral-900 min-h-28">
+{buildInitialMessage(onboarding, industry)}
+            </pre>
+          </div>
+        </div>
+        <div className="text-[11px] text-amber-800">These are sent to v0 on Start. We will remove this block after testing.</div>
+      </section>
 
       {/* Collapsed summaries of completed stages (in order) */}
       {stepsState && (
@@ -375,9 +476,10 @@ export default function SiteBuilderPage() {
                         return String(name).trim().slice(0,60) || 'New Site';
                       })();
                       const projDesc = (onboarding?.tagline || onboarding?.description || '') as string;
+                      const projInstructions = buildProjectInstructions(onboarding, industry, theme);
                       const pRes = await fetch('/api/v0/projects', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: projName, description: projDesc || undefined, user_id: userId || undefined, website_id: websiteId || undefined })
+                        body: JSON.stringify({ name: projName, description: projDesc || undefined, instructions: projInstructions, user_id: userId || undefined, website_id: websiteId || undefined })
                       });
                       const pJson = await pRes.json().catch(() => ({} as any));
                       if (!pRes.ok) throw new Error(pJson?.error || 'Failed to create project');
