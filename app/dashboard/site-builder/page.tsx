@@ -43,6 +43,10 @@ export default function SiteBuilderPage() {
   const [globalSent, setGlobalSent] = useState<boolean>(false);
   const [stepsState, setStepsState] = useState<Record<string, 'pending' | 'done'> | null>(null);
   const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
+  // Visible error banners
+  const [startError, setStartError] = useState<string | null>(null);
+  const [heroError, setHeroError] = useState<string | null>(null);
+  const [servicesError, setServicesError] = useState<string | null>(null);
 
   // Animated loader steps (similar to Onboarding step 4)
   const BUILD_STEPS = [
@@ -295,6 +299,7 @@ export default function SiteBuilderPage() {
                 if (simBusy) return;
                 if (!websiteId) { setSimStage('Missing website'); return; }
                 setSimBusy(true);
+                setStartError(null);
                 setSimStage('Initializing…');
                 setSimProgress(8);
                 try {
@@ -347,7 +352,9 @@ export default function SiteBuilderPage() {
                     es.close();
                   };
                 } catch (e: any) {
-                  setSimStage(e?.message || 'Failed to start');
+                  const msg = e?.message || 'Failed to start';
+                  setSimStage(msg);
+                  setStartError(msg);
                   setSimBusy(false);
                 }
               }}
@@ -356,6 +363,11 @@ export default function SiteBuilderPage() {
             >
               {simBusy ? 'Working…' : 'Start'}
             </button>
+            {startError && (
+              <div className="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                {startError}
+              </div>
+            )}
           ) : (
             <div className="flex items-center justify-between">
               <div className="text-xs text-neutral-600">Build completed successfully. You can continue.</div>
@@ -512,6 +524,7 @@ export default function SiteBuilderPage() {
                 if (simBusy) return;
                 if (!userId) return;
                 setSimBusy(true);
+                setHeroError(null);
                 setSimStage('Selecting hero…');
                 setSimProgress(8);
                 try {
@@ -579,7 +592,9 @@ export default function SiteBuilderPage() {
                     es.close();
                   };
                 } catch (e: any) {
-                  setSimStage(e?.message || 'Failed to start hero step');
+                  const msg = e?.message || 'Failed to start hero step';
+                  setSimStage(msg);
+                  setHeroError(msg);
                   setSimBusy(false);
                 }
               }}
@@ -627,6 +642,7 @@ export default function SiteBuilderPage() {
                 if (simBusy) return;
                 if (!userId) return;
                 setSimBusy(true);
+                setServicesError(null);
                 setSimStage('Selecting services layout…');
                 setSimProgress(8);
                 try {

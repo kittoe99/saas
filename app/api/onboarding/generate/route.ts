@@ -42,11 +42,35 @@ export async function POST(req: Request) {
     // 1) Create v0 project
     const rawName: string = (answers?.brand?.name || answers?.businessName || 'New Site') as string
     const cleanName = String(rawName).trim().slice(0, 60) || 'New Site'
-    const project: any = await (v0 as any).projects.create({
-      name: cleanName,
-      description: answers?.tagline || answers?.description || undefined,
-      instructions: projectInstructions,
-    })
+    // 1) Create v0 project (SDK, then REST fallback)
+    let project: any = null
+    try {
+      project = await (v0 as any).projects.create({
+        name: cleanName,
+        description: answers?.tagline || answers?.description || undefined,
+        instructions: projectInstructions,
+      })
+    } catch (e: any) {
+      console.error('v0.projects.create failed (SDK):', e?.message || e)
+    }
+    if (!project?.id) {
+      const apiKey = process.env.V0_API_KEY
+      if (!apiKey) return NextResponse.json({ error: 'Missing V0_API_KEY; cannot use REST fallback to create project.' }, { status: 500 })
+      const base = process.env.V0_API_BASE || 'https://api.v0.dev'
+      try {
+        const r = await fetch(`${base}/projects`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({ name: cleanName, description: answers?.tagline || answers?.description || undefined, instructions: projectInstructions })
+        })
+        const j = await r.json().catch(() => ({} as any))
+        if (!r.ok) return NextResponse.json({ error: j?.error || 'Failed to create project (REST)' }, { status: r.status })
+        // Some responses return the object directly; others under a key
+        project = j?.project || j
+      } catch (e: any) {
+        return NextResponse.json({ error: e?.message || 'Failed to create project (REST error)' }, { status: 500 })
+      }
+    }
 
     // Persist link in v0_projects for tracking
     const { error: pErr } = await supabase
@@ -60,10 +84,32 @@ export async function POST(req: Request) {
       .single()
     if (pErr) return NextResponse.json({ error: `Failed to persist project: ${pErr.message}` }, { status: 500 })
 
-    // 2) Create a chat within this project with initial prompt
-    const chat: any = await (v0 as any).chats.create({ message: initialPrompt, projectId: project?.id })
-    const demoUrl = chat?.latestVersion?.demoUrl ?? null
-    const files = chat?.latestVersion?.files ?? null
+    // 2) Create a chat within this project with initial prompt (SDK, then REST fallback)
+    let chat: any = null
+    try {
+      chat = await (v0 as any).chats.create({ message: initialPrompt, projectId: project?.id })
+    } catch (e: any) {
+      console.error('v0.chats.create failed (SDK):', e?.message || e)
+    }
+    if (!chat?.id) {
+      const apiKey = process.env.V0_API_KEY
+      if (!apiKey) return NextResponse.json({ error: 'Missing V0_API_KEY; cannot use REST fallback to create chat.' }, { status: 500 })
+      const base = process.env.V0_API_BASE || 'https://api.v0.dev'
+      try {
+        const r = await fetch(`${base}/chats`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({ projectId: project?.id, message: initialPrompt })
+        })
+        const j = await r.json().catch(() => ({} as any))
+        if (!r.ok) return NextResponse.json({ error: j?.error || 'Failed to create chat (REST)' }, { status: r.status })
+        chat = j?.chat || j
+      } catch (e: any) {
+        return NextResponse.json({ error: e?.message || 'Failed to create chat (REST error)' }, { status: 500 })
+      }
+    }
+    const demoUrl = chat?.latestVersion?.demoUrl ?? chat?.demoUrl ?? null
+    const files = chat?.latestVersion?.files ?? chat?.files ?? null
 
     const { error: cErr } = await supabase
       .from('v0_chats')
