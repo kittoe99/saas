@@ -7,13 +7,14 @@ const THEME_INSTRUCTIONS = `Site theme\n1) Color & Contrast\n- Background: #FCFA
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({} as any))
-    const user_id: string | undefined = body?.user_id
     const website_id: string | undefined = body?.website_id
-    if (!user_id || !website_id) {
-      return NextResponse.json({ error: 'Missing user_id or website_id' }, { status: 400 })
+    if (!website_id) {
+      return NextResponse.json({ error: 'Missing website_id' }, { status: 400 })
     }
 
     const supabase = getSupabaseServer()
+    const { data: auth } = await supabase.auth.getUser()
+    const user_id: string | undefined = auth?.user?.id
 
     // Load onboarding for this website
     const { data: ob, error: obErr } = await supabase

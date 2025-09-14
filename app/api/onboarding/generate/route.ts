@@ -30,11 +30,13 @@ export async function POST(req: Request) {
 
     // Compose blueprint and instructions
     const blueprint = getBlueprint(industry)
-    const projectInstructions = (typeof (body as any)?.instructions === 'string' && (body as any).instructions.trim().length)
+    const projectInstructionsRaw = (typeof (body as any)?.instructions === 'string' && (body as any).instructions.trim().length)
       ? (body as any).instructions as string
       : (typeof theme === 'string' && theme.trim().length)
         ? (theme as string)
         : buildProjectInstructions(theme, blueprint)
+    // v0 API constraint: instructions must be <= 1000 chars
+    const projectInstructions = String(projectInstructionsRaw || '').slice(0, 1000)
     const initialPrompt = buildInitialChatPrompt(answers, blueprint, theme)
 
     // 1) Create v0 project

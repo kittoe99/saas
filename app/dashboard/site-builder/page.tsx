@@ -293,7 +293,7 @@ export default function SiteBuilderPage() {
             <button
               onClick={async () => {
                 if (simBusy) return;
-                if (!userId) return;
+                if (!websiteId) { setSimStage('Missing website'); return; }
                 setSimBusy(true);
                 setSimStage('Initializing…');
                 setSimProgress(8);
@@ -301,7 +301,7 @@ export default function SiteBuilderPage() {
                   const res = await fetch('/api/sitebuild/init', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, website_id: websiteId })
+                    body: JSON.stringify({ website_id: websiteId })
                   });
                   const json = await res.json().catch(() => ({} as any));
                   if (!res.ok) throw new Error(json?.error || 'Failed to start build');
@@ -351,7 +351,7 @@ export default function SiteBuilderPage() {
                 }
               }}
               className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
-              disabled={simBusy || !userId}
+              disabled={simBusy || !websiteId}
             >
               {simBusy ? 'Working…' : 'Start'}
             </button>
