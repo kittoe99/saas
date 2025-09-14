@@ -12,6 +12,7 @@ export async function GET(_: Request, { params }: any) {
     let chat: any = null
     let demoUrl: string | null = null
     let files: any = null
+    let latestVersionId: string | null = null
 
     // Try SDK using tolerant method names
     try {
@@ -27,6 +28,7 @@ export async function GET(_: Request, { params }: any) {
       }
       demoUrl = chat?.latestVersion?.demoUrl ?? null
       files = chat?.latestVersion?.files ?? null
+      latestVersionId = chat?.latestVersion?.id ?? null
     } catch (e) {
       // Ignore and fall back to DB
     }
@@ -42,7 +44,7 @@ export async function GET(_: Request, { params }: any) {
       if (upErr) {
         return NextResponse.json({ error: `Failed to persist chat refresh: ${upErr.message}` }, { status: 500 })
       }
-      return NextResponse.json({ id, demo: demoUrl, files }, { status: 200 })
+      return NextResponse.json({ id, demo: demoUrl, files, latestVersionId }, { status: 200 })
     }
 
     // Fallback: read from DB if SDK isn't available or returned nothing yet
@@ -52,7 +54,7 @@ export async function GET(_: Request, { params }: any) {
       .eq('v0_chat_id', id)
       .maybeSingle()
     if (readErr) return NextResponse.json({ error: readErr.message }, { status: 500 })
-    return NextResponse.json({ id, demo: row?.demo_url ?? null, files: row?.files ?? null }, { status: 200 })
+    return NextResponse.json({ id, demo: row?.demo_url ?? null, files: row?.files ?? null, latestVersionId: null }, { status: 200 })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
   }

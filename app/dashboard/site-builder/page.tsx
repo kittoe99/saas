@@ -307,10 +307,13 @@ export default function SiteBuilderPage() {
                   const res = await fetch('/api/sitebuild/init', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ website_id: websiteId })
+                    body: JSON.stringify({ website_id: websiteId, user_id: userId || undefined })
                   });
                   const json = await res.json().catch(() => ({} as any));
-                  if (!res.ok) throw new Error(json?.error || 'Failed to start build');
+                  if (!res.ok) {
+                    if (res.status === 401) throw new Error('Please sign in again to start building.');
+                    throw new Error(json?.error || 'Failed to start build');
+                  }
                   const chatId: string | undefined = json?.chat?.id || json?.chatId;
                   if (!chatId) throw new Error('Missing chatId');
                   setAttachedChatId(chatId);

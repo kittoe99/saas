@@ -24,6 +24,17 @@ export async function POST(req: Request) {
         user_id = data?.user?.id || undefined
       } catch {}
     }
+    // If still missing, resolve via websites ownership (service role client)
+    if (!user_id && website_id) {
+      try {
+        const { data: w } = await supabase
+          .from('websites')
+          .select('user_id')
+          .eq('id', website_id)
+          .maybeSingle()
+        user_id = w?.user_id || undefined
+      } catch {}
+    }
     if (!user_id) return NextResponse.json({ error: 'Missing user (not authenticated)' }, { status: 401 })
 
     // supabase already initialized above

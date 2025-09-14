@@ -39,6 +39,12 @@ export default function V0Page() {
   const [deployError, setDeployError] = useState<string | null>(null);
   const [versionId, setVersionId] = useState<string>("");
 
+  // Resolver + one-click deploy latest
+  const [resolving, setResolving] = useState(false);
+  const [resolveError, setResolveError] = useState<string | null>(null);
+  const [resolvedChatId, setResolvedChatId] = useState<string>("");
+  const [resolvedVersionId, setResolvedVersionId] = useState<string>("");
+
   // Deployments state
   const [loadingDeployments, setLoadingDeployments] = useState(false);
   const [deployments, setDeployments] = useState<any[]>([]);
@@ -77,6 +83,77 @@ export default function V0Page() {
       return { error: json?.error || `Request failed: ${res.status}` } as any;
     }
     return json as ApiResult<T>;
+  }
+
+  async function resolveChatId(): Promise<string> {
+    // Priority: selectedChatId -> chatId -> websiteId lookup -> recent chats
+    if (selectedChatId) return selectedChatId;
+    if (chatId) return chatId;
+    if (websiteId) {
+      const { data, error } = await supabase
+        .from('v0_chats')
+        .select('v0_chat_id, created_at')
+        .eq('website_id', websiteId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      const found = (data || [])[0]?.v0_chat_id as string | undefined;
+      if (found) return found;
+    }
+    // Fallback: pick the most recent chat for the user
+    const { data, error } = await supabase
+      .from('v0_chats')
+      .select('v0_chat_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (error) throw error;
+    const found = (data || [])[0]?.v0_chat_id as string | undefined;
+    if (!found) throw new Error('No chats available to resolve');
+    return found;
+  }
+
+  async function handleResolveAndDeployLatest() {
+    setResolving(true);
+    setResolveError(null);
+    setResolvedChatId("");
+    setResolvedVersionId("");
+    try {
+      // 1) Resolve chatId
+      const cid = await resolveChatId();
+      setResolvedChatId(cid);
+      // 2) Fetch latest version via internal API (exposes latestVersionId)
+      const res = await fetch(`/api/v0/chats/${encodeURIComponent(cid)}`);
+      const j = await res.json().catch(() => ({} as any));
+      if (!res.ok) throw new Error(j?.error || 'Failed to fetch chat');
+      const latestVid: string | undefined = j?.latestVersionId || undefined;
+      if (!latestVid) throw new Error('No latest version available yet');
+      setResolvedVersionId(latestVid);
+      // 3) Deploy latest version via internal deployments API
+      const payload: any = {
+        projectId: deployProjectId || selectedProjectId || undefined,
+        versionId: latestVid,
+        user_id: userId || undefined,
+        website_id: websiteId || undefined,
+      };
+      if (!payload.projectId) {
+        // If projectId isn't selected, deployments API can still work with versionId alone
+        delete payload.projectId;
+      }
+      const dep = await postJSON<{ id: string; deployment: any }>("/api/v0/deployments", payload);
+      if ((dep as any).error) throw new Error((dep as any).error);
+      const depId = (dep as any).id as string;
+      setDeploymentId(depId);
+      setDeploymentStatus((dep as any).deployment?.status || "");
+      setDeploymentUrl((dep as any).deployment?.url || "");
+      if (!(dep as any).deployment?.url) {
+        // optionally poll for URL using existing helper
+        pollDeploymentUrl(depId, { attempts: 12, delayMs: 5000 });
+      }
+    } catch (e: any) {
+      setResolveError(e?.message || 'Failed to resolve and deploy latest');
+    } finally {
+      setResolving(false);
+    }
   }
 
   async function pollChatPreview(targetChatId: string, { attempts = 10, delayMs = 3000 } = {}) {
@@ -297,13 +374,42 @@ export default function V0Page() {
     setDeploying(true);
     setDeployError(null);
     try {
-      const result = await postJSON<{ id: string; deployment: any }>("/api/v0/deployments", {
-        projectId: deployProjectId || selectedProjectId,
-        chatId: versionId ? undefined : ((selectedChatId || chatId) || undefined),
-        versionId: versionId || undefined,
+      let project = deployProjectId || selectedProjectId || "";
+      let vid = (versionId || "").trim();
+      let cid = (!vid ? (selectedChatId || chatId || "") : "").trim();
+      if (!project) throw new Error('Missing projectId');
+
+      // Auto-resolve chatId by project if neither versionId nor chatId provided
+      if (!vid && !cid) {
+        const { data, error } = await supabase
+          .from('v0_chats')
+          .select('v0_chat_id, created_at')
+          .eq('v0_project_id', project)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (!error && data && data.length > 0) {
+          cid = (data[0] as any).v0_chat_id as string;
+        }
+      }
+      // Resolve latest version from chat if still no versionId
+      if (!vid && cid) {
+        const res = await fetch(`/api/v0/chats/${encodeURIComponent(cid)}`);
+        const j = await res.json().catch(() => ({} as any));
+        if (res.ok) {
+          vid = j?.latestVersionId || vid;
+        }
+      }
+      // Prepare payload (prefer versionId; fallback to chatId if API supports resolving)
+      const payload: any = {
+        projectId: project,
         user_id: userId || undefined,
         website_id: websiteId || undefined,
-      });
+      };
+      if (vid) payload.versionId = vid;
+      else if (cid) payload.chatId = cid;
+      else throw new Error('Missing chatId or versionId (no chat found for this project)');
+
+      const result = await postJSON<{ id: string; deployment: any }>("/api/v0/deployments", payload);
       if ((result as any).error) throw new Error((result as any).error);
       const depId = (result as any).id as string;
       setDeploymentId(depId);
@@ -360,6 +466,28 @@ export default function V0Page() {
             onChange={(e) => setWebsiteId(e.target.value)}
           />
         </label>
+      </section>
+
+      <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-3">
+        <div className="text-sm font-medium text-neutral-800">Resolve Chat & Deploy Latest</div>
+        <div className="text-xs text-neutral-600">Given a Website ID (or a selected chat), this will find the chat, read its latestVersionId, and deploy that version.</div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleResolveAndDeployLatest}
+            disabled={!userId || resolving}
+            className="inline-flex items-center justify-center rounded-md bg-neutral-900 text-white px-3 py-1.5 text-sm disabled:opacity-60"
+          >
+            {resolving ? 'Resolving…' : 'Resolve & Deploy Latest'}
+          </button>
+        </div>
+        {(resolvedChatId || resolvedVersionId || resolveError) && (
+          <div className="text-sm space-y-1">
+            {resolvedChatId && <div>Chat ID: <span className="font-mono">{resolvedChatId}</span></div>}
+            {resolvedVersionId && <div>Latest Version ID: <span className="font-mono">{resolvedVersionId}</span></div>}
+            {resolveError && <div className="text-red-700">{resolveError}</div>}
+          </div>
+        )}
       </section>
 
       <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-3">

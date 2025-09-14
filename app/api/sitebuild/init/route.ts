@@ -8,13 +8,14 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({} as any))
     const website_id: string | undefined = body?.website_id
+    const user_id_from_body: string | undefined = body?.user_id
     if (!website_id) {
       return NextResponse.json({ error: 'Missing website_id' }, { status: 400 })
     }
 
     const supabase = getSupabaseServer()
     const { data: auth } = await supabase.auth.getUser()
-    const user_id: string | undefined = auth?.user?.id
+    const user_id: string | undefined = user_id_from_body || auth?.user?.id
 
     // Load onboarding for this website
     const { data: ob, error: obErr } = await supabase
@@ -89,9 +90,11 @@ export async function POST(req: Request) {
 
     // Call existing generate orchestrator with deploy=false and instructions override
     const { origin } = new URL(req.url)
+    const cookie = req.headers.get('cookie') || ''
     const res = await fetch(`${origin}/api/onboarding/generate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // Forward cookies so server-side auth can recognize the user
+      headers: { 'Content-Type': 'application/json', ...(cookie ? { cookie } : {}) },
       body: JSON.stringify({
         user_id,
         website_id,
