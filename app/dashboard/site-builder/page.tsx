@@ -404,6 +404,28 @@ export default function SiteBuilderPage() {
     try { return s ? JSON.parse(s) : undefined } catch { return undefined }
   }
 
+  // Resolve a chatId to use for continuation, mirroring logic in app/v0/page.tsx
+  async function resolveChatId(): Promise<string> {
+    // Priority: attachedChatId -> by website_id (latest)
+    if (attachedChatId) return attachedChatId;
+    if (websiteId) {
+      const { data, error } = await supabase
+        .from('v0_chats' as any)
+        .select('v0_chat_id, created_at')
+        .eq('website_id', websiteId)
+        .order('created_at', { ascending: false } as any)
+        .limit(1);
+      if (!error) {
+        const found = (data || [])[0]?.v0_chat_id as string | undefined;
+        if (found) {
+          setAttachedChatId(found);
+          return found;
+        }
+      }
+    }
+    throw new Error('Missing chatId');
+  }
+
   function buildInitialMessage(data: any, resolved: string): string {
     if (!data || typeof data !== 'object') return '';
     const brandName = (data?.name || data?.brand?.name || 'New Site').toString();
@@ -894,11 +916,12 @@ export default function SiteBuilderPage() {
                   const code = getSectionCode(pick as any);
                   setSimStage('Sending hero to builder…');
                   setSimProgress(18);
+                  const chatToUse = await resolveChatId().catch((e) => { throw e; });
                   const r = await fetch('/api/v0/chats/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      chatId: attachedChatId || undefined,
+                      chatId: chatToUse || undefined,
                       user_id: userId || undefined,
                       website_id: websiteId || undefined,
                       message: `Design our hero like this: \n\n${code}`,
@@ -906,7 +929,6 @@ export default function SiteBuilderPage() {
                   });
                   const j = await r.json().catch(() => ({} as any));
                   if (!r.ok) throw new Error(j?.error || 'Failed to send hero');
-                  const chatToUse = attachedChatId!;
                   setHeroSent(true);
                   setSimStage('Waiting for hero preview…');
                   setSimProgress(30);
@@ -934,7 +956,9 @@ export default function SiteBuilderPage() {
                     await new Promise(res => setTimeout(res, 2500));
                   }
                 } catch (e: any) {
-                  const msg = e?.message || 'Failed to start hero step';
+                  const msg = e?.message === 'Missing chatId'
+                    ? 'Missing chatId — please click Start first to create/attach a chat.'
+                    : (e?.message || 'Failed to start hero step');
                   setSimStage(msg);
                   setHeroError(msg);
                   setSimBusy(false);
@@ -1000,11 +1024,12 @@ export default function SiteBuilderPage() {
                   const code = getSectionCode(pick as any);
                   setSimStage('Sending services to builder…');
                   setSimProgress(18);
+                  const chatToUse = await resolveChatId().catch((e) => { throw e; });
                   const r = await fetch('/api/v0/chats/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      chatId: attachedChatId || undefined,
+                      chatId: chatToUse || undefined,
                       user_id: userId || undefined,
                       website_id: websiteId || undefined,
                       message: `Design our services section like this: \n\n${code}`,
@@ -1012,7 +1037,6 @@ export default function SiteBuilderPage() {
                   });
                   const j = await r.json().catch(() => ({} as any));
                   if (!r.ok) throw new Error(j?.error || 'Failed to send services');
-                  const chatToUse = attachedChatId!;
                   setServicesSent(true);
                   setSimStage('Waiting for services preview…');
                   setSimProgress(30);
@@ -1040,7 +1064,9 @@ export default function SiteBuilderPage() {
                     await new Promise(res => setTimeout(res, 2500));
                   }
                 } catch (e: any) {
-                  const msg = e?.message || 'Failed to start services step';
+                  const msg = e?.message === 'Missing chatId'
+                    ? 'Missing chatId — please click Start first to create/attach a chat.'
+                    : (e?.message || 'Failed to start services step');
                   setSimStage(msg);
                   setServicesError(msg);
                   setSimBusy(false);
@@ -1109,11 +1135,12 @@ export default function SiteBuilderPage() {
                   const code = getSectionCode(pick as any);
                   setSimStage('Sending service areas to builder…');
                   setSimProgress(18);
+                  const chatToUse = await resolveChatId().catch((e) => { throw e; });
                   const r = await fetch('/api/v0/chats/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      chatId: attachedChatId || undefined,
+                      chatId: chatToUse || undefined,
                       user_id: userId || undefined,
                       website_id: websiteId || undefined,
                       message: `Design our service areas section like this: \n\n${code}`,
@@ -1121,7 +1148,6 @@ export default function SiteBuilderPage() {
                   });
                   const j = await r.json().catch(() => ({} as any));
                   if (!r.ok) throw new Error(j?.error || 'Failed to send service areas');
-                  const chatToUse = attachedChatId!;
                   setAreasSent(true);
                   setSimStage('Waiting for service areas preview…');
                   setSimProgress(30);
@@ -1149,7 +1175,10 @@ export default function SiteBuilderPage() {
                     await new Promise(res => setTimeout(res, 2500));
                   }
                 } catch (e: any) {
-                  setSimStage(e?.message || 'Failed to start service areas step');
+                  const msg = e?.message === 'Missing chatId'
+                    ? 'Missing chatId — please click Start first to create/attach a chat.'
+                    : (e?.message || 'Failed to start service areas step');
+                  setSimStage(msg);
                   setSimBusy(false);
                 }
               }}
@@ -1201,11 +1230,12 @@ export default function SiteBuilderPage() {
                 setSimProgress(12);
                 try {
                   const message = 'make sure homepage has a "service areas" section, let navigation menu and footer appear in all pages, then add relevant site images. Also, make nav menu and footer design more appealing on mobile, tab and desktop';
+                  const chatToUse = await resolveChatId().catch((e) => { throw e; });
                   const r = await fetch('/api/v0/chats/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      chatId: attachedChatId || undefined,
+                      chatId: chatToUse || undefined,
                       user_id: userId || undefined,
                       website_id: websiteId || undefined,
                       message,
@@ -1213,7 +1243,6 @@ export default function SiteBuilderPage() {
                   });
                   const j = await r.json().catch(() => ({} as any));
                   if (!r.ok) throw new Error(j?.error || 'Failed to send global update');
-                  const chatToUse = attachedChatId!;
                   setGlobalSent(true);
                   setSimStage('Waiting for global update preview…');
                   setSimProgress(28);
@@ -1241,7 +1270,10 @@ export default function SiteBuilderPage() {
                     await new Promise(res => setTimeout(res, 2500));
                   }
                 } catch (e: any) {
-                  setSimStage(e?.message || 'Failed to start global step');
+                  const msg = e?.message === 'Missing chatId'
+                    ? 'Missing chatId — please click Start first to create/attach a chat.'
+                    : (e?.message || 'Failed to start global step');
+                  setSimStage(msg);
                   setSimBusy(false);
                 }
               }}
