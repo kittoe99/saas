@@ -425,31 +425,64 @@ export default function SiteBuilderPage() {
     try { return s ? JSON.parse(s) : undefined } catch { return undefined }
   }
 
-  // Resolve a chatId to use for continuation, mirroring logic in app/v0/page.tsx, with extra fallbacks.
+  // Resolve a chatId to use for continuation, prioritizing project->chats resolution.
   async function resolveChatId(): Promise<string> {
     // 0) In-memory
     if (attachedChatId) return attachedChatId;
 
-    // 1) Directly from websites row (authoritative linkage)
+    // 1) Resolve projectId first (preferred path), no user filter to avoid mismatches
     try {
-      if (websiteId && userId) {
+      let pid = attachedProjectId || undefined;
+      if (!pid && websiteId) {
+        // Try v0_projects by website_id
+        const { data: prow } = await supabase
+          .from('v0_projects')
+          .select('v0_project_id')
+          .eq('website_id', websiteId)
+          .order('created_at', { ascending: false } as any)
+          .limit(1)
+          .maybeSingle();
+        if (prow?.v0_project_id) pid = prow.v0_project_id as string;
+      }
+      if (!pid && websiteId) {
+        // Fallback: websites.v0_project_id
         const { data: wrow } = await supabase
           .from('websites' as any)
-          .select('v0_chat_id, v0_project_id')
+          .select('v0_project_id')
           .eq('id', websiteId)
-          .eq('user_id', userId)
           .maybeSingle();
-        const fromWeb = (wrow as any)?.v0_chat_id as string | undefined;
-        if (fromWeb) {
-          setAttachedChatId(fromWeb);
-          if ((wrow as any)?.v0_project_id && !attachedProjectId) setAttachedProjectId((wrow as any).v0_project_id);
-          return fromWeb;
+        if ((wrow as any)?.v0_project_id) pid = (wrow as any).v0_project_id as string;
+      }
+      if (pid) {
+        setAttachedProjectId(pid);
+        // 2) Find latest chat by v0_project_id (authoritative)
+        const { data: cdata, error: cerr } = await supabase
+          .from('v0_chats' as any)
+          .select('v0_chat_id, created_at')
+          .eq('v0_project_id', pid)
+          .order('created_at', { ascending: false } as any)
+          .limit(1);
+        if (!cerr) {
+          const found = (cdata || [])[0]?.v0_chat_id as string | undefined;
+          if (found) { setAttachedChatId(found); return found; }
         }
-        if ((wrow as any)?.v0_project_id && !attachedProjectId) setAttachedProjectId((wrow as any).v0_project_id);
       }
     } catch {}
 
-    // 2) Latest chat by website_id
+    // 3) Directly from websites row chat
+    try {
+      if (websiteId) {
+        const { data: wrow } = await supabase
+          .from('websites' as any)
+          .select('v0_chat_id')
+          .eq('id', websiteId)
+          .maybeSingle();
+        const fromWeb = (wrow as any)?.v0_chat_id as string | undefined;
+        if (fromWeb) { setAttachedChatId(fromWeb); return fromWeb; }
+      }
+    } catch {}
+
+    // 4) Latest chat by website_id (fallback)
     try {
       if (websiteId) {
         const { data, error } = await supabase
@@ -460,64 +493,7 @@ export default function SiteBuilderPage() {
           .limit(1);
         if (!error) {
           const found = (data || [])[0]?.v0_chat_id as string | undefined;
-          if (found) {
-            setAttachedChatId(found);
-            return found;
-          }
-        }
-      }
-    } catch {}
-
-    // 3) Latest chat by project if we have one
-    try {
-      const pid = attachedProjectId;
-      if (pid) {
-        const { data, error } = await supabase
-          .from('v0_chats' as any)
-          .select('v0_chat_id, created_at')
-          .eq('v0_project_id', pid)
-          .order('created_at', { ascending: false } as any)
-          .limit(1);
-        if (!error) {
-          const found = (data || [])[0]?.v0_chat_id as string | undefined;
-          if (found) {
-            setAttachedChatId(found);
-            return found;
-          }
-        }
-      }
-    } catch {}
-
-    // 4) Auto-create a chat if a project exists but no chat was found
-    try {
-      // Ensure we have a projectId to attach the chat to
-      let pid = attachedProjectId || undefined;
-      if (!pid && websiteId && userId) {
-        const { data: prow } = await supabase
-          .from('v0_projects')
-          .select('v0_project_id')
-          .eq('website_id', websiteId)
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false } as any)
-          .limit(1)
-          .maybeSingle();
-        if (prow?.v0_project_id) {
-          pid = prow.v0_project_id as string;
-          setAttachedProjectId(pid);
-        }
-      }
-      if (pid) {
-        const initialMessage = buildInitialMessage(onboarding, industry);
-        const cRes = await fetch('/api/v0/chats', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: initialMessage || 'Start building based on the theme and onboarding.', v0_project_id: pid, user_id: userId || undefined, website_id: websiteId || undefined })
-        });
-        const cJson = await cRes.json().catch(() => ({} as any));
-        if (!cRes.ok) throw new Error(cJson?.error || 'Failed to create chat');
-        const newId = cJson?.id as string | undefined;
-        if (newId) {
-          setAttachedChatId(newId);
-          return newId;
+          if (found) { setAttachedChatId(found); return found; }
         }
       }
     } catch {}
