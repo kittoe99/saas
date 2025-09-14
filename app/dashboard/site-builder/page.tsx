@@ -34,7 +34,7 @@ export default function SiteBuilderPage() {
   // Local-only simulated build state (no API calls)
   const [simBusy, setSimBusy] = useState<boolean>(false);
   const [simProgress, setSimProgress] = useState<number>(0); // 0-100
-  const [simStage, setSimStage] = useState<string>("Idle");
+  const [simStage, setSimStage] = useState<string>("");
   const [simDone, setSimDone] = useState<boolean>(false);
   const [attachedChatId, setAttachedChatId] = useState<string | null>(null);
   const [heroSent, setHeroSent] = useState<boolean>(false);
@@ -43,6 +43,52 @@ export default function SiteBuilderPage() {
   const [globalSent, setGlobalSent] = useState<boolean>(false);
   const [stepsState, setStepsState] = useState<Record<string, 'pending' | 'done'> | null>(null);
   const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
+
+  // Animated loader steps (similar to Onboarding step 4)
+  const BUILD_STEPS = [
+    'Connecting to builder',
+    'Analyzing structure',
+    'Generating sections',
+    'Applying styles',
+    'Updating preview',
+  ];
+  const [buildStepIndex, setBuildStepIndex] = useState(0);
+  useEffect(() => {
+    if (!simBusy) {
+      setBuildStepIndex(0);
+      return;
+    }
+    setBuildStepIndex(0);
+    let i = 0;
+    const id = setInterval(() => {
+      i = Math.min(i + 1, BUILD_STEPS.length - 1);
+      setBuildStepIndex(i);
+      if (i >= BUILD_STEPS.length - 1) {
+        clearInterval(id);
+      }
+    }, 1400);
+    return () => clearInterval(id);
+  }, [simBusy]);
+
+  const liveStage = simStage || (simBusy ? BUILD_STEPS[buildStepIndex] : '');
+
+  // Collapsed summary card for completed stages
+  function CollapsedCard({ title, note }: { title: string; note?: string }) {
+    return (
+      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="h-3.5 w-3.5"><path d="M5 13l4 4L19 7"/></svg>
+          </span>
+          <div className="min-w-0">
+            <div className="text-sm font-medium text-neutral-900 truncate">{title}</div>
+            {note && <div className="text-xs text-neutral-600 truncate">{note}</div>}
+          </div>
+        </div>
+        <span className="text-[11px] text-neutral-500">Completed</span>
+      </div>
+    );
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -218,7 +264,7 @@ export default function SiteBuilderPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 space-y-10">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">Site Builder</h1>
+        <h1 className="text-2xl font-semibold">Building your site</h1>
         <p className="text-sm text-neutral-600">Signed in user_id: {userId || "(not signed in)"}</p>
         {!userId && (
           <div className="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -227,26 +273,23 @@ export default function SiteBuilderPage() {
         )}
       </header>
 
-      {/* Start Building - Test UI (always visible) */}
+      {/* Start Building - orchestration kickoff */}
       <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-neutral-900">Start Building</h2>
-            <p className="text-sm text-neutral-600">We’ll use your onboarding details and our theme system to build your site. This is a test UI — no live build yet.</p>
+            <h2 className="text-lg font-semibold text-neutral-900">Start</h2>
+            <p className="text-sm text-neutral-600">We’ll use your onboarding details and our theme system to build your site. You’ll see live activity below.</p>
             {!websiteId && (
               <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 inline-block">Tip: open this page with a website_id query param to target a specific site.</div>
             )}
           </div>
           <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-            <div className="text-sm font-medium text-neutral-800">Build Progress</div>
-            <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
-              <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
-            </div>
-            <div className="mt-2 text-xs text-neutral-600 flex items-center gap-2">
-              {(simBusy && !simDone) && (
-                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
-              )}
-              <span>{simStage}</span>
-            </div>
+            <div className="text-sm font-medium text-neutral-800">Build Activity</div>
+            {simBusy && (
+              <div className="mt-2 flex items-center gap-3 text-sm text-neutral-700">
+                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-neutral-400 border-t-success-accent" />
+                <span>{liveStage}</span>
+              </div>
+            )}
           </div>
           {!simDone ? (
             <button
@@ -312,7 +355,7 @@ export default function SiteBuilderPage() {
               className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
               disabled={simBusy || !userId}
             >
-              {simBusy ? 'Building…' : 'Start Building'}
+              {simBusy ? 'Working…' : 'Start'}
             </button>
           ) : (
             <div className="flex items-center justify-between">
@@ -332,6 +375,16 @@ export default function SiteBuilderPage() {
             </div>
           )}
       </section>
+
+      {/* Collapsed summaries of completed stages (in order) */}
+      {stepsState && (
+        <div className="space-y-2">
+          {stepsState.hero === 'done' && <CollapsedCard title="Initial layout" note="Base structure prepared" />}
+          {stepsState.services === 'done' && <CollapsedCard title="Content updates" note="Key sections adjusted" />}
+          {stepsState.areas === 'done' && <CollapsedCard title="Location setup" note="Coverage details added" />}
+          {stepsState.global === 'done' && <CollapsedCard title="Design polish" note="Consistent nav & footer" />}
+        </div>
+      )}
 
       {step === 'init' && (
         <section className="rounded-xl border border-neutral-200 p-4 shadow-soft space-y-4 bg-white">
@@ -444,19 +497,13 @@ export default function SiteBuilderPage() {
       {step === 'hero' && (
         <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-neutral-900">Add Hero Section</h2>
-            <p className="text-sm text-neutral-600">We’ll randomly pick a hero layout and ask v0 to implement it. Live status will appear below.</p>
-            <p className="text-xs text-amber-800 bg-amber-50 inline-block rounded px-2 py-1 border border-amber-200">Make sure hero has an image.</p>
+            <h2 className="text-lg font-semibold text-neutral-900">Continue Site Build</h2>
+            <p className="text-sm text-neutral-600">We’re updating your site. You’ll see live activity below.</p>
           </div>
           <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-            <div className="text-sm font-medium text-neutral-800">Hero Progress</div>
-            <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
-              <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
-            </div>
-            <div className="mt-2 text-xs text-neutral-600 flex items-center gap-2">
-              {(simBusy && !simDone) && (
-                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
-              )}
+            <div className="text-sm font-medium text-neutral-800">Build Activity</div>
+            <div className="mt-2 flex items-center gap-3 text-sm text-neutral-700">
+              <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-neutral-400 border-t-success-accent" />
               <span>{simStage}</span>
             </div>
           </div>
@@ -539,11 +586,11 @@ export default function SiteBuilderPage() {
               className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
               disabled={simBusy || !userId}
             >
-              {simBusy ? 'Working…' : 'Add Hero'}
+              {simBusy ? 'Working…' : 'Continue'}
             </button>
           ) : (
             <div className="flex items-center justify-between">
-              <div className="text-xs text-neutral-600">Hero step completed. Continue to the next step.</div>
+              <div className="text-xs text-neutral-600">Update applied. Continue when ready.</div>
               <button
                 onClick={() => {
                   const qp = new URLSearchParams();
@@ -564,18 +611,13 @@ export default function SiteBuilderPage() {
       {step === 'services' && (
         <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-neutral-900">Add Services Section</h2>
-            <p className="text-sm text-neutral-600">We’ll randomly pick a services layout and ask v0 to implement it. Live status will appear below.</p>
+            <h2 className="text-lg font-semibold text-neutral-900">Continue Site Build</h2>
+            <p className="text-sm text-neutral-600">We’re updating your site. You’ll see live activity below.</p>
           </div>
           <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-            <div className="text-sm font-medium text-neutral-800">Services Progress</div>
-            <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
-              <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
-            </div>
-            <div className="mt-2 text-xs text-neutral-600 flex items-center gap-2">
-              {(simBusy && !simDone) && (
-                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
-              )}
+            <div className="text-sm font-medium text-neutral-800">Build Activity</div>
+            <div className="mt-2 flex items-center gap-3 text-sm text-neutral-700">
+              <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-neutral-400 border-t-success-accent" />
               <span>{simStage}</span>
             </div>
           </div>
@@ -658,11 +700,11 @@ export default function SiteBuilderPage() {
               className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
               disabled={simBusy || !userId}
             >
-              {simBusy ? 'Working…' : 'Add Services'}
+              {simBusy ? 'Working…' : 'Continue'}
             </button>
           ) : (
             <div className="flex items-center justify-between">
-              <div className="text-xs text-neutral-600">Services step completed. Continue to the next step.</div>
+              <div className="text-xs text-neutral-600">Update applied. Continue when ready.</div>
               <button
                 onClick={() => {
                   const qp = new URLSearchParams();
@@ -777,7 +819,7 @@ export default function SiteBuilderPage() {
               className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
               disabled={simBusy || !userId}
             >
-              {simBusy ? 'Working…' : 'Add Service Areas'}
+              {simBusy ? 'Working…' : 'Continue'}
             </button>
           ) : (
             <div className="flex items-center justify-between">
@@ -802,18 +844,13 @@ export default function SiteBuilderPage() {
       {step === 'global' && (
         <section className="rounded-xl border border-neutral-200 p-6 shadow-soft space-y-5 bg-white">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-neutral-900">Apply Global Elements</h2>
-            <p className="text-sm text-neutral-600">We’ll ask v0 to ensure a service areas section is present on the homepage and that navigation + footer appear on all pages.</p>
+            <h2 className="text-lg font-semibold text-neutral-900">Finalize Design Elements</h2>
+            <p className="text-sm text-neutral-600">We’re refining your site for consistency across pages and devices.</p>
           </div>
           <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-            <div className="text-sm font-medium text-neutral-800">Global Progress</div>
-            <div className="mt-2 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
-              <div className="h-full bg-success-accent transition-all" style={{ width: `${simProgress}%` }} />
-            </div>
-            <div className="mt-2 text-xs text-neutral-600 flex items-center gap-2">
-              {(simBusy && !simDone) && (
-                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
-              )}
+            <div className="text-sm font-medium text-neutral-800">Build Activity</div>
+            <div className="mt-2 flex items-center gap-3 text-sm text-neutral-700">
+              <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-neutral-400 border-t-success-accent" />
               <span>{simStage}</span>
             </div>
           </div>
@@ -826,7 +863,7 @@ export default function SiteBuilderPage() {
                 setSimStage('Sending global update…');
                 setSimProgress(12);
                 try {
-                  const message = 'make sure homepage has a "service areas" section, let navigation menu and footer appear in all pages, then add relevant site images';
+                  const message = 'make sure homepage has a "service areas" section, let navigation menu and footer appear in all pages, then add relevant site images. Also, make nav menu and footer design more appealing on mobile, tab and desktop';
                   const r = await fetch('/api/sitebuild/continue', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -892,11 +929,11 @@ export default function SiteBuilderPage() {
               className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
               disabled={simBusy || !userId}
             >
-              {simBusy ? 'Working…' : 'Apply Global Elements'}
+              {simBusy ? 'Working…' : 'Continue'}
             </button>
           ) : (
             <div className="flex items-center justify-between">
-              <div className="text-xs text-neutral-600">Global step completed. You can deploy when ready.</div>
+              <div className="text-xs text-neutral-600">Update applied. Continue when ready.</div>
               <button
                 onClick={() => {
                   const qp = new URLSearchParams();
