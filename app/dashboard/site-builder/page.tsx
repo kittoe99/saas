@@ -77,6 +77,11 @@ export default function SiteBuilderPage() {
           setServicesSent(steps.services === 'done');
           setAreasSent(steps.areas === 'done');
           setGlobalSent(steps.global === 'done');
+          // If deployment already completed, go to dashboard
+          if (steps.deploy === 'done') {
+            router.push('/dashboard');
+            return;
+          }
           const current = st || null;
           const order = ['hero','services','areas','global','deploy'];
           const nextPending = order.find(k => (steps as any)[k] !== 'done');
@@ -926,6 +931,29 @@ export default function SiteBuilderPage() {
               <span>{simStage}</span>
             </div>
           </div>
+
+          {deployedUrl && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+              <div className="text-sm font-medium text-emerald-900">Live Site</div>
+              <div className="mt-1 text-sm text-emerald-800 break-all">{deployedUrl}</div>
+              <div className="mt-3 flex items-center gap-2">
+                <a
+                  href={deployedUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm text-emerald-800 hover:bg-emerald-100"
+                >
+                  View
+                </a>
+                <button
+                  onClick={async () => { try { if (deployedUrl) await navigator.clipboard.writeText(deployedUrl); } catch {} }}
+                  className="inline-flex items-center justify-center rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm text-emerald-800 hover:bg-emerald-100"
+                >
+                  Copy URL
+                </button>
+              </div>
+            </div>
+          )}
           <button
             onClick={async () => {
               if (simBusy) return;
@@ -942,6 +970,21 @@ export default function SiteBuilderPage() {
                 const j = await r.json().catch(() => ({} as any));
                 if (!r.ok) throw new Error(j?.error || 'Failed to start deployment');
                 const depId = j?.deploymentId as string | undefined;
+                // If URL is already available, finalize without SSE
+                if (j?.url) {
+                  setDeployedUrl(j.url);
+                  setSimStage(`Deployed: ${j.url}`);
+                  setSimProgress(100);
+                  setSimDone(true);
+                  setSimBusy(false);
+                  try {
+                    const newSteps = { ...(stepsState || {}), deploy: 'done' as const };
+                    setStepsState(newSteps);
+                    void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: newSteps }) });
+                  } catch {}
+                  setTimeout(() => { router.push('/dashboard'); }, 1200);
+                  return;
+                }
                 if (!depId) throw new Error('Missing deploymentId');
                 setSimStage('Deploying…');
                 setSimProgress(30);
@@ -972,7 +1015,8 @@ export default function SiteBuilderPage() {
                         router.push('/dashboard');
                       }, 1800);
                     } else if (data?.type === 'complete') {
-                      // Already handled in deployed event
+                      // If complete emitted without deployed payload, still route to dashboard
+                      setTimeout(() => { router.push('/dashboard'); }, 1000);
                     } else if (data?.type === 'timeout') {
                       setSimStage('Timed out waiting for deployment');
                       setSimBusy(false);
@@ -1010,6 +1054,12 @@ export default function SiteBuilderPage() {
               >
                 View Live Site
               </a>
+              <button
+                onClick={async () => { try { if (deployedUrl) await navigator.clipboard.writeText(deployedUrl); } catch {} }}
+                className="inline-flex items-center justify-center rounded-md border border-neutral-200 px-4 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+              >
+                Copy URL
+              </button>
               <button
                 onClick={() => router.push('/dashboard')}
                 className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90"

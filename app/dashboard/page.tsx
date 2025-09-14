@@ -53,6 +53,7 @@ export default function DashboardPage() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [deployments, setDeployments] = useState<Array<{ id: string; url: string | null; status: string | null; created_at: string }>>([]);
+  const [incompleteBuilds, setIncompleteBuilds] = useState<Array<{ website_id: string; nextStep: string; steps: Record<string, 'pending'|'done'> }>>([]);
 
   // Logout handler
   const handleLogout = async () => {
@@ -113,6 +114,38 @@ export default function DashboardPage() {
           deps.map((d: any) => ({ id: d.v0_deployment_id as string, url: d.url as string | null, status: d.status as string | null, created_at: d.created_at as string }))
         );
       }
+
+      // Load websites for this user and detect unfinished builder steps
+      const { data: sites } = await supabase
+        .from('websites')
+        .select('id, builder_steps')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      const pending: Array<{ website_id: string; nextStep: string; steps: Record<string, 'pending'|'done'> }> = [];
+      if (sites && sites.length) {
+        for (const s of sites as any[]) {
+          // Prefer site_build_progress entry if exists
+          let steps: any = null;
+          try {
+            const { data: prog } = await supabase
+              .from('site_build_progress')
+              .select('steps')
+              .eq('website_id', s.id)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            steps = prog?.steps || null;
+          } catch {}
+          if (!steps) steps = s.builder_steps || null;
+          if (!steps) continue;
+          // Determine next pending step
+          const order = ['hero','services','areas','global','deploy'];
+          const next = order.find((k) => steps[k] !== 'done');
+          if (next) {
+            pending.push({ website_id: s.id as string, nextStep: next, steps });
+          }
+        }
+      }
+      if (mounted) setIncompleteBuilds(pending);
     })();
     return () => { mounted = false; };
   }, [authChecked]);
@@ -190,6 +223,12 @@ export default function DashboardPage() {
           </button>
           {/* Desktop tabs moved to sidebar */}
           <div className="ml-auto hidden sm:flex items-center gap-2">
+            <a
+              href="/dashboard/onboarding"
+              className="px-3 py-1.5 rounded-md bg-success-accent text-white text-sm hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+            >
+              New Site
+            </a>
             <button
               type="button"
               onClick={handleLogout}
@@ -322,6 +361,10 @@ export default function DashboardPage() {
                     <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft">
                       <div className="text-xs text-neutral-600 mb-2">Quick actions</div>
                       <div className="grid grid-cols-3 gap-2">
+                        <a href="/dashboard/onboarding" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><path d="M12 5v14M5 12h14"/></svg>
+                          <span className="text-[11px] text-neutral-700">Create new site</span>
+                        </a>
                         <a href="/dashboard?tab=Website" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
                           <span className="text-[11px] text-neutral-700">Edit site</span>
@@ -340,6 +383,28 @@ export default function DashboardPage() {
 
                   {/* Recent activity placeholder */}
                   <div className="p-4">
+                    {/* Incomplete builds (mobile) */}
+                    {incompleteBuilds.length > 0 && (
+                      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 shadow-soft mb-4">
+                        <div className="text-xs text-amber-900 mb-2">Incomplete builds</div>
+                        <ul className="space-y-2">
+                          {incompleteBuilds.map((b) => (
+                            <li key={b.website_id} className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium text-amber-900 truncate max-w-[12rem]">Website {b.website_id.slice(0, 8)}…</div>
+                                <div className="text-[11px] text-amber-800">Next step: {b.nextStep}</div>
+                              </div>
+                              <a
+                                href={`/dashboard/site-builder?website_id=${encodeURIComponent(b.website_id)}&step=${encodeURIComponent(b.nextStep)}`}
+                                className="px-2.5 py-1.5 rounded-md border border-amber-300 text-[12px] text-amber-900 bg-white hover:bg-amber-100"
+                              >
+                                Continue
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     {/* Your site(s) */}
                     <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft mb-4">
                       <div className="text-xs text-neutral-600 mb-2">Your site{deployments.length !== 1 ? 's' : ''}</div>
@@ -389,8 +454,76 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* Desktop or other tabs content placeholder */}
-              {onboardingChecked && needsOnboarding && active === "Home" && (
+              {/* Desktop Home content */}
+              {active === "Home" && (
+                <div className="hidden sm:block p-6">
+                  {incompleteBuilds.length > 0 && (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-soft mb-6">
+                      <div className="text-sm font-medium text-amber-900 mb-1">Incomplete builds</div>
+                      <ul className="divide-y divide-amber-200">
+                        {incompleteBuilds.map((b) => (
+                          <li key={b.website_id} className="py-2 flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-amber-900 truncate max-w-[28rem]">Website {b.website_id}</div>
+                              <div className="text-[12px] text-amber-800">Next step: {b.nextStep}</div>
+                            </div>
+                            <a
+                              href={`/dashboard/site-builder?website_id=${encodeURIComponent(b.website_id)}&step=${encodeURIComponent(b.nextStep)}`}
+                              className="px-2.5 py-1.5 rounded-md border border-amber-300 text-[12px] text-amber-900 bg-white hover:bg-amber-100"
+                            >
+                              Continue
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {/* Your sites (desktop) */}
+                  <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-soft mb-6">
+                    <div className="text-sm font-medium text-neutral-900 mb-1">Your site{deployments.length !== 1 ? 's' : ''}</div>
+                    {deployments.length === 0 ? (
+                      <div className="text-sm text-neutral-700">No deployments yet. Build your site to see it here.</div>
+                    ) : (
+                      <ul className="divide-y divide-neutral-200">
+                        {deployments.map((d) => (
+                          <li key={d.id} className="py-2 flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-neutral-900 truncate max-w-[28rem]">{d.url ?? 'Pending URL'}</div>
+                              <div className="text-[12px] text-neutral-500">{d.status ?? 'unknown'} • {new Date(d.created_at).toLocaleString()}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {d.url && (
+                                <a href={d.url} target="_blank" rel="noreferrer" className="px-2.5 py-1.5 rounded-md border border-neutral-200 text-[12px] text-neutral-800 hover:bg-neutral-50">View</a>
+                              )}
+                              {d.url && (
+                                <button
+                                  onClick={async () => { try { await navigator.clipboard.writeText(d.url!); } catch {} }}
+                                  className="px-2.5 py-1.5 rounded-md border border-neutral-200 text-[12px] text-neutral-800 hover:bg-neutral-50"
+                                >
+                                  Copy URL
+                                </button>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* Onboarding prompt (desktop) */}
+                  {onboardingChecked && needsOnboarding && (
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-soft">
+                      <h2 className="text-base font-semibold text-neutral-900">Complete your onboarding to get the most out of your dashboard.</h2>
+                      <div className="mt-3">
+                        <a href="/dashboard/onboarding" className="inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-1.5 text-white hover:opacity-90">Start onboarding</a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Fallback placeholder for non-Home tabs when onboarding required */}
+              {onboardingChecked && needsOnboarding && active !== "Home" && (
                 <div className="hidden sm:flex min-h-[40vh] items-center justify-center p-8 text-center">
                   <div className="max-w-md space-y-4">
                     <div className="flex justify-center">
