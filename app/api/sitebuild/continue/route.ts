@@ -71,10 +71,26 @@ export async function POST(req: Request) {
       // swallow and fallback; SSE polling may still see updated state if any method succeeded
     }
 
-    // REST fallbacks (direct V0 API) if SDK surface doesn't match
+    // Attempt internal fallback using our own /api/v0/chats/send route (does SDK/REST internally)
+    if ((!didSend || !didVersion) && chatId && message && user_id) {
+      try {
+        const local = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/v0/chats/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId, message, user_id, website_id })
+        })
+        const lj = await local.json().catch(() => ({} as any))
+        if (local.ok && !lj?.error) {
+          didSend = true
+        }
+      } catch {}
+    }
+
+    // REST fallbacks (direct V0 API) if SDK surface doesn't match and internal fallback didn't resolve it
     // Requires V0_API_KEY in env
     const apiKey = process.env.V0_API_KEY
     if ((!didSend || !didVersion) && !apiKey) {
+      // If we couldn't send and have no API key for REST fallback, return a clear error
       return NextResponse.json({ error: 'Missing V0_API_KEY on the server. Set it in your server env (.env.local) for REST fallback.' }, { status: 500 })
     }
     if ((!didSend || !didVersion) && apiKey && chatId) {
