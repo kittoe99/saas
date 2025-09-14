@@ -101,6 +101,7 @@ export default function SiteBuilderPage() {
         const url = new URL(window.location.href);
         const wid = url.searchParams.get("website_id");
         const st = url.searchParams.get("step");
+        const resumeFlag = url.searchParams.get("resume") === '1';
         if (st) setStep(st);
         if (wid) setWebsiteId(wid);
         if (!userId) return;
@@ -109,13 +110,9 @@ export default function SiteBuilderPage() {
           const prog = await fetch(`/api/sitebuild/steps?website_id=${encodeURIComponent(wid)}&user_id=${encodeURIComponent(userId)}`, { cache: 'no-store' });
           const pj = await prog.json().catch(() => ({} as any));
           let steps: Record<string, 'pending' | 'done'> | null = pj?.steps || null;
-          // Initialize with hero/services done per request if no record
+          // Initialize with all steps pending if no record; do not persist yet
           if (!steps) {
-            steps = { hero: 'done', services: 'done', areas: 'pending', global: 'pending', deploy: 'pending' };
-            await fetch('/api/sitebuild/steps', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ user_id: userId, website_id: wid, steps })
-            }).catch(() => {});
+            steps = { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' };
           }
           setStepsState(steps);
           // Reflect into local flags and route to next pending if current step is missing or completed
@@ -131,7 +128,8 @@ export default function SiteBuilderPage() {
           const current = st || null;
           const order = ['hero','services','areas','global','deploy'];
           const nextPending = order.find(k => (steps as any)[k] !== 'done');
-          if (!current || (current && (steps as any)[current] === 'done')) {
+          // Only auto-route if a step was explicitly provided and is already done
+          if (current && (steps as any)[current] === 'done') {
             if (nextPending) {
               const qp = new URLSearchParams();
               if (wid) qp.set('website_id', wid);
@@ -141,7 +139,7 @@ export default function SiteBuilderPage() {
           }
         }
         // Attempt to resume: check if the website already has a v0_chat_id
-        if (wid) {
+        if (wid && resumeFlag) {
           const { data: siteRow, error: siteErr } = await supabase
             .from('websites')
             .select('v0_chat_id')
