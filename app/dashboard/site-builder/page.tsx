@@ -265,6 +265,15 @@ export default function SiteBuilderPage() {
             steps = { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' };
           }
           setStepsState(steps);
+          // If Start is done, skip Start unconditionally
+          if ((steps as any).start === 'done' && (!st || st === 'start')) {
+            const qp = new URLSearchParams();
+            if (wid) qp.set('website_id', wid);
+            qp.set('step', 'hero');
+            setStep('hero');
+            router.replace(`/dashboard/site-builder?${qp.toString()}`);
+            return;
+          }
           // Reflect into local flags and route to next pending if current step is missing or completed
           setHeroSent(steps.hero === 'done');
           setServicesSent(steps.services === 'done');
@@ -538,6 +547,15 @@ export default function SiteBuilderPage() {
                 setSimStage('Initializing…');
                 setSimProgress(8);
                 try {
+                  // If Start is already done, skip immediately to hero
+                  if (stepsState && (stepsState as any).start === 'done') {
+                    const qp = new URLSearchParams();
+                    qp.set('website_id', websiteId);
+                    qp.set('step', 'hero');
+                    setStep('hero');
+                    router.replace(`/dashboard/site-builder?${qp.toString()}`);
+                    return;
+                  }
                   // First, try to reuse existing website-linked project/chat
                   let projectId: string | undefined = undefined;
                   let chatId: string | undefined = undefined;
@@ -565,6 +583,20 @@ export default function SiteBuilderPage() {
                         .limit(1)
                         .maybeSingle();
                       if (prow?.v0_project_id) projectId = prow.v0_project_id as string;
+                    } catch {}
+                  }
+
+                  // If chat not found on website row, try v0_chats by website_id (latest)
+                  if (!chatId) {
+                    try {
+                      const { data: crow } = await supabase
+                        .from('v0_chats')
+                        .select('v0_chat_id')
+                        .eq('website_id', websiteId)
+                        .order('created_at', { ascending: false } as any)
+                        .limit(1)
+                        .maybeSingle();
+                      if ((crow as any)?.v0_chat_id) chatId = (crow as any).v0_chat_id as string;
                     } catch {}
                   }
 
@@ -672,6 +704,8 @@ export default function SiteBuilderPage() {
                   setSimStage(msg);
                   setStartError(msg);
                   setSimBusy(false);
+                } finally {
+                  setStartSubmitting(false);
                 }
               }}
               className="inline-flex items-center justify-center rounded-md bg-success-accent text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60"
