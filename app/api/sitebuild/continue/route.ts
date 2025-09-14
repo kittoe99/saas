@@ -31,7 +31,21 @@ export async function POST(req: Request) {
       chatId = row.v0_chat_id as string
     }
 
-    // REST-first approach (avoid SDK entirely)
+    // 1) Prefer internal route that V0 page uses, to mirror its behavior exactly
+    try {
+      const internalUrl = new URL('/api/v0/chats/send', new URL(req.url).origin).toString()
+      const local = await fetch(internalUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId, message, user_id, website_id })
+      })
+      const lj = await local.json().catch(() => ({} as any))
+      if (local.ok && !lj?.error) {
+        return NextResponse.json({ ok: true, chatId }, { status: 200 })
+      }
+    } catch {}
+
+    // 2) Fallback to REST if available
     const apiKey = process.env.V0_API_KEY
     if (!apiKey) {
       return NextResponse.json({ error: 'Missing V0_API_KEY on the server. Set it in .env.local for REST continuation.' }, { status: 500 })
@@ -42,34 +56,21 @@ export async function POST(req: Request) {
       'Authorization': `Bearer ${apiKey}`,
       'Accept': 'application/json',
     }
-
-    // 1) Send user message
-    const r1 = await fetch(`${base}/chats/${encodeURIComponent(chatId!)}/messages`, {
-      method: 'POST', headers, body: JSON.stringify({ role: 'user', content: message })
-    })
-    if (!r1.ok) {
-      const j = await r1.json().catch(() => ({} as any))
-      return NextResponse.json({ error: j?.error || 'Failed to send message (REST)' }, { status: r1.status })
-    }
-
-    // 2) Request a new version explicitly (some APIs may auto-generate on message; this is a nudge)
-    let versionOk = false
     try {
-      const r2 = await fetch(`${base}/chats/${encodeURIComponent(chatId!)}/versions`, {
-        method: 'POST', headers, body: JSON.stringify({})
+      const r1 = await fetch(`${base}/chats/send`, {
+        method: 'POST', headers, body: JSON.stringify({ chatId, message })
       })
-      versionOk = r2.ok
-    } catch {}
-    if (!versionOk) {
-      try {
-        const r3 = await fetch(`${base}/chats/${encodeURIComponent(chatId!)}/generate`, {
-          method: 'POST', headers, body: JSON.stringify({})
-        })
-        versionOk = r3.ok || versionOk
-      } catch {}
+      const j1 = await r1.json().catch(() => ({} as any))
+      if (!r1.ok) {
+        return NextResponse.json({ error: j1?.error || 'Failed to send message (REST)' }, { status: r1.status })
+      }
+      // Attempt to request a new version explicitly (in case send doesn't auto-generate)
+      try { await fetch(`${base}/chats/${encodeURIComponent(chatId!)}/versions`, { method: 'POST', headers, body: JSON.stringify({}) }) } catch {}
+      try { await fetch(`${base}/chats/${encodeURIComponent(chatId!)}/generate`, { method: 'POST', headers, body: JSON.stringify({}) }) } catch {}
+      return NextResponse.json({ ok: true, chatId }, { status: 200 })
+    } catch (e: any) {
+      return NextResponse.json({ error: e?.message || 'Failed to continue chat (REST)' }, { status: 500 })
     }
-
-    return NextResponse.json({ ok: true, chatId }, { status: 200 })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
   }
