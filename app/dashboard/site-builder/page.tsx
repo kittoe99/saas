@@ -11,19 +11,49 @@ type ApiResult<T = any> = { ok?: boolean; error?: string } & T;
 // Build a System Prompt (theme) string from onboarding preferences
 function buildThemeFromOnboarding(data: any): string {
   if (!data || typeof data !== 'object') return '';
-  const colors: string[] = Array.isArray(data?.primaryColors)
-    ? data.primaryColors.filter((c: any) => typeof c === 'string' && c.trim()).slice(0, 3)
-    : Array.isArray(data?.brand?.colors)
-      ? data.brand.colors.filter((c: any) => typeof c === 'string' && c.trim()).slice(0, 3)
-      : [];
   const font = (data?.fontFamily || data?.font || 'Geist').toString();
   const highContrast = !!data?.highContrast;
   const radius = (data?.borderRadius || 8);
   const lines: string[] = [];
   lines.push('Site theme');
-  lines.push(`Typography: ${font}; Headings 600; Body 16px/1.6; Labels 500 with 0.02em`);
-  lines.push(`Radii: ${radius}px components`);
-  lines.push(`Contrast: ${highContrast ? 'High' : 'Normal'}`);
+  lines.push('1) Color & Contrast');
+  lines.push('- Use a light, near-neutral background.');
+  lines.push('- Derive the accent palette from brand/onboarding. Do not hardcode colors; generate harmonious variants (primary, hover/focus, subtle backgrounds).');
+  lines.push('- Ensure strong text contrast against backgrounds.');
+  lines.push('');
+  lines.push('2) Typography');
+  lines.push(`- Font: ${font}; Headings 600; Body 16px/1.6; Labels 500 with ~0.02em letter-spacing.`);
+  lines.push('- Maintain tight heading tracking; prefer readability over decoration.');
+  lines.push('');
+  lines.push('3) Surfaces & Layers');
+  lines.push(`- Radii: Cards ~12px; Buttons/Inputs ~${radius}px; small UI slightly tighter.`);
+  lines.push('- Shadows: low (soft, subtle) for cards; high (richer) for modals/drawers.');
+  lines.push('- Optional translucent panels sparingly; blur backdrop for a refined effect.');
+  lines.push('');
+  lines.push('4) Forms (Solid fields)');
+  lines.push('- Inputs use solid backgrounds; clear, visible borders (not hairline).');
+  lines.push(`- Border radius around ${radius}px; subtle inner shadow for depth.`);
+  lines.push('- Focus: replace default outline with a clear focus ring using the accent color (no opacity tricks that reduce clarity).');
+  lines.push('- Labels remain visible above inputs (weight 500, secondary text color).');
+  lines.push('- Placeholders are subdued and minimal.');
+  lines.push('');
+  lines.push('5) Buttons');
+  lines.push('- Primary uses the accent color; text white, weight 600.');
+  lines.push('- Hover: darken the accent; Focus: clear focus ring consistent with forms.');
+  lines.push('');
+  lines.push('6) Borders & Emphasis');
+  lines.push('- Prefer emphasis via elevation (shadow) and color.');
+  lines.push('- Use borders for functional separation only.');
+  lines.push('');
+  lines.push('7) Motion');
+  lines.push('- Keep animations gentle (<300ms) and respect reduced-motion preferences.');
+  lines.push('');
+  lines.push('8) Dark Mode');
+  lines.push('- Use a deep neutral background with near-white text.');
+  lines.push('- Surfaces step up in lightness to maintain layered depth.');
+  lines.push('- Accent is adjusted for visibility on dark; focus rings remain clear.');
+  lines.push('- Inputs use dark surfaces with clear borders and visible focus.');
+  lines.push(`- Contrast: ${highContrast ? 'High' : 'Normal'} by default; ensure WCAG AA.`);
   return lines.join('\n');
 }
 
@@ -324,9 +354,15 @@ export default function SiteBuilderPage() {
     const preferredDomain = (data?.preferredDomain || '').toString();
     const competitors = Array.isArray(data?.competitors) ? data.competitors.filter((v: string) => v && v.trim().length).join(', ') : '';
 
-    const kind = (resolved || siteType || category || '').trim();
-    const kindPhrase = kind ? `${kind} business` : 'local service business';
-    const preface = `Build a website for a ${kindPhrase} using the details below. Follow the System Prompt (theme) strictly.`;
+    const servicesArr: string[] = Array.isArray((data as any)?.selectedServices)
+      ? (data as any).selectedServices.filter((s: any) => typeof s === 'string' && s.trim())
+      : [];
+    const primaryService = (servicesArr[0] as string | undefined)
+      || siteType
+      || category
+      || resolved
+      || 'service';
+    const preface = `Build a website for a ${primaryService} using the details below. Follow the System Prompt (theme) strictly.`;
     const bullets: string[] = [];
     bullets.push(`Brand: ${brandName}${tagline ? ` — ${tagline}` : ''}`);
     bullets.push(`Type/Category: ${[siteType, category].filter(Boolean).join(' / ') || '—'}`);
