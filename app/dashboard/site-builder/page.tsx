@@ -111,14 +111,15 @@ export default function SiteBuilderPage() {
   const [globalSent, setGlobalSent] = useState<boolean>(false);
   const [stepsState, setStepsState] = useState<Record<string, 'pending' | 'done'> | null>(null);
   const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
-  // Guard to avoid duplicate auto-chat creation
-  const [autoChatDone, setAutoChatDone] = useState<boolean>(false);
+  // Guard to avoid duplicate auto state updates on load
+  const [autoStartMarked, setAutoStartMarked] = useState<boolean>(false);
   // Visible error banners
   const [startError, setStartError] = useState<string | null>(null);
   const [heroError, setHeroError] = useState<string | null>(null);
   const [servicesError, setServicesError] = useState<string | null>(null);
   // Fallback: allow advancing to hero after chat creation, even if preview is slow
   const [startCanContinue, setStartCanContinue] = useState<boolean>(false);
+  const [startSubmitting, setStartSubmitting] = useState<boolean>(false);
 
   // Animated loader steps (similar to Onboarding step 4)
   const BUILD_STEPS = [
@@ -170,6 +171,37 @@ export default function SiteBuilderPage() {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
   }, []);
 
+  // Fetch onboarding immediately when websiteId is present (without waiting for userId)
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!websiteId || onboarding) return;
+        const ob = await fetch(`/api/onboarding?website_id=${encodeURIComponent(websiteId)}`, { cache: 'no-store' });
+        if (!ob.ok) return;
+        const j = await ob.json().catch(() => ({} as any));
+        const data = j?.row?.data || {};
+        setOnboarding(data);
+        const st = (data?.siteType as string | undefined) || '';
+        const mapped = resolveIndustry(st);
+        if (mapped) setIndustry(mapped);
+        try {
+          const t = buildThemeFromOnboarding(data);
+          if (t && t.trim()) setTheme(t);
+        } catch {}
+        const a: any = {};
+        const businessName = (data?.name as string | undefined) || 'New Site';
+        a.brand = { name: businessName, tagline: data?.tagline || undefined };
+        a.businessName = businessName;
+        a.audience = data?.primaryGoal || data?.typeSpecific?.icp || '';
+        a.tone = Array.isArray(data?.voiceTone) && data.voiceTone.length ? data.voiceTone.join(', ') : 'clear, modern';
+        if (Array.isArray(data?.envisionedPages) && data.envisionedPages.length) a.pages = data.envisionedPages;
+        if (Array.isArray(data?.selectedServices) && data.selectedServices.length) a.services = data.selectedServices;
+        if (data?.contactMethod) a.contactMethod = data.contactMethod;
+        setAnswers(JSON.stringify(a, null, 2));
+      } catch {}
+    })();
+  }, [websiteId, onboarding]);
+
   // Prefill from onboarding using website_id and restore step progress
   useEffect(() => {
     (async () => {
@@ -211,32 +243,15 @@ export default function SiteBuilderPage() {
               } catch {}
             }
             if (resolvedProjectId) setAttachedProjectId(resolvedProjectId);
-            // If a project exists (from website or v0_projects) but chat is missing, auto-create chat now
-            if (resolvedProjectId && !wrow?.v0_chat_id && !autoChatDone) {
+            // If a project exists (from website or v0_projects) but chat is missing, DO NOT auto-create a chat.
+            // Instead, mark 'start' as done so we can proceed to next step without creating duplicate projects/chats.
+            if (resolvedProjectId && !wrow?.v0_chat_id && !autoStartMarked) {
               try {
-                // Load onboarding needed to build the initial message
-                const ob = await fetch(`/api/onboarding?website_id=${encodeURIComponent(wid)}`, { cache: 'no-store' });
-                const j = await ob.json().catch(() => ({} as any));
-                const data = j?.row?.data || {};
-                const initialMsg = buildInitialMessage(data, resolveIndustry(data?.siteType || '')) || 'Initialize chat for this website using the System Prompt.';
-                const cRes = await fetch('/api/v0/chats', {
-                  method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ message: initialMsg, v0_project_id: resolvedProjectId, user_id: userId || undefined, website_id: wid })
-                });
-                const cJson = await cRes.json().catch(() => ({} as any));
-                if (cRes.ok && cJson?.id) {
-                  setAttachedChatId(cJson.id as string);
-                  // Ensure v0_chats row is upserted with latest details
-                  try { void fetch(`/api/v0/chats/${encodeURIComponent(cJson.id)}`); } catch {}
-                  // Mark start as done in steps
-                  try {
-                    const newSteps = { ...(stepsState || { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const), start: 'done' as const };
-                    setStepsState(newSteps as any);
-                    void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: wid, steps: newSteps }) });
-                  } catch {}
-                }
+                const newSteps = { ...(stepsState || { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const), start: 'done' as const };
+                setStepsState(newSteps as any);
+                void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: wid, steps: newSteps }) });
               } catch {}
-              setAutoChatDone(true);
+              setAutoStartMarked(true);
             }
           } catch {}
         }
@@ -469,13 +484,13 @@ export default function SiteBuilderPage() {
           <div>
             <div className="text-xs font-semibold text-amber-900">System Prompt (theme)</div>
             <pre className="mt-1 whitespace-pre-wrap text-xs leading-relaxed rounded-lg border border-amber-200 bg-white p-3 text-neutral-900 min-h-28">
-{buildProjectInstructions(onboarding, industry, theme)}
+{buildProjectInstructions(onboarding, industry, theme) || 'Loading theme…'}
             </pre>
           </div>
           <div>
             <div className="text-xs font-semibold text-amber-900">Chat Prompt (initial)</div>
             <pre className="mt-1 whitespace-pre-wrap text-xs leading-relaxed rounded-lg border border-amber-200 bg-white p-3 text-neutral-900 min-h-28">
-{buildInitialMessage(onboarding, industry)}
+{buildInitialMessage(onboarding, industry) || 'Loading prompt…'}
             </pre>
           </div>
         </div>
@@ -515,8 +530,9 @@ export default function SiteBuilderPage() {
             <>
             <button
               onClick={async () => {
-                if (simBusy) return;
+                if (simBusy || startSubmitting) return;
                 if (!websiteId) { setSimStage('Missing website'); return; }
+                setStartSubmitting(true);
                 setSimBusy(true);
                 setStartError(null);
                 setSimStage('Initializing…');
@@ -538,6 +554,20 @@ export default function SiteBuilderPage() {
                     }
                   } catch {}
 
+                  // Additionally, consult v0_projects WITHOUT user filter to avoid mismatch causing duplicate creates
+                  if (!projectId) {
+                    try {
+                      const { data: prow } = await supabase
+                        .from('v0_projects')
+                        .select('v0_project_id')
+                        .eq('website_id', websiteId)
+                        .order('created_at', { ascending: false } as any)
+                        .limit(1)
+                        .maybeSingle();
+                      if (prow?.v0_project_id) projectId = prow.v0_project_id as string;
+                    } catch {}
+                  }
+
                   if (chatId) {
                     // Reattach to existing chat and poll
                     setAttachedProjectId(projectId || null);
@@ -553,7 +583,7 @@ export default function SiteBuilderPage() {
                     // Ensure v0_chats row exists/upserts by refreshing chat via API
                     try { void fetch(`/api/v0/chats/${encodeURIComponent(chatId)}`); } catch {}
                   } else {
-                    // Ensure we have a project; create only if missing
+                    // Ensure we have a project; create only if missing after double-check
                     if (!projectId) {
                       const projName = (() => {
                         const name = (onboarding?.name || onboarding?.brand?.name || 'New Site') as string;
@@ -571,17 +601,19 @@ export default function SiteBuilderPage() {
                       if (!projectId) throw new Error('Missing projectId');
                     }
                     setAttachedProjectId(projectId || null);
-                    // Create chat with initial message
-                    const initialMessage = buildInitialMessage(onboarding, industry);
-                    const cRes = await fetch('/api/v0/chats', {
-                      method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ message: initialMessage, v0_project_id: projectId, user_id: userId || undefined, website_id: websiteId || undefined })
-                    });
-                    const cJson = await cRes.json().catch(() => ({} as any));
-                    if (!cRes.ok) throw new Error(cJson?.error || 'Failed to create chat');
-                    chatId = cJson?.id as string | undefined;
-                    if (!chatId) throw new Error('Missing chatId');
-                    setAttachedChatId(chatId);
+                    // Only create chat if we don't already have one linked on website (avoid duplicates)
+                    if (!chatId) {
+                      const initialMessage = buildInitialMessage(onboarding, industry);
+                      const cRes = await fetch('/api/v0/chats', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: initialMessage, v0_project_id: projectId, user_id: userId || undefined, website_id: websiteId || undefined })
+                      });
+                      const cJson = await cRes.json().catch(() => ({} as any));
+                      if (!cRes.ok) throw new Error(cJson?.error || 'Failed to create chat');
+                      chatId = cJson?.id as string | undefined;
+                      if (!chatId) throw new Error('Missing chatId');
+                      setAttachedChatId(chatId);
+                    }
                     // Persist 'start' completion now that chat is established
                     try {
                       const newSteps = { ...(stepsState || { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const), start: 'done' as const };
