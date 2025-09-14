@@ -36,13 +36,44 @@ export async function GET(_: Request, { params }: any) {
     const supabase = getSupabaseServer()
 
     if (demoUrl !== null || files !== null) {
-      const { error: upErr } = await supabase
+      // If record exists: update; else: upsert using websites mapping
+      const { data: existing } = await supabase
         .from('v0_chats')
-        .update({ demo_url: demoUrl, files })
+        .select('v0_chat_id')
         .eq('v0_chat_id', id)
-        .single()
-      if (upErr) {
-        return NextResponse.json({ error: `Failed to persist chat refresh: ${upErr.message}` }, { status: 500 })
+        .maybeSingle()
+
+      if (existing?.v0_chat_id) {
+        const { error: upErr } = await supabase
+          .from('v0_chats')
+          .update({ demo_url: demoUrl, files })
+          .eq('v0_chat_id', id)
+          .single()
+        if (upErr) {
+          return NextResponse.json({ error: `Failed to persist chat refresh: ${upErr.message}` }, { status: 500 })
+        }
+      } else {
+        // Try to derive website/user/project from websites row
+        const { data: w } = await supabase
+          .from('websites' as any)
+          .select('id, user_id, v0_project_id')
+          .eq('v0_chat_id', id)
+          .maybeSingle()
+        const insertRow: any = {
+          v0_chat_id: id,
+          demo_url: demoUrl,
+          files: files,
+        }
+        if (w?.id) insertRow.website_id = w.id
+        if (w?.user_id) insertRow.user_id = w.user_id
+        if (w?.v0_project_id) insertRow.v0_project_id = w.v0_project_id
+        const { error: insErr } = await supabase
+          .from('v0_chats')
+          .upsert(insertRow, { onConflict: 'v0_chat_id' })
+          .single()
+        if (insErr) {
+          return NextResponse.json({ error: `Failed to upsert chat: ${insErr.message}` }, { status: 500 })
+        }
       }
       return NextResponse.json({ id, demo: demoUrl, files, latestVersionId }, { status: 200 })
     }

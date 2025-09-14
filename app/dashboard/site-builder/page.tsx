@@ -112,6 +112,19 @@ export default function SiteBuilderPage() {
         if (st) setStep(st);
         if (wid) setWebsiteId(wid);
         if (!userId) return;
+        // Always try to restore attached IDs from website row
+        if (wid) {
+          try {
+            const { data: wrow } = await supabase
+              .from('websites' as any)
+              .select('v0_chat_id, v0_project_id')
+              .eq('id', wid)
+              .eq('user_id', userId)
+              .maybeSingle();
+            if (wrow?.v0_chat_id) setAttachedChatId(wrow.v0_chat_id as string);
+            if (wrow?.v0_project_id) setAttachedProjectId(wrow.v0_project_id as string);
+          } catch {}
+        }
         // Load progress for this website/user
         if (wid) {
           const prog = await fetch(`/api/sitebuild/steps?website_id=${encodeURIComponent(wid)}&user_id=${encodeURIComponent(userId)}`, { cache: 'no-store' });
@@ -133,16 +146,22 @@ export default function SiteBuilderPage() {
             return;
           }
           const current = st || null;
-          const order = ['hero','services','areas','global','deploy'];
-          const nextPending = order.find(k => (steps as any)[k] !== 'done');
-          // Only auto-route if a step was explicitly provided and is already done
-          if (current && (steps as any)[current] === 'done') {
-            if (nextPending) {
-              const qp = new URLSearchParams();
-              if (wid) qp.set('website_id', wid);
-              qp.set('step', nextPending);
-              router.push(`/dashboard/site-builder?${qp.toString()}`);
-            }
+          const order = ['start','hero','services','areas','global','deploy'] as const;
+          const nextPending = order.find(k => (steps as any)[k] !== 'done' && (steps as any)[k] !== undefined);
+          // Auto-route scenarios:
+          // 1) If current provided and done → move to next pending
+          // 2) If no current provided and 'start' is done → move to next pending
+          // 3) If current is 'start' and done → move to next pending
+          const shouldAutoAdvance = (
+            (current && (steps as any)[current] === 'done') ||
+            (!current && (steps as any)['start'] === 'done') ||
+            (current === 'start' && (steps as any)['start'] === 'done')
+          );
+          if (shouldAutoAdvance && nextPending && nextPending !== 'start') {
+            const qp = new URLSearchParams();
+            if (wid) qp.set('website_id', wid);
+            qp.set('step', nextPending);
+            router.push(`/dashboard/site-builder?${qp.toString()}`);
           }
         }
         // Attempt to resume: check if the website already has a v0_chat_id
@@ -281,6 +300,7 @@ export default function SiteBuilderPage() {
       {/* Collapsed summaries of completed stages (in order) */}
       {stepsState && (
         <div className="space-y-2">
+          {stepsState.start === 'done' && <CollapsedCard title="Start" note="Project + chat created" />}
           {stepsState.hero === 'done' && <CollapsedCard title="Initial layout" note="Base structure prepared" />}
           {stepsState.services === 'done' && <CollapsedCard title="Content updates" note="Key sections adjusted" />}
           {stepsState.areas === 'done' && <CollapsedCard title="Location setup" note="Coverage details added" />}
@@ -339,6 +359,14 @@ export default function SiteBuilderPage() {
                     setAttachedChatId(chatId);
                     setSimStage('Reattaching to existing build…');
                     setSimProgress(22);
+                    // Mark 'start' as done if not yet persisted
+                    try {
+                      const newSteps = { ...(stepsState || { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const), start: 'done' as const };
+                      setStepsState(newSteps as any);
+                      void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: newSteps }) });
+                    } catch {}
+                    // Ensure v0_chats row exists/upserts by refreshing chat via API
+                    try { void fetch(`/api/v0/chats/${encodeURIComponent(chatId)}`); } catch {}
                   } else {
                     // Ensure we have a project; create only if missing
                     if (!projectId) {
@@ -368,6 +396,12 @@ export default function SiteBuilderPage() {
                     chatId = cJson?.id as string | undefined;
                     if (!chatId) throw new Error('Missing chatId');
                     setAttachedChatId(chatId);
+                    // Persist 'start' completion now that chat is established
+                    try {
+                      const newSteps = { ...(stepsState || { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const), start: 'done' as const };
+                      setStepsState(newSteps as any);
+                      void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: newSteps }) });
+                    } catch {}
                   }
                   setSimStage('Waiting for preview…');
                   setSimProgress(25);
@@ -375,7 +409,7 @@ export default function SiteBuilderPage() {
                   // Initialize steps in DB if not present
                   try {
                     if (!stepsState) {
-                      const initSteps = { hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const;
+                      const initSteps = { start: 'done', hero: 'pending', services: 'pending', areas: 'pending', global: 'pending', deploy: 'pending' } as const;
                       setStepsState(initSteps as any);
                       void fetch('/api/sitebuild/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, website_id: websiteId, steps: initSteps }) });
                     }
