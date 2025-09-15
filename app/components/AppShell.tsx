@@ -10,6 +10,7 @@ import ChatWidget from "./ChatWidget";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith("/dashboard");
+  const suppressBreadcrumb = isDashboard || pathname?.startsWith("/website") || pathname?.startsWith("/onboarding");
 
   if (isDashboard) {
     // Hide main site nav/footer/chat for dashboard; page provides its own UI.
@@ -19,8 +20,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header />
-      {/* Breadcrumbs (container width, simple chevron-separated) */}
-      {pathname && pathname !== "/" && (
+      {/* Breadcrumbs (container width, simple chevron-separated). Hidden on dashboard and website pages */}
+      {pathname && pathname !== "/" && !suppressBreadcrumb && (
         <div className="max-w-5xl mx-auto px-3 sm:px-4 mt-2">
           <nav aria-label="Breadcrumb" className="text-[11px] sm:text-xs">
             <ol className="flex items-center flex-wrap gap-1 text-neutral-600">

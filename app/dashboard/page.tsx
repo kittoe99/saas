@@ -450,7 +450,7 @@ export default function DashboardPage() {
                           {incompleteBuilds.map((b) => (
                             <li key={b.website_id} className="flex items-center justify-between gap-3">
                               <div className="min-w-0">
-                                <div className="text-sm font-medium text-amber-900 truncate max-w-[12rem]">{b.name || `Website ${b.website_id.slice(0, 8)}…`}</div>
+                                <div className="text-sm font-medium text-amber-900 truncate max-w-[12rem]">{b.name || 'Untitled Site'}</div>
                                 <div className="text-[11px] text-amber-800">Next step: {b.nextStep}</div>
                               </div>
                               <a
@@ -523,7 +523,7 @@ export default function DashboardPage() {
                         {incompleteBuilds.map((b) => (
                           <li key={b.website_id} className="py-2 flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <div className="text-sm font-medium text-amber-900 truncate max-w-[28rem]">{b.name || `Website ${b.website_id}`}</div>
+                              <div className="text-sm font-medium text-amber-900 truncate max-w-[28rem]">{b.name || 'Untitled Site'}</div>
                               <div className="text-[12px] text-amber-800">Next step: {b.nextStep}</div>
                             </div>
                             <a
@@ -557,7 +557,7 @@ export default function DashboardPage() {
                                     {(w.name || 'W').slice(0,1).toUpperCase()}
                                   </div>
                                   <div className="min-w-0">
-                                    <div className="text-sm font-semibold text-neutral-900 truncate" title={w.name || w.id}>{w.name || `Website ${w.id.slice(0,8)}…`}</div>
+                                    <div className="text-sm font-semibold text-neutral-900 truncate" title={w.name || undefined}>{w.name || 'Untitled Site'}</div>
                                     <div className="mt-0.5 flex items-center gap-2 text-[11px] text-neutral-600">
                                       <span>Created {new Date(w.created_at).toLocaleDateString()}</span>
                                       <span aria-hidden>•</span>
