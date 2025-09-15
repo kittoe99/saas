@@ -111,14 +111,34 @@ export default function ManageWebsitePage() {
       const { error: wupdErr } = await supabase.from("websites").update(updates).eq("id", websiteId).eq("user_id", uid);
       if (wupdErr) throw wupdErr;
 
-      // Save contact info into onboarding JSON
       const merged = {
         ...(obData || {}),
         businessEmail: contactEmail || null,
         businessPhone: contactPhone || null,
       };
 
-  // Upload logo to Supabase Storage and persist in onboarding JSON
+      if (hasOnboardingRow) {
+        const { error: oupdErr } = await supabase
+          .from("onboarding")
+          .update({ data: merged })
+          .eq("website_id", websiteId)
+          .eq("user_id", uid);
+        if (oupdErr) throw oupdErr;
+      } else {
+        const { error: oinsErr } = await supabase
+          .from("onboarding")
+          .insert({ website_id: websiteId, user_id: uid, data: merged });
+        if (oinsErr) throw oinsErr;
+        setHasOnboardingRow(true);
+      }
+      setObData(merged);
+    } catch (e: any) {
+      setError(e?.message || "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleUploadLogo = async (file: File) => {
     if (!websiteId || !uid || !file) return;
     setUploadingLogo(true);
@@ -132,7 +152,7 @@ export default function ManageWebsitePage() {
       if (upErr && upErr.message && !upErr.message.includes('duplicate')) throw upErr;
       const { data: pub } = supabase.storage.from('website-assets').getPublicUrl(path);
       const url = pub?.publicUrl || null;
-      const merged = {
+      const mergedLogo = {
         ...(obData || {}),
         hasLogo: true,
         logoUrl: url,
@@ -140,10 +160,10 @@ export default function ManageWebsitePage() {
       };
       const { error: oupdErr } = await supabase
         .from('onboarding')
-        .upsert({ website_id: websiteId, user_id: uid, data: merged }, { onConflict: 'website_id,user_id' });
+        .upsert({ website_id: websiteId, user_id: uid, data: mergedLogo }, { onConflict: 'website_id,user_id' });
       if (oupdErr) throw oupdErr;
       setLogoUrl(url);
-      setObData(merged);
+      setObData(mergedLogo);
     } catch (e: any) {
       setError(e?.message || 'Failed to upload logo');
     } finally {
@@ -151,7 +171,6 @@ export default function ManageWebsitePage() {
     }
   };
 
-  // Upload multiple files to Supabase Storage and bump assetCount
   const handleUploadFiles = async (files: FileList | null) => {
     if (!websiteId || !uid || !files || files.length === 0) return;
     setUploadingFiles(true);
@@ -167,26 +186,21 @@ export default function ManageWebsitePage() {
         if (upErr) throw upErr;
         uploaded++;
       }
-      const merged = {
+      const mergedFiles = {
         ...(obData || {}),
         assetCount: Number(obData?.assetCount ?? 0) + uploaded
       };
       const { error: oupdErr } = await supabase
         .from('onboarding')
-        .upsert({ website_id: websiteId, user_id: uid, data: merged }, { onConflict: 'website_id,user_id' });
+        .upsert({ website_id: websiteId, user_id: uid, data: mergedFiles }, { onConflict: 'website_id,user_id' });
       if (oupdErr) throw oupdErr;
-      setObData(merged);
+      setObData(mergedFiles);
     } catch (e: any) {
       setError(e?.message || 'Failed to upload files');
     } finally {
       setUploadingFiles(false);
     }
   };
-      if (hasOnboardingRow) {
-        const { error: oupdErr } = await supabase
-          .from("onboarding")
-          .update({ data: merged })
-          .eq("website_id", websiteId)
           .eq("user_id", uid);
         if (oupdErr) throw oupdErr;
       } else {
