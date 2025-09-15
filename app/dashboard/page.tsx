@@ -600,8 +600,8 @@ export default function DashboardPage() {
                               {/* Actions */}
                               <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                 <a
-                                  href={`/dashboard?tab=Website`}
-                                  className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-2 text-[12px] text-neutral-800 hover:bg-neutral-50 shadow-hover"
+                                  href={`/website/${w.id}`}
+                                  className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-success-accent text-white px-3 py-2 text-[12px] hover:opacity-90 shadow-hover"
                                 >
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
                                   Manage Site
@@ -611,7 +611,7 @@ export default function DashboardPage() {
                                     href={dep.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md border border-emerald-300 bg-white px-3 py-2 text-[12px] text-emerald-800 hover:bg-emerald-50 shadow-hover"
+                                    className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-emerald-600 text-white px-3 py-2 text-[12px] hover:bg-emerald-700 shadow-hover"
                                   >
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M5 12v7a2 2 0 0 0 2 2h7"/></svg>
                                     View Live
