@@ -50,6 +50,11 @@ export default function ManageWebsitePage() {
   const [uploadingLogo, setUploadingLogo] = useState<boolean>(false);
   const [uploadingFiles, setUploadingFiles] = useState<boolean>(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  // Build progress
+  const [progressSteps, setProgressSteps] = useState<Record<string, 'pending'|'done'> | null>(null);
+  const [progressDone, setProgressDone] = useState<number>(1);
+  const [progressTotal, setProgressTotal] = useState<number>(3);
+  const [progressLabel, setProgressLabel] = useState<string>('Preparing build');
 
   useEffect(() => {
     (async () => {
@@ -98,6 +103,40 @@ export default function ManageWebsitePage() {
       }
     })();
   }, [websiteId, router]);
+
+  // Load build progress once uid and websiteId are known (3-step model)
+  useEffect(() => {
+    (async () => {
+      if (!websiteId || !uid) return;
+      try {
+        const { data: prog } = await supabase
+          .from('site_build_progress')
+          .select('steps')
+          .eq('website_id', websiteId)
+          .eq('user_id', uid)
+          .maybeSingle();
+        const steps = (prog?.steps as any) || null;
+        setProgressSteps(steps);
+        const orderLegacy = ['hero','services','areas','global','deploy'];
+        const legacyDone = steps ? orderLegacy.filter((k) => steps[k] === 'done').length : 0;
+        let done3 = 1;
+        let label = 'Preparing build';
+        const hasReady = (steps && steps['deploy'] === 'done') || (!!website?.vercel_prod_domain) || (website?.status === 'active');
+        if (hasReady) {
+          done3 = 3; label = 'Ready';
+        } else if (legacyDone >= 3) {
+          done3 = 2; label = 'Applying final touches';
+        } else {
+          done3 = 1; label = 'Preparing build';
+        }
+        setProgressDone(done3);
+        setProgressTotal(3);
+        setProgressLabel(label);
+      } catch {
+        // ignore
+      }
+    })();
+  }, [websiteId, uid, website]);
 
   const handleSaveBasics = async () => {
     if (!websiteId) return;
@@ -261,12 +300,30 @@ export default function ManageWebsitePage() {
           <>
             {/* Summary card (matches dashboard website card vibe) */}
             <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-soft">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-success-accent/15 text-success-ink inline-flex items-center justify-center font-semibold">
-                    {(name || 'W').slice(0,1).toUpperCase()}
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                <div className="flex flex-col sm:flex-row items-start gap-3 min-w-0 w-full">
+                  {/* Responsive thumbnail (optimized for mobile) */}
+                  <div className="w-full h-24 sm:h-16 sm:w-28 shrink-0 rounded-md border border-neutral-200 overflow-hidden bg-neutral-100">
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt="Website thumbnail"
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="h-full w-full grid place-items-center text-neutral-400">
+                        <svg viewBox="0 0 64 40" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-12">
+                          <rect x="1" y="1" width="62" height="38" rx="6" className="text-neutral-300"/>
+                          <rect x="6" y="8" width="24" height="6" rx="2" className="text-neutral-300"/>
+                          <rect x="6" y="18" width="52" height="4" rx="2" className="text-neutral-300"/>
+                          <rect x="6" y="26" width="40" height="4" rx="2" className="text-neutral-300"/>
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 w-full">
                     <div className="text-sm font-semibold text-neutral-900 truncate" title={name || website.id}>{name || `Website ${website.id.slice(0,8)}…`}</div>
                     <div className="mt-0.5 flex items-center gap-2 text-[11px] text-neutral-600">
                       <span>Created {new Date(website.created_at).toLocaleDateString()}</span>
@@ -284,6 +341,19 @@ export default function ManageWebsitePage() {
                       ) : (
                         <span className="text-neutral-500">Domain not connected</span>
                       )}
+                    </div>
+                    {/* Build progress (3-step) */}
+                    <div className="mt-2">
+                      <div className="flex items-center justify-between text-[11px] text-neutral-600">
+                        <span>{progressLabel}</span>
+                        <span>Step {progressDone} of {progressTotal}</span>
+                      </div>
+                      <div className="mt-1 h-2 w-full rounded-full bg-neutral-100 overflow-hidden">
+                        <div
+                          className="h-full bg-success-accent transition-all"
+                          style={{ width: `${Math.round((progressDone / (progressTotal || 1)) * 100)}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

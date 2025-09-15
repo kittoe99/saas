@@ -66,6 +66,10 @@ export default function DashboardPage() {
     contact_method?: string | null;
     envisioned_pages?: string[] | null;
     selected_services?: string[] | null;
+    progress_steps?: Record<string, 'pending'|'done'> | null;
+    progress_done?: number;
+    progress_total?: number;
+    progress_label?: string;
   }>>([]);
 
   // Logout handler
@@ -167,8 +171,47 @@ export default function DashboardPage() {
             contact_method: (ob?.contactMethod as string) || null,
             envisioned_pages: Array.isArray(ob?.envisionedPages) ? ob.envisionedPages : null,
             selected_services: Array.isArray(ob?.selectedServices) ? ob.selectedServices : null,
+            progress_steps: null,
+            progress_done: 1,
+            progress_total: 3,
+            progress_label: 'Preparing build',
           };
         }));
+      }
+      // Fetch build progress for each site and enrich state
+      if (mounted && sites && (sites as any[]).length) {
+        const orderLegacy = ['hero','services','areas','global','deploy'];
+        const enriched = await Promise.all((sites as any[]).map(async (s: any) => {
+          let steps: Record<string, 'pending'|'done'> | null = null;
+          try {
+            const { data: prog } = await supabase
+              .from('site_build_progress')
+              .select('steps')
+              .eq('website_id', s.id)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            steps = (prog?.steps as any) || null;
+          } catch {}
+          // Map legacy 5-step data into 3-step model
+          const legacyDone = steps ? orderLegacy.filter((k) => steps![k] === 'done').length : 0;
+          let done3 = 1;
+          let label = 'Preparing build';
+          const hasReady = (steps && steps['deploy'] === 'done') || (!!s.vercel_prod_domain) || (s.status === 'active');
+          if (hasReady) {
+            done3 = 3; label = 'Ready';
+          } else if (legacyDone >= 3) {
+            done3 = 2; label = 'Applying final touches';
+          } else {
+            done3 = 1; label = 'Preparing build';
+          }
+          return { id: s.id as string, steps, done3, total3: 3, label };
+        }));
+        if (mounted) {
+          setWebsites((prev) => prev.map((w) => {
+            const e = enriched.find((x) => x.id === w.id);
+            return e ? { ...w, progress_steps: e.steps, progress_done: e.done3, progress_total: e.total3, progress_label: e.label } : w;
+          }));
+        }
       }
       const pending: Array<{ website_id: string; name: string | null; nextStep: string; steps: Record<string, 'pending'|'done'> }> = [];
       if (sites && sites.length) {
@@ -443,27 +486,6 @@ export default function DashboardPage() {
                   {/* Recent activity placeholder */}
                   <div className="p-4">
                     {/* Incomplete builds (mobile) */}
-                    {incompleteBuilds.length > 0 && (
-                      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 shadow-soft mb-4">
-                        <div className="text-xs text-amber-900 mb-2">Incomplete builds</div>
-                        <ul className="space-y-2">
-                          {incompleteBuilds.map((b) => (
-                            <li key={b.website_id} className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium text-amber-900 truncate max-w-[12rem]">{b.name || 'Untitled Site'}</div>
-                                <div className="text-[11px] text-amber-800">Next step: {b.nextStep}</div>
-                              </div>
-                              <a
-                                href={`/dashboard`}
-                                className="px-2.5 py-1.5 rounded-md border border-amber-300 text-[12px] text-amber-900 bg-white hover:bg-amber-100"
-                              >
-                                Continue
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                     {/* Your site(s) */}
                     <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft mb-4">
                       <div className="text-xs text-neutral-600 mb-2">Your site{deployments.length !== 1 ? 's' : ''}</div>
@@ -599,6 +621,20 @@ export default function DashboardPage() {
                                     {w.contact_method}
                                   </span>
                                 )}
+                              </div>
+
+                              {/* Build progress (3-step) */}
+                              <div className="mt-3">
+                                <div className="flex items-center justify-between text-[11px] text-neutral-600">
+                                  <span>{w.progress_label || 'Preparing build'}</span>
+                                  <span>Step {(w.progress_done ?? 1)} of {(w.progress_total ?? 3)}</span>
+                                </div>
+                                <div className="mt-1 h-2 w-full rounded-full bg-neutral-100 overflow-hidden">
+                                  <div
+                                    className="h-full bg-success-accent transition-all"
+                                    style={{ width: `${Math.round(((w.progress_done ?? 1) / (w.progress_total ?? 3)) * 100)}%` }}
+                                  />
+                                </div>
                               </div>
 
                               {/* Actions */}
