@@ -235,7 +235,7 @@ export default function Home() {
   return (
     <div className="py-10 md:py-16">
       {/* Hero */}
-      <section className="relative grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-2xl border border-neutral-200 bg-white shadow-soft shadow-hover">
+      <section className="relative grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-xl border border-soft bg-white shadow-soft">
         {/* Soft background accent */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-[radial-gradient(1200px_600px_at_10%_-10%,rgba(26,115,232,0.06),transparent_60%),radial-gradient(1000px_500px_at_90%_110%,rgba(26,115,232,0.05),transparent_60%)]" />
 
@@ -243,7 +243,7 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1 text-xs text-neutral-600 shadow-xs backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" /> No setup fees • Cancel anytime
           </div>
-          <h1 className="mt-4 text-4xl md:text-5xl font-bold leading-tight tracking-tight">
+          <h1 className="mt-4 text-4xl md:text-5xl font-semibold leading-tight tracking-tight text-primary">
             Pay‑by‑month, all‑inclusive
             {/* Reserve height with invisible placeholder to prevent layout shift */}
             <span className="block relative">
@@ -254,33 +254,33 @@ export default function Home() {
               </span>
             </span>
           </h1>
-          <p className="mt-4 text-neutral-700 text-base md:text-lg max-w-xl">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
+          <p className="mt-4 text-secondary text-base md:text-lg max-w-xl">Launch a professional site without large upfront costs. One simple monthly plan covers design, hosting, updates, and support—so you can focus on your business.</p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            <a href="/get-started" className="inline-flex items-center justify-center px-5 py-3 rounded-md bg-success-accent text-white text-sm md:text-base font-medium transition-all duration-200 hover:opacity-90 shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent">
+            <a href="/get-started" className="inline-flex items-center justify-center px-5 py-3 rounded-lg bg-accent-primary text-white text-sm md:text-base font-medium transition-all duration-200 hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-primary">
               Get started
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-2 h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </a>
-            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-md border border-neutral-300 text-success-ink bg-white text-sm md:text-base gap-2 transition-all duration-200 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-md hover:shadow-lg">
+            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-soft text-accent-primary bg-white text-sm md:text-base gap-2 transition-all duration-200 hover:bg-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-primary">
               See what’s included
             </a>
           </div>
-          <div className="mt-3 text-xs text-neutral-500">All essentials covered. Simple pricing, no surprises.</div>
-          <ul className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-neutral-700 max-w-2xl">
-            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-success-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Design + build included</span></li>
-            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-success-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Managed hosting & SSL</span></li>
-            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-success-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Monthly content updates</span></li>
+          <div className="mt-3 text-xs text-tertiary">All essentials covered. Simple pricing, no surprises.</div>
+          <ul className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-secondary max-w-2xl">
+            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Design + build included</span></li>
+            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Managed hosting & SSL</span></li>
+            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Monthly content updates</span></li>
           </ul>
         </div>
         {/* Hero visual */}
-        <div className="group relative h-[300px] sm:h-[380px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-[var(--panel)] to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 shadow-soft shadow-hover">
-          <div aria-hidden className="absolute -right-10 -top-10 h-60 w-60 rounded-full bg-success-accent/10 blur-2xl" />
+        <div className="group relative h-[300px] sm:h-[380px] border border-soft rounded-xl overflow-hidden bg-panel shadow-soft hover:shadow-hover transition-shadow duration-300">
+          <div aria-hidden className="absolute -right-10 -top-10 h-60 w-60 rounded-full bg-accent-subtle blur-2xl" />
           <VectorArt
             variant="dashboard"
             className="absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
             aria-label="Website design preview"
           />
-          <div className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs text-neutral-700 shadow-sm backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-success-accent" /> Live preview
+          <div className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs text-secondary shadow-sm backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent-primary" /> Live preview
           </div>
         </div>
       </section>
@@ -321,9 +321,9 @@ export default function Home() {
       <section id="showcase" className="scroll-mt-24 mt-12 md:mt-16">
         <div className="max-w-5xl mx-auto px-2.5 md:px-4">
         <header className="mb-3 md:mb-4 text-center">
-          <div className="text-xs uppercase tracking-wider text-neutral-500">Showcase</div>
-          <h2 className="mt-1 text-[17px] md:text-xl font-semibold tracking-tight">Selected work</h2>
-          <p className="mt-1 text-xs text-neutral-600 max-w-2xl mx-auto">Fast and responsive websites.</p>
+          <div className="text-xs uppercase tracking-wider text-tertiary">Showcase</div>
+          <h2 className="mt-1 text-[18px] md:text-xl font-semibold tracking-tight text-primary">Selected work</h2>
+          <p className="mt-1 text-sm text-secondary max-w-2xl mx-auto">Fast and responsive websites.</p>
         </header>
         <ShowcaseSection />
         </div>
@@ -332,12 +332,12 @@ export default function Home() {
       {/* Create */}
       <section id="create" className="scroll-mt-24 mt-16 md:mt-24">
         <header className="mb-8 md:mb-10">
-          <div className="text-xs uppercase tracking-wider text-neutral-500">Create</div>
-          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight">Launch a professional site without code</h2>
-          <p className="mt-2 text-neutral-600 max-w-2xl">We handle structure, visuals, and monthly content updates so you can focus on your business. Everything is responsive and easy to evolve.</p>
+          <div className="text-xs uppercase tracking-wider text-tertiary">Create</div>
+          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight text-primary">Launch a professional site without code</h2>
+          <p className="mt-2 text-secondary max-w-2xl">We handle structure, visuals, and monthly content updates so you can focus on your business. Everything is responsive and easy to evolve.</p>
         </header>
         <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-start">
-          <div className="group relative h-52 sm:h-64 md:h-[360px] border border-neutral-200 rounded-xl overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-neutral-50 via-[var(--panel)] to-neutral-50 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] transition-shadow duration-300 shadow-soft shadow-hover">
+          <div className="group relative h-52 sm:h-64 md:h-[360px] border border-soft rounded-xl overflow-hidden bg-panel shadow-soft hover:shadow-hover transition-shadow duration-300">
             <VectorArt
               variant="builder"
               className="absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
@@ -345,16 +345,16 @@ export default function Home() {
             />
           </div>
           <div>
-            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold tracking-tight">Highly engaging sites without programming skills</h3>
-            <p className="mt-3 text-neutral-600">Easily create and edit your site with simple content updates each month. Everything looks great and scales perfectly on any device, plus it’s simple to move or resize elements.</p>
-            <ul className="mt-4 text-sm text-neutral-700 space-y-2">
-              <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-success-accent" /><span>Monthly content updates included</span></li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-success-accent" /><span>Responsive layouts for all devices</span></li>
-              <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-success-accent" /><span>No code required</span></li>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold tracking-tight text-primary">Highly engaging sites without programming skills</h3>
+            <p className="mt-3 text-secondary">Easily create and edit your site with simple content updates each month. Everything looks great and scales perfectly on any device, plus it’s simple to move or resize elements.</p>
+            <ul className="mt-4 text-sm text-secondary space-y-2">
+              <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-accent-primary" /><span>Monthly content updates included</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-accent-primary" /><span>Responsive layouts for all devices</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-accent-primary" /><span>No code required</span></li>
             </ul>
             <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-3 xl:items-center">
-              <div className="w-full"><a href="/get-started" className="block w-full text-center px-4 py-2.5 rounded-md bg-success-accent text-white transition-all duration-200 hover:opacity-90 shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent">Start monthly plan</a></div>
-              <div className="w-full"><a href="#work" className="flex w-full items-center justify-center px-4 py-2.5 rounded-md border border-neutral-300 text-success-ink bg-white gap-2 transition-all duration-200 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-sm hover:shadow-md"><span>View recent work</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></a></div>
+              <div className="w-full"><a href="/get-started" className="block w-full text-center px-4 py-2.5 rounded-lg bg-accent-primary text-white font-medium transition-all duration-200 hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-primary">Start monthly plan</a></div>
+              <div className="w-full"><a href="#work" className="flex w-full items-center justify-center px-4 py-2.5 rounded-lg border border-soft text-accent-primary bg-white gap-2 font-medium transition-all duration-200 hover:bg-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-primary"><span>View recent work</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></a></div>
             </div>
           </div>
         </div>
@@ -365,62 +365,62 @@ export default function Home() {
       {/* Features */}
       <section id="features" className="scroll-mt-24 mt-20 md:mt-28">
         <header className="mb-6 md:mb-8 text-center">
-          <div className="text-xs uppercase tracking-wider text-neutral-500">Features</div>
-          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight">Everything you need to grow</h2>
-          <p className="mt-2 text-neutral-600 max-w-2xl mx-auto">From your website to sales automation and payments—built in, simple to use, and ready to scale.</p>
+          <div className="text-xs uppercase tracking-wider text-tertiary">Features</div>
+          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight text-primary">Everything you need to grow</h2>
+          <p className="mt-2 text-secondary max-w-2xl mx-auto">From your website to sales automation and payments—built in, simple to use, and ready to scale.</p>
         </header>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6">
-          <div id="features-website" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+          <div id="features-website" className="group p-5 rounded-xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft hover:shadow-hover">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-soft rounded-lg overflow-hidden bg-panel">
               <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Website feature preview" />
             </div>
-            <div className="text-sm font-medium text-neutral-500">Website</div>
-            <h3 className="mt-2 text-lg font-semibold">Design, hosting, and updates</h3>
-            <p className="mt-2 text-sm text-neutral-600">Launch fast with professional design and monthly updates included.</p>
+            <div className="text-sm font-medium text-tertiary">Website</div>
+            <h3 className="mt-2 text-lg font-semibold text-primary">Design, hosting, and updates</h3>
+            <p className="mt-2 text-sm text-secondary">Launch fast with professional design and monthly updates included.</p>
             <div className="mt-3">
-              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-success-ink hover:opacity-80">
+              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-accent-primary hover:text-accent-hover transition-colors">
                 Learn more
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
               </Link>
             </div>
           </div>
-          <div id="features-sales" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+          <div id="features-sales" className="group p-5 rounded-xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft hover:shadow-hover">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-soft rounded-lg overflow-hidden bg-panel">
               <VectorArt variant="sales" className="absolute inset-0 h-full w-full" aria-label="Sales & automation preview" />
             </div>
-            <div className="text-sm font-medium text-neutral-500">Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
-            <h3 className="mt-2 text-lg font-semibold">Funnels, forms, workflows</h3>
-            <p className="mt-2 text-sm text-neutral-600">Capture leads and automate follow‑ups without extra tools.</p>
+            <div className="text-sm font-medium text-tertiary">Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-accent-subtle text-accent-primary px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium">Coming soon</span></div>
+            <h3 className="mt-2 text-lg font-semibold text-primary">Funnels, forms, workflows</h3>
+            <p className="mt-2 text-sm text-secondary">Capture leads and automate follow‑ups without extra tools.</p>
             <div className="mt-3">
-              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-success-ink hover:opacity-80">
+              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-accent-primary hover:text-accent-hover transition-colors">
                 Learn more
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
               </Link>
             </div>
           </div>
-          <div id="features-ai" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+          <div id="features-ai" className="group p-5 rounded-xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft hover:shadow-hover">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-soft rounded-lg overflow-hidden bg-panel">
               <VectorArt variant="ai" className="absolute inset-0 h-full w-full" aria-label="AI features preview" />
             </div>
-            <div className="text-sm font-medium text-neutral-500">Artificial Intelligence <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
-            <h3 className="mt-2 text-lg font-semibold">Content, insights, assistance</h3>
-            <p className="mt-2 text-sm text-neutral-600">Speed up content, find insights, and get helpful suggestions.</p>
+            <div className="text-sm font-medium text-tertiary">Artificial Intelligence <span className="ml-2 inline-flex items-center rounded-full bg-accent-subtle text-accent-primary px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium">Coming soon</span></div>
+            <h3 className="mt-2 text-lg font-semibold text-primary">Content, insights, assistance</h3>
+            <p className="mt-2 text-sm text-secondary">Speed up content, find insights, and get helpful suggestions.</p>
             <div className="mt-3">
-              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-success-ink hover:opacity-80">
+              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-accent-primary hover:text-accent-hover transition-colors">
                 Learn more
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
               </Link>
             </div>
           </div>
-          <div id="features-payments" className="group p-5 rounded-xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-success-accent/30 shadow-soft shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+          <div id="features-payments" className="group p-5 rounded-xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft hover:shadow-hover">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-soft rounded-lg overflow-hidden bg-panel">
               <VectorArt variant="payments" className="absolute inset-0 h-full w-full" aria-label="Payments preview" />
             </div>
-            <div className="text-sm font-medium text-neutral-500">Payments <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 text-neutral-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span></div>
-            <h3 className="mt-2 text-lg font-semibold">Subscriptions & one‑time</h3>
-            <p className="mt-2 text-sm text-neutral-600">Sell plans or services with simple, integrated checkout.</p>
+            <div className="text-sm font-medium text-tertiary">Payments <span className="ml-2 inline-flex items-center rounded-full bg-accent-subtle text-accent-primary px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium">Coming soon</span></div>
+            <h3 className="mt-2 text-lg font-semibold text-primary">Subscriptions & one‑time</h3>
+            <p className="mt-2 text-sm text-secondary">Sell plans or services with simple, integrated checkout.</p>
             <div className="mt-3">
-              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-success-ink hover:opacity-80">
+              <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-accent-primary hover:text-accent-hover transition-colors">
                 Learn more
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
               </Link>
@@ -433,14 +433,13 @@ export default function Home() {
 
       {/* FAQ */}
       <section id="faq" className="scroll-mt-24 mt-20 md:mt-28">
-        <h2 className="text-2xl md:text-4xl font-semibold tracking-tight">FAQ</h2>
+        <h2 className="text-2xl md:text-4xl font-semibold tracking-tight text-primary">FAQ</h2>
         <dl className="mt-4 space-y-4">
-          <div className="rounded-md border border-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-neutral-50 shadow-soft shadow-hover"><dt className="font-medium">What’s included in the monthly plan?</dt><dd className="mt-1 text-sm text-neutral-600">Design, hosting, SSL, and monthly content updates with support.</dd></div>
-          <div className="rounded-md border border-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-neutral-50 shadow-soft shadow-hover"><dt className="font-medium">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-neutral-600">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
-          <div className="rounded-md border border-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-neutral-50 shadow-soft shadow-hover"><dt className="font-medium">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-neutral-600">We’ll align the site with your brand and adjust layouts to fit your content.</dd></div>
+          <div className="rounded-xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">What's included in the monthly plan?</dt><dd className="mt-1 text-sm text-secondary">Design, hosting, SSL, and monthly content updates with support.</dd></div>
+          <div className="rounded-xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-secondary">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
+          <div className="rounded-xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-secondary">We'll align the site with your brand and adjust layouts to fit your content.</dd></div>
         </dl>
       </section>
 
     </div>
   );
-}

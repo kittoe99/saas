@@ -1,25 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  /* Anthropic-like warm palette */
-  --bg-page: color-mix(in srgb, #fdfbf7 15%, #ffffff 85%); /* page background further lightened */
-  --panel: #f8f2ea;       /* cards/hero/tabs (slightly deeper for contrast) */
-  --panel-hover: #f1e9dc; /* hover state tuned to match panel */
-  --border: #e7dac4;      /* soft border slightly deeper for visibility */
-  --accent: #d97759;      /* warm accent for links */
+  /* Light, near-neutral background system */
+  --bg-page: #fefefe; /* very light, near-white background */
+  --panel: #f9f9f9;   /* subtle off-white for cards/surfaces */
+  --panel-hover: #f5f5f5; /* hover state for panels */
+  --border: #e5e5e5;  /* clear, visible borders */
+  --accent: #d97759;  /* brand accent - warm coral */
   --background: var(--bg-page);
-  --foreground: #171717;
-  /* Subtle background pattern tokens */
-  --pattern-size: 24px; /* grid spacing (slightly tighter) */
-  --pattern-dot: rgba(217, 119, 89, 0.07); /* warm accent-tinted dot (more visible) */
-  --pattern-dot-2: rgba(217, 119, 89, 0.035); /* secondary (more visible) */
-  /* Accent-derived success tokens (Option B) */
-  --success-accent: var(--accent);
-  /* Use CSS color-mix for subtle tints; falls back gracefully in older browsers */
-  --success-bg: color-mix(in srgb, var(--accent) 10%, #ffffff);
-  --success-border: color-mix(in srgb, var(--accent) 30%, #ffffff);
-  --success-pill-bg: color-mix(in srgb, var(--accent) 15%, #ffffff);
-  --success-pill-text: color-mix(in srgb, var(--accent) 80%, #000000);
+  --foreground: #0a0a0a; /* strong contrast text */
+  
+  /* Harmonious accent-derived palette */
+  --accent-primary: var(--accent);
+  --accent-hover: color-mix(in srgb, var(--accent) 85%, #000000); /* darker for hover */
+  --accent-focus: color-mix(in srgb, var(--accent) 90%, #000000); /* darker for focus */
+  --accent-subtle: color-mix(in srgb, var(--accent) 8%, #ffffff); /* very light tint */
+  --accent-muted: color-mix(in srgb, var(--accent) 15%, #ffffff); /* light tint */
+  --accent-soft: color-mix(in srgb, var(--accent) 25%, #ffffff); /* medium tint */
+  
+  /* Typography tokens */
+  --text-primary: #0a0a0a;   /* high contrast headings */
+  --text-secondary: #404040; /* readable body text */
+  --text-tertiary: #6b6b6b;  /* muted text */
+  --text-accent: var(--accent-primary);
+  
+  /* Subtle background pattern (minimal) */
+  --pattern-size: 32px;
+  --pattern-dot: rgba(217, 119, 89, 0.02);
+  --pattern-dot-2: rgba(217, 119, 89, 0.01);
+  
+  /* Legacy success tokens (mapped to new system) */
+  --success-accent: var(--accent-primary);
+  --success-bg: var(--accent-subtle);
+  --success-border: var(--accent-soft);
+  --success-pill-bg: var(--accent-muted);
+  --success-pill-text: color-mix(in srgb, var(--accent) 75%, #000000);
 }
 
 @theme inline {
@@ -45,16 +60,17 @@ html, body {
 }
 
 body {
-  /* Keep color separate from image layers */
   background-color: var(--background);
-  /* Subtle warm dot-grid pattern; extremely faint */
+  /* Minimal pattern for texture */
   background-image:
-    radial-gradient(circle at 1px 1px, var(--pattern-dot) 1.2px, transparent 1.6px),
-    radial-gradient(circle at calc(var(--pattern-size)/2) calc(var(--pattern-size)/2), var(--pattern-dot-2) 1.2px, transparent 1.6px);
+    radial-gradient(circle at 1px 1px, var(--pattern-dot) 1px, transparent 1.2px),
+    radial-gradient(circle at calc(var(--pattern-size)/2) calc(var(--pattern-size)/2), var(--pattern-dot-2) 1px, transparent 1.2px);
   background-repeat: repeat;
   background-size: var(--pattern-size) var(--pattern-size);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -150,6 +166,31 @@ details[open] .fade-slide {
 .bg-\[\#faf6ec\].border-match { border-color: #faf6ec !important; }
 .bg-\[\#efeae2\].border-match { border-color: #efeae2 !important; }
 
+/* Typography utilities */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-tertiary { color: var(--text-tertiary) !important; }
+.text-accent { color: var(--text-accent) !important; }
+
+/* Heading styles with proper weights and tracking */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* Body text improvements */
+p, span, div {
+  color: var(--text-secondary);
+}
+
+/* Label styles with proper letter-spacing */
+label, .label {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
 /* Theme utilities */
 .bg-page { background-color: var(--bg-page) !important; }
 .bg-panel { background-color: var(--panel) !important; }
@@ -157,7 +198,16 @@ details[open] .fade-slide {
 .border-soft { border-color: var(--border) !important; }
 .text-accent { color: var(--accent) !important; }
 
-/* Success (accent-based) utilities */
+/* Accent system utilities */
+.bg-accent-primary { background-color: var(--accent-primary) !important; }
+.bg-accent-subtle { background-color: var(--accent-subtle) !important; }
+.bg-accent-muted { background-color: var(--accent-muted) !important; }
+.bg-accent-soft { background-color: var(--accent-soft) !important; }
+.text-accent-primary { color: var(--accent-primary) !important; }
+.border-accent-soft { border-color: var(--accent-soft) !important; }
+.border-accent-muted { border-color: var(--accent-muted) !important; }
+
+/* Success (accent-based) utilities - legacy support */
 .bg-success-bg { background-color: var(--success-bg) !important; }
 .border-success { border-color: var(--success-border) !important; }
 .bg-success-accent { background-color: var(--success-accent) !important; }
@@ -234,81 +284,114 @@ header .no-btn-shadow:active {
   box-shadow: none !important;
 }
 
-/* Shadow utilities for containers (forms, cards, lists) */
-/* Subtle, warm-tinted drop shadows that work with the palette */
+/* Shadow system: low shadows for cards, high for modals */
 .shadow-soft {
-  /* Slightly stronger for visibility on warm light background */
+  /* Low shadow for cards and general surfaces */
   box-shadow:
-    0 1px 2px rgba(17, 17, 17, 0.05),
-    0 4px 10px rgba(17, 17, 17, 0.06);
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .shadow-elevated {
+  /* High shadow for modals, drawers, and elevated content */
   box-shadow:
-    0 1px 1px rgba(17, 17, 17, 0.02),
-    0 6px 16px rgba(17, 17, 17, 0.035),
-    0 12px 24px rgba(17, 17, 17, 0.025);
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 10px 20px rgba(0, 0, 0, 0.10),
+    0 20px 40px rgba(0, 0, 0, 0.08);
 }
 
-/* Hover utility: now elevated across all states (default, hover, focus, active) */
 .shadow-hover {
-  /* Default elevated look (applies at rest and on hover for consistent feel) */
+  /* Interactive shadow for hover states */
   box-shadow:
-    0 3px 6px rgba(17, 17, 17, 0.06),
-    0 10px 24px rgba(17, 17, 17, 0.10);
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease;
 }
-.shadow-hover:hover,
-.shadow-hover:focus,
-.shadow-hover:focus-visible,
-.shadow-hover:active {
+.shadow-hover:hover {
   box-shadow:
-    0 4px 10px rgba(17, 17, 17, 0.07),
-    0 16px 32px rgba(17, 17, 17, 0.12);
+    0 4px 8px rgba(0, 0, 0, 0.06),
+    0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 /* Compose helpers */
 .shadow-card { box-shadow: 0 1px 1px rgba(17,17,17,0.02), 0 4px 10px rgba(17,17,17,0.05); }
 .shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(17,17,17,0.05); }
 
-/* Button shadows: apply a consistent feel across the site */
+/* Form elements with solid backgrounds and clear focus states */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  background-color: #ffffff;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 0 0 3px var(--accent-subtle);
+}
+
+/* Button styles with proper radius and shadows */
 button,
 [role="button"],
 .button,
 .btn {
-  /* default subtle elevation */
-  box-shadow:
-    0 1px 1px rgba(17, 17, 17, 0.01),
-    0 2px 6px rgba(17, 17, 17, 0.02);
-  transition: box-shadow 160ms ease, transform 120ms ease;
+  border-radius: 8px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 button:hover,
+[role="button"]:hover,
+.button:hover,
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
 button:focus,
 button:focus-visible,
-button:active,
-[role="button"]:hover,
 [role="button"]:focus,
 [role="button"]:focus-visible,
-[role="button"]:active,
-.button:hover,
 .button:focus,
 .button:focus-visible,
-.button:active,
-.btn:hover,
 .btn:focus,
-.btn:focus-visible,
-.btn:active {
-  /* elevated shadow on interaction */
-  box-shadow:
-    0 2px 4px rgba(17, 17, 17, 0.02),
-    0 8px 18px rgba(17, 17, 17, 0.035);
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 0 0 3px var(--accent-subtle);
 }
 
 button:active,
 [role="button"]:active,
 .button:active,
 .btn:active {
-  transform: translateY(0.5px);
+  transform: translateY(0);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
 /* Utility class to opt-out when needed */
