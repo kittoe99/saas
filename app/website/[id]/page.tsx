@@ -221,11 +221,7 @@ export default function ManageWebsitePage() {
               </li>
             </ol>
           </nav>
-          <div className="ml-auto flex items-center gap-2">
-            <button onClick={handleSaveBasics} disabled={saving} className="px-4 py-2 rounded-lg bg-success-accent text-white text-sm hover:opacity-90 disabled:opacity-60 shadow-hover transition-all">
-              {saving ? "Saving…" : "Save Changes"}
-            </button>
-          </div>
+          
         </div>
       </header>
 
