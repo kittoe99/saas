@@ -55,7 +55,17 @@ export default function DashboardPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [deployments, setDeployments] = useState<Array<{ id: string; website_id: string | null; url: string | null; status: string | null; created_at: string }>>([]);
   const [incompleteBuilds, setIncompleteBuilds] = useState<Array<{ website_id: string; name: string | null; nextStep: string; steps: Record<string, 'pending'|'done'> }>>([]);
-  const [websites, setWebsites] = useState<Array<{ id: string; name: string | null; created_at: string }>>([]);
+  const [websites, setWebsites] = useState<Array<{
+    id: string;
+    name: string | null;
+    domain: string | null;
+    status: string | null;
+    created_at: string;
+    primary_goal?: string | null;
+    contact_method?: string | null;
+    envisioned_pages?: string[] | null;
+    selected_services?: string[] | null;
+  }>>([]);
 
   // Logout handler
   const handleLogout = async () => {
@@ -135,11 +145,26 @@ export default function DashboardPage() {
       // Load websites for this user and detect unfinished builder steps
       const { data: sites } = await supabase
         .from('websites')
-        .select('id, name, builder_steps, created_at')
+        .select('id, name, domain, status, created_at, onboarding(data)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (mounted && sites) {
-        setWebsites((sites as any[]).map(s => ({ id: s.id as string, name: (s.name as string) || null, created_at: s.created_at as string })));
+        setWebsites((sites as any[]).map((s: any) => {
+          const ob = Array.isArray(s?.onboarding)
+            ? ((s.onboarding[0]?.data as any) || {})
+            : ((s?.onboarding?.data as any) || {});
+          return {
+            id: s.id as string,
+            name: (s.name as string) || null,
+            domain: (s.domain as string) || null,
+            status: (s.status as string) || null,
+            created_at: s.created_at as string,
+            primary_goal: (ob?.primaryGoal as string) || null,
+            contact_method: (ob?.contactMethod as string) || null,
+            envisioned_pages: Array.isArray(ob?.envisionedPages) ? ob.envisionedPages : null,
+            selected_services: Array.isArray(ob?.selectedServices) ? ob.selectedServices : null,
+          };
+        }));
       }
       const pending: Array<{ website_id: string; name: string | null; nextStep: string; steps: Record<string, 'pending'|'done'> }> = [];
       if (sites && sites.length) {
@@ -345,7 +370,7 @@ export default function DashboardPage() {
             >
               {/* Mobile (native-like) Home */}
               {active === "Home" && (
-                <div className="sm:hidden">
+                <div className="hidden">
                   {/* Greeting / hero */}
                   <div className="bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-4 rounded-t-xl border-b border-neutral-200">
                     <div className="flex items-center justify-between">
@@ -425,7 +450,7 @@ export default function DashboardPage() {
                                 <div className="text-[11px] text-amber-800">Next step: {b.nextStep}</div>
                               </div>
                               <a
-                                href={`/dashboard/site-builder?website_id=${encodeURIComponent(b.website_id)}&step=${encodeURIComponent(b.nextStep)}`}
+                                href={`/dashboard`}
                                 className="px-2.5 py-1.5 rounded-md border border-amber-300 text-[12px] text-amber-900 bg-white hover:bg-amber-100"
                               >
                                 Continue
@@ -486,7 +511,7 @@ export default function DashboardPage() {
 
               {/* Desktop Home content */}
               {active === "Home" && (
-                <div className="hidden sm:block p-6">
+                <div className="block p-4 sm:p-6">
                   {incompleteBuilds.length > 0 && (
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-soft mb-6">
                       <div className="text-sm font-medium text-amber-900 mb-1">Incomplete builds</div>
@@ -498,7 +523,7 @@ export default function DashboardPage() {
                               <div className="text-[12px] text-amber-800">Next step: {b.nextStep}</div>
                             </div>
                             <a
-                              href={`/dashboard/site-builder?website_id=${encodeURIComponent(b.website_id)}&step=${encodeURIComponent(b.nextStep)}`}
+                              href={`/dashboard`}
                               className="px-2.5 py-1.5 rounded-md border border-amber-300 text-[12px] text-amber-900 bg-white hover:bg-amber-100"
                             >
                               Continue
@@ -510,32 +535,85 @@ export default function DashboardPage() {
                   )}
 
                   {/* Websites (cards) */}
-                  <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-soft mb-6">
-                    <div className="text-sm font-medium text-neutral-900 mb-1">Websites</div>
+                  <div className="mb-6">
                     {websites.length === 0 ? (
                       <div className="text-sm text-neutral-700">No websites yet. Click New Site to create one.</div>
                     ) : (
-                      <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {websites.map((w) => {
                           const dep = deployments.find(d => (d.website_id === w.id) && d.url);
+                          const pagesCount = Array.isArray(w.envisioned_pages) ? w.envisioned_pages.length : 0;
+                          const servicesCount = Array.isArray(w.selected_services) ? w.selected_services.length : 0;
                           return (
-                            <li key={w.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                              <div className="text-sm font-semibold text-neutral-900 truncate" title={w.name || w.id}>{w.name || `Website ${w.id.slice(0,8)}…`}</div>
-                              <div className="text-[11px] text-neutral-500">Created {new Date(w.created_at).toLocaleDateString()}</div>
-                              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                            <li key={w.id} className="group rounded-2xl border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft hover:shadow-card transition-shadow">
+                              {/* Header */}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                                  <div className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 rounded-lg bg-success-accent/15 text-success-ink inline-flex items-center justify-center font-semibold">
+                                    {(w.name || 'W').slice(0,1).toUpperCase()}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-semibold text-neutral-900 truncate" title={w.name || w.id}>{w.name || `Website ${w.id.slice(0,8)}…`}</div>
+                                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-neutral-600">
+                                      <span>Created {new Date(w.created_at).toLocaleDateString()}</span>
+                                      <span aria-hidden>•</span>
+                                      {w.domain ? (
+                                        <a href={`https://${w.domain}`} target="_blank" rel="noreferrer" className="text-success-ink hover:underline truncate max-w-[8rem] sm:max-w-[12rem]" title={w.domain}>{w.domain}</a>
+                                      ) : (
+                                        <span className="text-neutral-500">Domain not connected</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <span className={classNames(
+                                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] border",
+                                  w.status === 'active' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                  w.status === 'draft' ? "bg-neutral-100 text-neutral-700 border-neutral-200" :
+                                  "bg-amber-50 text-amber-800 border-amber-200"
+                                )}>{w.status || 'unknown'}</span>
+                              </div>
+
+                              {/* Chips */}
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14"/></svg>
+                                  {pagesCount} pages
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M5 7h14M5 12h14M5 17h9"/></svg>
+                                  {servicesCount} services
+                                </span>
+                                {w.primary_goal && (
+                                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md border border-success/30 bg-success-accent/10 px-2 py-1 text-[11px] text-success-ink">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 3v18M3 12h18"/></svg>
+                                    Goal: {w.primary_goal}
+                                  </span>
+                                )}
+                                {w.contact_method && (
+                                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-800">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3 7.18 2 2 0 0 1 5 5h4.09a2 2 0 0 1 2 1.72l.45 2.6a2 2 0 0 1-.54 1.86l-1.27 1.27a16 16 0 0 0 6.88 6.88l1.27-1.27a2 2 0 0 1 1.86-.54l2.6.45A2 2 0 0 1 22 16.92z"/></svg>
+                                    {w.contact_method}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Actions */}
+                              <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                 <a
-                                  href={`/dashboard/site-builder?website_id=${encodeURIComponent(w.id)}`}
-                                  className="px-2.5 py-1.5 rounded-md border border-neutral-300 text-[12px] text-neutral-800 bg-white hover:bg-neutral-100"
+                                  href={`/dashboard?tab=Website`}
+                                  className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-2 text-[12px] text-neutral-800 hover:bg-neutral-50 shadow-hover"
                                 >
-                                  Open Builder
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
+                                  Manage Site
                                 </a>
                                 {dep?.url && (
                                   <a
                                     href={dep.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="px-2.5 py-1.5 rounded-md border border-emerald-300 text-[12px] text-emerald-800 bg-white hover:bg-emerald-100"
+                                    className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md border border-emerald-300 bg-white px-3 py-2 text-[12px] text-emerald-800 hover:bg-emerald-50 shadow-hover"
                                   >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M5 12v7a2 2 0 0 0 2 2h7"/></svg>
                                     View Live
                                   </a>
                                 )}

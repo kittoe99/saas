@@ -622,10 +622,8 @@ export default function OnboardingPage() {
         }
       } catch {}
 
-      // Redirect to the Dashboard Site Builder page to continue with Site Build → Preview → Deployment
-      const qp = new URLSearchParams();
-      if (effectiveWebsiteId) qp.set("website_id", effectiveWebsiteId);
-      router.push(`/dashboard/site-builder?${qp.toString()}`);
+      // Redirect to the Dashboard (site-builder removed)
+      router.push(`/dashboard`);
     } catch (e: any) {
       setError(e?.message || "Something went wrong while finishing onboarding.");
     } finally {
