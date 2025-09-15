@@ -1256,11 +1256,18 @@ export default function OnboardingPage() {
                         type="button"
                         onClick={() => setSiteType(t)}
                         className={classNames(
-                          "rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover",
+                          "relative rounded-md border px-3 py-2 pr-7 text-sm text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover",
                           siteType === t ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50"
                         )}
                       >
                         {t}
+                        {siteType === t && (
+                          <span className="absolute top-1.5 right-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-success-accent text-white">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="h-3 w-3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12l4 4L19 7" />
+                            </svg>
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -1321,8 +1328,8 @@ export default function OnboardingPage() {
                         type="button"
                         onClick={() => setCategory(c)}
                         className={classNames(
-                          "w-full text-left rounded-lg border px-3 py-2 text-sm shadow-soft shadow-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                          category === c ? "border-success bg-success-accent/15 text-success-ink ring-2 ring-success" : "border-neutral-200 bg-white text-neutral-800 hover:border-success hover:bg-success-accent/10"
+                          "relative text-left rounded-md border px-3 py-2 pr-7 text-sm shadow-soft shadow-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+                          category === c ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50"
                         )}
                         aria-pressed={category === c}
                         aria-selected={category === c}
@@ -1330,6 +1337,13 @@ export default function OnboardingPage() {
                         <div className="flex items-center">
                           <span className="truncate">{c}</span>
                         </div>
+                        {category === c && (
+                          <span className="absolute top-1.5 right-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-success-accent text-white">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="h-3 w-3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12l4 4L19 7" />
+                            </svg>
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -1444,7 +1458,24 @@ export default function OnboardingPage() {
                   <label className="block text-sm font-medium">Do you have a current website?</label>
                   <div className="mt-2 flex gap-2">
                     {(["yes","no"] as const).map((v) => (
-                      <button key={v} type="button" onClick={() => setHasCurrent(v)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover", hasCurrent === v ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50")}>{v.toUpperCase()}</button>
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setHasCurrent(v)}
+                        className={classNames(
+                          "relative rounded-md border px-3 py-2 pr-7 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent shadow-soft shadow-hover",
+                          hasCurrent === v ? "border-success ring-2 ring-success bg-success-accent/20 text-success-ink hover:bg-success-accent/25" : "border-gray-300 hover:bg-neutral-50"
+                        )}
+                      >
+                        {v.toUpperCase()}
+                        {hasCurrent === v && (
+                          <span className="absolute top-1.5 right-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-success-accent text-white">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="h-3 w-3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12l4 4L19 7" />
+                            </svg>
+                          </span>
+                        )}
+                      </button>
                     ))}
                   </div>
 
@@ -1576,8 +1607,26 @@ export default function OnboardingPage() {
                   <div className="mt-4">
                     <label className="block text-sm font-medium">Preferred contact method</label>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {["email","phone","form","schedule"].map((m) => (
-                        <button disabled={step5Analyzing} key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent disabled:opacity-60 shadow-soft shadow-hover", contactMethod === m ? "border-success ring-2 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}>{m}</button>
+                      {(["email","phone","form","schedule"]).map((m) => (
+                        <button
+                          disabled={step5Analyzing}
+                          key={m}
+                          type="button"
+                          onClick={() => setContactMethod(m as any)}
+                          className={classNames(
+                            "relative rounded-md border px-3 py-2 pr-7 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent disabled:opacity-60 shadow-soft shadow-hover",
+                            contactMethod === m ? "border-success ring-2 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50"
+                          )}
+                        >
+                          {m}
+                          {contactMethod === m && (
+                            <span className="absolute top-1.5 right-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-success-accent text-white">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="h-3 w-3">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12l4 4L19 7" />
+                              </svg>
+                            </span>
+                          )}
+                        </button>
                       ))}
                     </div>
                   </div>
