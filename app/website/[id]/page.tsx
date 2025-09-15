@@ -353,12 +353,15 @@ export default function ManageWebsitePage() {
                     </div>
                   </div>
                 </div>
-                <span className={classNames(
-                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] border",
-                  website.status === 'active' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                  website.status === 'draft' ? "bg-neutral-100 text-neutral-700 border-neutral-200" :
-                  "bg-amber-50 text-amber-800 border-amber-200"
-                )}>{website.status || 'unknown'}</span>
+                {(() => {
+                  const ready = !!website.vercel_prod_domain;
+                  return (
+                    <span className={classNames(
+                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] border",
+                      ready ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-neutral-100 text-neutral-700 border-neutral-200"
+                    )}>{ready ? 'Active' : 'Not Ready'}</span>
+                  );
+                })()}
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">

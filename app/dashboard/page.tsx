@@ -54,7 +54,6 @@ export default function DashboardPage() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [deployments, setDeployments] = useState<Array<{ id: string; website_id: string | null; url: string | null; status: string | null; created_at: string }>>([]);
-  const [incompleteBuilds, setIncompleteBuilds] = useState<Array<{ website_id: string; name: string | null; nextStep: string }>>([]);
   const [websites, setWebsites] = useState<Array<{
     id: string;
     name: string | null;
@@ -208,27 +207,7 @@ export default function DashboardPage() {
           }));
         }
       }
-      const pending: Array<{ website_id: string; name: string | null; nextStep: string }> = [];
-      if (sites && sites.length) {
-        for (const s of sites as any[]) {
-          // Prefer site_build_progress entry if exists
-          let statusRow: { status: string | null } | null = null;
-          try {
-            const { data: prog } = await supabase
-              .from('site_build_progress')
-              .select('status')
-              .eq('website_id', s.id)
-              .eq('user_id', user.id)
-              .maybeSingle();
-            statusRow = (prog as any) || null;
-          } catch {}
-          const isComplete = (!!s.vercel_prod_domain) || (statusRow?.status === 'complete');
-          if (isComplete) continue;
-          const next = statusRow?.status === 'finalizing' ? 'Applying final touches' : 'Preparing build';
-          pending.push({ website_id: s.id as string, name: (s.name as string) || null, nextStep: next });
-        }
-      }
-      if (mounted) setIncompleteBuilds(pending);
+      // Incomplete builds card removed
     })();
     return () => { mounted = false; };
   }, [authChecked]);
@@ -529,27 +508,7 @@ export default function DashboardPage() {
               {/* Desktop Home content */}
               {active === "Home" && (
                 <div className="block p-4 sm:p-6">
-                  {incompleteBuilds.length > 0 && (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-soft mb-6">
-                      <div className="text-sm font-medium text-amber-900 mb-1">Incomplete builds</div>
-                      <ul className="divide-y divide-amber-200">
-                        {incompleteBuilds.map((b) => (
-                          <li key={b.website_id} className="py-2 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium text-amber-900 truncate max-w-[28rem]">{b.name || 'Untitled Site'}</div>
-                              <div className="text-[12px] text-amber-800">Next step: {b.nextStep}</div>
-                            </div>
-                            <a
-                              href={`/dashboard`}
-                              className="px-2.5 py-1.5 rounded-md border border-amber-300 text-[12px] text-amber-900 bg-white hover:bg-amber-100"
-                            >
-                              Continue
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {/* Incomplete builds card removed */}
 
                   {/* Websites (cards) */}
                   <div className="mb-6">
@@ -582,12 +541,15 @@ export default function DashboardPage() {
                                     </div>
                                   </div>
                                 </div>
-                                <span className={classNames(
-                                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] border",
-                                  w.status === 'active' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                                  w.status === 'draft' ? "bg-neutral-100 text-neutral-700 border-neutral-200" :
-                                  "bg-amber-50 text-amber-800 border-amber-200"
-                                )}>{w.status || 'unknown'}</span>
+                                {(() => {
+                                  const ready = !!w.vercel_prod_domain;
+                                  return (
+                                    <span className={classNames(
+                                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] border",
+                                      ready ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-neutral-100 text-neutral-700 border-neutral-200"
+                                    )}>{ready ? 'Active' : 'Not Ready'}</span>
+                                  );
+                                })()}
                               </div>
 
                               {/* Chips */}
