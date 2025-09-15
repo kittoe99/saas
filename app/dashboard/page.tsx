@@ -59,6 +59,7 @@ export default function DashboardPage() {
     id: string;
     name: string | null;
     domain: string | null;
+    vercel_prod_domain?: string | null;
     status: string | null;
     created_at: string;
     primary_goal?: string | null;
@@ -117,6 +118,8 @@ export default function DashboardPage() {
     };
   }, []);
 
+  // (Reverted) No artificial delay for loader
+
   // Check onboarding status for current user
   useEffect(() => {
     if (!authChecked) return;
@@ -145,7 +148,7 @@ export default function DashboardPage() {
       // Load websites for this user and detect unfinished builder steps
       const { data: sites } = await supabase
         .from('websites')
-        .select('id, name, domain, status, created_at, onboarding(data)')
+        .select('id, name, domain, vercel_prod_domain, status, created_at, onboarding(data)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (mounted && sites) {
@@ -157,6 +160,7 @@ export default function DashboardPage() {
             id: s.id as string,
             name: (s.name as string) || null,
             domain: (s.domain as string) || null,
+            vercel_prod_domain: (s.vercel_prod_domain as string) || null,
             status: (s.status as string) || null,
             created_at: s.created_at as string,
             primary_goal: (ob?.primaryGoal as string) || null,
@@ -557,8 +561,8 @@ export default function DashboardPage() {
                                     <div className="mt-0.5 flex items-center gap-2 text-[11px] text-neutral-600">
                                       <span>Created {new Date(w.created_at).toLocaleDateString()}</span>
                                       <span aria-hidden>•</span>
-                                      {w.domain ? (
-                                        <a href={`https://${w.domain}`} target="_blank" rel="noreferrer" className="text-success-ink hover:underline truncate max-w-[8rem] sm:max-w-[12rem]" title={w.domain}>{w.domain}</a>
+                                      {(w.vercel_prod_domain || w.domain) ? (
+                                        <a href={`https://${w.vercel_prod_domain || w.domain}`} target="_blank" rel="noreferrer" className="text-success-ink hover:underline truncate max-w-[8rem] sm:max-w-[12rem]" title={(w.vercel_prod_domain || w.domain) || undefined}>{w.vercel_prod_domain || w.domain}</a>
                                       ) : (
                                         <span className="text-neutral-500">Domain not connected</span>
                                       )}

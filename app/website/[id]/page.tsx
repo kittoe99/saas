@@ -43,6 +43,13 @@ export default function ManageWebsitePage() {
 
   // Comprehensive onboarding data
   const [obData, setObData] = useState<any>(null);
+  const [contactEmail, setContactEmail] = useState<string>("");
+  const [contactPhone, setContactPhone] = useState<string>("");
+  const [hasOnboardingRow, setHasOnboardingRow] = useState<boolean>(false);
+  const [uid, setUid] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState<boolean>(false);
+  const [uploadingFiles, setUploadingFiles] = useState<boolean>(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -51,24 +58,25 @@ export default function ManageWebsitePage() {
       setError(null);
       try {
         const { data: auth } = await supabase.auth.getUser();
-        const uid = auth?.user?.id;
-        if (!uid) {
+        const uid0 = auth?.user?.id;
+        if (!uid0) {
           router.replace("/login?next=" + encodeURIComponent(`/website/${websiteId}`));
           return;
         }
+        setUid(uid0);
         // Load website + onboarding
         const { data: w, error: werr } = await supabase
           .from("websites")
           .select("id, user_id, name, domain, status, created_at, updated_at, vercel_prod_domain")
           .eq("id", websiteId)
-          .eq("user_id", uid)
+          .eq("user_id", uid0)
           .maybeSingle();
         if (werr) throw werr;
         const { data: o, error: oerr } = await supabase
           .from("onboarding")
           .select("website_id, user_id, data, created_at, updated_at")
           .eq("website_id", websiteId)
-          .eq("user_id", uid)
+          .eq("user_id", uid0)
           .maybeSingle();
         if (oerr && oerr.code !== 'PGRST116') throw oerr; // ignore no rows
         if (!w) throw new Error("Website not found");
@@ -78,6 +86,10 @@ export default function ManageWebsitePage() {
         if (o) {
           setOnboarding(o?.data ?? null);
           setObData(o?.data ?? {});
+          setContactEmail((o?.data?.businessEmail as string) || "");
+          setContactPhone((o?.data?.businessPhone as string) || "");
+          setHasOnboardingRow(true);
+          setLogoUrl((o?.data?.logoUrl as string) || null);
         }
       } catch (e: any) {
         setError(e?.message || "Failed to load website");
@@ -96,8 +108,95 @@ export default function ManageWebsitePage() {
       const uid = auth?.user?.id;
       if (!uid) throw new Error("Not authenticated");
       const updates: any = { name: name || null, domain: domain || null };
-      const { error } = await supabase.from("websites").update(updates).eq("id", websiteId).eq("user_id", uid);
-      if (error) throw error;
+      const { error: wupdErr } = await supabase.from("websites").update(updates).eq("id", websiteId).eq("user_id", uid);
+      if (wupdErr) throw wupdErr;
+
+      // Save contact info into onboarding JSON
+      const merged = {
+        ...(obData || {}),
+        businessEmail: contactEmail || null,
+        businessPhone: contactPhone || null,
+      };
+
+  // Upload logo to Supabase Storage and persist in onboarding JSON
+  const handleUploadLogo = async (file: File) => {
+    if (!websiteId || !uid || !file) return;
+    setUploadingLogo(true);
+    setError(null);
+    try {
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+      const path = `${uid}/${websiteId}/logo.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('website-assets')
+        .upload(path, file, { upsert: true, cacheControl: '3600' });
+      if (upErr && upErr.message && !upErr.message.includes('duplicate')) throw upErr;
+      const { data: pub } = supabase.storage.from('website-assets').getPublicUrl(path);
+      const url = pub?.publicUrl || null;
+      const merged = {
+        ...(obData || {}),
+        hasLogo: true,
+        logoUrl: url,
+        assetCount: Math.max(1, Number(obData?.assetCount ?? 0))
+      };
+      const { error: oupdErr } = await supabase
+        .from('onboarding')
+        .upsert({ website_id: websiteId, user_id: uid, data: merged }, { onConflict: 'website_id,user_id' });
+      if (oupdErr) throw oupdErr;
+      setLogoUrl(url);
+      setObData(merged);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to upload logo');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  // Upload multiple files to Supabase Storage and bump assetCount
+  const handleUploadFiles = async (files: FileList | null) => {
+    if (!websiteId || !uid || !files || files.length === 0) return;
+    setUploadingFiles(true);
+    setError(null);
+    try {
+      let uploaded = 0;
+      for (const file of Array.from(files)) {
+        const safeName = file.name.replace(/[^a-zA-Z0-9_\.\-]/g, '_');
+        const path = `${uid}/${websiteId}/assets/${Date.now()}_${safeName}`;
+        const { error: upErr } = await supabase.storage
+          .from('website-assets')
+          .upload(path, file, { upsert: false, cacheControl: '3600' });
+        if (upErr) throw upErr;
+        uploaded++;
+      }
+      const merged = {
+        ...(obData || {}),
+        assetCount: Number(obData?.assetCount ?? 0) + uploaded
+      };
+      const { error: oupdErr } = await supabase
+        .from('onboarding')
+        .upsert({ website_id: websiteId, user_id: uid, data: merged }, { onConflict: 'website_id,user_id' });
+      if (oupdErr) throw oupdErr;
+      setObData(merged);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to upload files');
+    } finally {
+      setUploadingFiles(false);
+    }
+  };
+      if (hasOnboardingRow) {
+        const { error: oupdErr } = await supabase
+          .from("onboarding")
+          .update({ data: merged })
+          .eq("website_id", websiteId)
+          .eq("user_id", uid);
+        if (oupdErr) throw oupdErr;
+      } else {
+        const { error: oinsErr } = await supabase
+          .from("onboarding")
+          .insert({ website_id: websiteId, user_id: uid, data: merged });
+        if (oinsErr) throw oinsErr;
+        setHasOnboardingRow(true);
+      }
+      setObData(merged);
     } catch (e: any) {
       setError(e?.message || "Failed to save");
     } finally {
@@ -168,8 +267,16 @@ export default function ManageWebsitePage() {
                     <div className="mt-0.5 flex items-center gap-2 text-[11px] text-neutral-600">
                       <span>Created {new Date(website.created_at).toLocaleDateString()}</span>
                       <span aria-hidden>•</span>
-                      {domain ? (
-                        <a href={`https://${domain}`} target="_blank" rel="noreferrer" className="text-success-ink hover:underline truncate max-w-[12rem]" title={domain}>{domain}</a>
+                      {(website.vercel_prod_domain || domain) ? (
+                        <a
+                          href={`https://${website.vercel_prod_domain || domain}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-success-ink hover:underline truncate max-w-[12rem]"
+                          title={(website.vercel_prod_domain || domain) || undefined}
+                        >
+                          {website.vercel_prod_domain || domain}
+                        </a>
                       ) : (
                         <span className="text-neutral-500">Domain not connected</span>
                       )}
@@ -261,6 +368,14 @@ export default function ManageWebsitePage() {
                     <div className="text-sm font-medium text-neutral-700 mb-1">Domain</div>
                     <input value={domain} onChange={(e) => setDomain(e.target.value)} className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent focus:border-transparent transition-all" placeholder="example.com" />
                   </label>
+                  <label className="block">
+                    <div className="text-sm font-medium text-neutral-700 mb-1">Business email</div>
+                    <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent focus:border-transparent transition-all" placeholder="you@company.com" />
+                  </label>
+                  <label className="block">
+                    <div className="text-sm font-medium text-neutral-700 mb-1">Business phone</div>
+                    <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-success-accent focus:border-transparent transition-all" placeholder="(555) 555-5555" />
+                  </label>
                 </div>
                 {(() => {
                   const liveUrl = website.vercel_prod_domain ? `https://${website.vercel_prod_domain}` : (domain ? `https://${domain}` : null);
@@ -303,6 +418,42 @@ export default function ManageWebsitePage() {
                     <div className="text-xs text-neutral-500 font-medium mb-1">Contact Method</div>
                     <div className="text-sm font-semibold text-neutral-900">{obData?.contactMethod || "Not specified"}</div>
                   </div>
+                </div>
+              </div>
+              </section>
+
+              {/* Assets */}
+              <section className="rounded-xl border border-neutral-200 bg-white shadow-soft overflow-hidden">
+              <div className="px-6 py-4 border-b border-neutral-200 bg-neutral-50">
+                <div className="flex items-center gap-3">
+                  <div className="h-7 w-7 rounded-md bg-neutral-200 text-neutral-700 inline-flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M12 3l9 4-9 4-9-4 9-4zm9 7l-9 4-9-4m18 0v7l-9 4-9-4v-7"/></svg>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-900">Assets</div>
+                    <div className="text-xs text-neutral-600">Upload your logo and supporting files</div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="h-10 w-10 rounded border border-neutral-200 object-contain bg-white" />
+                  ) : (
+                    <div className="h-10 w-10 rounded border border-dashed border-neutral-300 bg-neutral-50 inline-flex items-center justify-center text-neutral-400 text-xs">Logo</div>
+                  )}
+                  <label className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white text-neutral-900 px-3 py-2 text-[12px] hover:bg-neutral-50 shadow-hover cursor-pointer">
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && e.target.files[0] && handleUploadLogo(e.target.files[0])} disabled={uploadingLogo} />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14"/></svg>
+                    {uploadingLogo ? 'Uploading…' : (logoUrl ? 'Replace Logo' : 'Upload Logo')}
+                  </label>
+                </div>
+                <div>
+                  <label className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white text-neutral-900 px-3 py-2 text-[12px] hover:bg-neutral-50 shadow-hover cursor-pointer">
+                    <input type="file" multiple className="hidden" onChange={(e) => handleUploadFiles(e.target.files)} disabled={uploadingFiles} />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 4h16v16H4z"/><path d="M22 6 12 13 2 6"/></svg>
+                    {uploadingFiles ? 'Uploading…' : 'Upload Files'}
+                  </label>
                 </div>
               </div>
               </section>

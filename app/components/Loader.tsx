@@ -17,11 +17,7 @@ export default function Loader({ message = "Loading...", fullScreen = false, var
     <div className={container} role="status" aria-live="polite" aria-busy="true">
       <div className="flex flex-col items-center gap-3 text-neutral-700">
         <div className="relative h-12 w-12">
-          {variant === "spinner" ? (
-            <Spinner />
-          ) : (
-            <Dots />
-          )}
+          {variant === "spinner" ? <Spinner /> : <Dots />}
         </div>
         <div className="text-sm font-medium text-neutral-800">
           {message}
@@ -33,7 +29,14 @@ export default function Loader({ message = "Loading...", fullScreen = false, var
 
 function Spinner() {
   return (
-    <div className="h-12 w-12 rounded-full border-2 border-success/30 border-t-success-accent animate-spin" />
+    <div className="relative h-12 w-12">
+      {/* Base ring */}
+      <div className="absolute inset-0 rounded-full border-2 border-neutral-200" />
+      {/* Animated accent arc */}
+      <div className="absolute inset-0 rounded-full border-2 border-success/30 border-t-success-accent animate-spin" />
+      {/* Soft center */}
+      <div className="absolute inset-2 rounded-full bg-success-accent/5" />
+    </div>
   );
 }
 
