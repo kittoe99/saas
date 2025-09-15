@@ -201,22 +201,6 @@ export default function ManageWebsitePage() {
       setUploadingFiles(false);
     }
   };
-          .eq("user_id", uid);
-        if (oupdErr) throw oupdErr;
-      } else {
-        const { error: oinsErr } = await supabase
-          .from("onboarding")
-          .insert({ website_id: websiteId, user_id: uid, data: merged });
-        if (oinsErr) throw oinsErr;
-        setHasOnboardingRow(true);
-      }
-      setObData(merged);
-    } catch (e: any) {
-      setError(e?.message || "Failed to save");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
