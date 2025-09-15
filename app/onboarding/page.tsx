@@ -1322,7 +1322,7 @@ export default function OnboardingPage() {
                         onClick={() => setCategory(c)}
                         className={classNames(
                           "w-full text-left rounded-lg border px-3 py-2 text-sm shadow-soft shadow-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                          category === c ? "border-success bg-success-accent/15 text-success-ink ring-1 ring-success" : "border-neutral-200 bg-white text-neutral-800 hover:border-success hover:bg-success-accent/10"
+                          category === c ? "border-success bg-success-accent/15 text-success-ink ring-2 ring-success" : "border-neutral-200 bg-white text-neutral-800 hover:border-success hover:bg-success-accent/10"
                         )}
                         aria-pressed={category === c}
                         aria-selected={category === c}
@@ -1577,7 +1577,7 @@ export default function OnboardingPage() {
                     <label className="block text-sm font-medium">Preferred contact method</label>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {["email","phone","form","schedule"].map((m) => (
-                        <button disabled={step5Analyzing} key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent disabled:opacity-60 shadow-soft shadow-hover", contactMethod === m ? "border-success ring-1 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}>{m}</button>
+                        <button disabled={step5Analyzing} key={m} type="button" onClick={() => setContactMethod(m as any)} className={classNames("rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent disabled:opacity-60 shadow-soft shadow-hover", contactMethod === m ? "border-success ring-2 ring-success bg-success-bg" : "border-gray-300 hover:bg-neutral-50")}>{m}</button>
                       ))}
                     </div>
                   </div>
