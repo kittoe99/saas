@@ -50,8 +50,7 @@ export default function ManageWebsitePage() {
   const [uploadingLogo, setUploadingLogo] = useState<boolean>(false);
   const [uploadingFiles, setUploadingFiles] = useState<boolean>(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  // Build progress
-  const [progressSteps, setProgressSteps] = useState<Record<string, 'pending'|'done'> | null>(null);
+  // Build progress (3-step status-based)
   const [progressDone, setProgressDone] = useState<number>(1);
   const [progressTotal, setProgressTotal] = useState<number>(3);
   const [progressLabel, setProgressLabel] = useState<string>('Preparing build');
@@ -111,20 +110,17 @@ export default function ManageWebsitePage() {
       try {
         const { data: prog } = await supabase
           .from('site_build_progress')
-          .select('steps')
+          .select('status')
           .eq('website_id', websiteId)
           .eq('user_id', uid)
           .maybeSingle();
-        const steps = (prog?.steps as any) || null;
-        setProgressSteps(steps);
-        const orderLegacy = ['hero','services','areas','global','deploy'];
-        const legacyDone = steps ? orderLegacy.filter((k) => steps[k] === 'done').length : 0;
+        const status = (prog?.status as string | null) || null;
         let done3 = 1;
         let label = 'Preparing build';
-        const hasReady = (steps && steps['deploy'] === 'done') || (!!website?.vercel_prod_domain) || (website?.status === 'active');
+        const hasReady = !!website?.vercel_prod_domain;
         if (hasReady) {
           done3 = 3; label = 'Ready';
-        } else if (legacyDone >= 3) {
+        } else if (status === 'finalizing') {
           done3 = 2; label = 'Applying final touches';
         } else {
           done3 = 1; label = 'Preparing build';

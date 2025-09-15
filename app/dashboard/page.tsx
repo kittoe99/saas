@@ -54,7 +54,7 @@ export default function DashboardPage() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [deployments, setDeployments] = useState<Array<{ id: string; website_id: string | null; url: string | null; status: string | null; created_at: string }>>([]);
-  const [incompleteBuilds, setIncompleteBuilds] = useState<Array<{ website_id: string; name: string | null; nextStep: string; steps: Record<string, 'pending'|'done'> }>>([]);
+  const [incompleteBuilds, setIncompleteBuilds] = useState<Array<{ website_id: string; name: string | null; nextStep: string }>>([]);
   const [websites, setWebsites] = useState<Array<{
     id: string;
     name: string | null;
@@ -66,7 +66,6 @@ export default function DashboardPage() {
     contact_method?: string | null;
     envisioned_pages?: string[] | null;
     selected_services?: string[] | null;
-    progress_steps?: Record<string, 'pending'|'done'> | null;
     progress_done?: number;
     progress_total?: number;
     progress_label?: string;
@@ -171,7 +170,6 @@ export default function DashboardPage() {
             contact_method: (ob?.contactMethod as string) || null,
             envisioned_pages: Array.isArray(ob?.envisionedPages) ? ob.envisionedPages : null,
             selected_services: Array.isArray(ob?.selectedServices) ? ob.selectedServices : null,
-            progress_steps: null,
             progress_done: 1,
             progress_total: 3,
             progress_label: 'Preparing build',
@@ -180,61 +178,54 @@ export default function DashboardPage() {
       }
       // Fetch build progress for each site and enrich state
       if (mounted && sites && (sites as any[]).length) {
-        const orderLegacy = ['hero','services','areas','global','deploy'];
         const enriched = await Promise.all((sites as any[]).map(async (s: any) => {
-          let steps: Record<string, 'pending'|'done'> | null = null;
+          let statusRow: { status: string | null } | null = null;
           try {
             const { data: prog } = await supabase
               .from('site_build_progress')
-              .select('steps')
+              .select('status')
               .eq('website_id', s.id)
               .eq('user_id', user.id)
               .maybeSingle();
-            steps = (prog?.steps as any) || null;
+            statusRow = (prog as any) || null;
           } catch {}
-          // Map legacy 5-step data into 3-step model
-          const legacyDone = steps ? orderLegacy.filter((k) => steps![k] === 'done').length : 0;
           let done3 = 1;
           let label = 'Preparing build';
-          const hasReady = (steps && steps['deploy'] === 'done') || (!!s.vercel_prod_domain) || (s.status === 'active');
+          const hasReady = !!s.vercel_prod_domain;
           if (hasReady) {
             done3 = 3; label = 'Ready';
-          } else if (legacyDone >= 3) {
+          } else if (statusRow?.status === 'finalizing') {
             done3 = 2; label = 'Applying final touches';
           } else {
             done3 = 1; label = 'Preparing build';
           }
-          return { id: s.id as string, steps, done3, total3: 3, label };
+          return { id: s.id as string, done3, total3: 3, label };
         }));
         if (mounted) {
           setWebsites((prev) => prev.map((w) => {
             const e = enriched.find((x) => x.id === w.id);
-            return e ? { ...w, progress_steps: e.steps, progress_done: e.done3, progress_total: e.total3, progress_label: e.label } : w;
+            return e ? { ...w, progress_done: e.done3, progress_total: e.total3, progress_label: e.label } : w;
           }));
         }
       }
-      const pending: Array<{ website_id: string; name: string | null; nextStep: string; steps: Record<string, 'pending'|'done'> }> = [];
+      const pending: Array<{ website_id: string; name: string | null; nextStep: string }> = [];
       if (sites && sites.length) {
         for (const s of sites as any[]) {
           // Prefer site_build_progress entry if exists
-          let steps: any = null;
+          let statusRow: { status: string | null } | null = null;
           try {
             const { data: prog } = await supabase
               .from('site_build_progress')
-              .select('steps')
+              .select('status')
               .eq('website_id', s.id)
               .eq('user_id', user.id)
               .maybeSingle();
-            steps = prog?.steps || null;
+            statusRow = (prog as any) || null;
           } catch {}
-          if (!steps) steps = s.builder_steps || null;
-          if (!steps) continue;
-          // Determine next pending step
-          const order = ['hero','services','areas','global','deploy'];
-          const next = order.find((k) => steps[k] !== 'done');
-          if (next) {
-            pending.push({ website_id: s.id as string, name: (s.name as string) || null, nextStep: next, steps });
-          }
+          const isComplete = (!!s.vercel_prod_domain) || (statusRow?.status === 'complete');
+          if (isComplete) continue;
+          const next = statusRow?.status === 'finalizing' ? 'Applying final touches' : 'Preparing build';
+          pending.push({ website_id: s.id as string, name: (s.name as string) || null, nextStep: next });
         }
       }
       if (mounted) setIncompleteBuilds(pending);
