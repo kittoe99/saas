@@ -468,7 +468,7 @@ export default function DashboardPage() {
               <div
                 className={classNames(
                   "mt-2 overflow-hidden transition-all duration-300 ease-out",
-                  showMore ? "max-h-[480px] opacity-100" : "max-h-0 opacity-0"
+                  showMore ? "max-h-[480px] opacity-100 pointer-events-auto" : "max-h-0 opacity-0 pointer-events-none"
                 )}
                 aria-label="More menu (desktop)"
               >
@@ -966,7 +966,7 @@ export default function DashboardPage() {
       <div
         className={classNames(
           "sm:hidden fixed left-0 right-0 bottom-[64px] z-40 px-3 transition-all duration-300 ease-out",
-          showMore ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+          showMore ? "translate-y-0 opacity-100 pointer-events-auto" : "translate-y-full opacity-0 pointer-events-none"
         )}
         aria-label="More menu (mobile)"
       >
