@@ -9,10 +9,10 @@ import ChatWidget from "./ChatWidget";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isDashboard = pathname?.startsWith("/dashboard");
-  const suppressBreadcrumb = isDashboard || pathname?.startsWith("/website") || pathname?.startsWith("/onboarding");
+  const isDashboardArea = ["/dashboard", "/website", "/onboarding"].some((p) => pathname?.startsWith(p));
+  const suppressBreadcrumb = isDashboardArea;
 
-  if (isDashboard) {
+  if (isDashboardArea) {
     // Hide main site nav/footer/chat for dashboard; page provides its own UI.
     return <>{children}</>;
   }
