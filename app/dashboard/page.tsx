@@ -92,6 +92,21 @@ export default function DashboardPage() {
     }
   };
 
+  // Stable helper to open a specific More subview
+  const openMoreView = (view: 'account' | 'billing' | 'support') => {
+    // Close any prior messages when switching views
+    setProfileError(null);
+    setProfileSuccess(null);
+    setActive('More');
+    setMoreView(view);
+    setShowMore(false);
+    if (view === 'account') {
+      // Load profile after switching
+      // Small microtask ensures state batch commits before load
+      Promise.resolve().then(() => loadProfile());
+    }
+  };
+
   // Load the current user's profile (creates one if missing)
   const loadProfile = async () => {
     setProfileError(null);
@@ -494,7 +509,7 @@ export default function DashboardPage() {
                     <li>
                       <a
                         href="#"
-                        onClick={(e) => { e.preventDefault(); setActive("More"); setShowMore(false); setMoreView('account'); loadProfile(); }}
+                        onClick={(e) => { e.preventDefault(); openMoreView('account'); }}
                         className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
                         role="menuitem"
                       >
@@ -503,13 +518,13 @@ export default function DashboardPage() {
                       </a>
                     </li>
                     <li>
-                      <a href="#" onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('billing'); }} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
+                      <a href="#" onClick={(e) => { e.preventDefault(); openMoreView('billing'); }} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
                         <span>Billing</span>
                       </a>
                     </li>
                     <li>
-                      <a href="#" onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('support'); }} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
+                      <a href="#" onClick={(e) => { e.preventDefault(); openMoreView('support'); }} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg>
                         <span>Support</span>
                       </a>
@@ -978,34 +993,53 @@ export default function DashboardPage() {
         aria-label="More menu (mobile)"
       >
         <div ref={mobileMoreRef} className="rounded-2xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-3">
-          <ul className="grid grid-cols-1 gap-2" role="menu" aria-orientation="vertical">
-            <li>
+          <ul className="grid grid-cols-3 gap-2" role="menu" aria-orientation="horizontal">
+            <li className="flex">
               <a
                 href="#"
                 onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('account'); loadProfile(); }}
-                className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2"
+                className={classNames(
+                  "mx-1 my-1 flex-1 py-2 text-center text-[11px] leading-tight flex flex-col items-center gap-1 rounded-xl border border-neutral-200 bg-white",
+                  "hover:bg-neutral-50"
+                )}
                 role="menuitem"
               >
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
                 </span>
-                <span className="text-sm text-neutral-900">Account</span>
+                <span>Account</span>
               </a>
             </li>
-            <li>
-              <a href="#" onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('billing'); }} className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
+            <li className="flex">
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('billing'); }}
+                className={classNames(
+                  "mx-1 my-1 flex-1 py-2 text-center text-[11px] leading-tight flex flex-col items-center gap-1 rounded-xl border border-neutral-200 bg-white",
+                  "hover:bg-neutral-50"
+                )}
+                role="menuitem"
+              >
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
                 </span>
-                <span className="text-sm text-neutral-900">Billing</span>
+                <span>Billing</span>
               </a>
             </li>
-            <li>
-              <a href="#" onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('support'); }} className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
+            <li className="flex">
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('support'); }}
+                className={classNames(
+                  "mx-1 my-1 flex-1 py-2 text-center text-[11px] leading-tight flex flex-col items-center gap-1 rounded-xl border border-neutral-200 bg-white",
+                  "hover:bg-neutral-50"
+                )}
+                role="menuitem"
+              >
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg>
                 </span>
-                <span className="text-sm text-neutral-900">Support</span>
+                <span>Support</span>
               </a>
             </li>
           </ul>
