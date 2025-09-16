@@ -65,6 +65,7 @@ export default function DashboardPage() {
     created_at: string;
     primary_goal?: string | null;
     contact_method?: string | null;
+    contact_phone?: string | null;
     envisioned_pages?: string[] | null;
     selected_services?: string[] | null;
     progress_done?: number;
@@ -251,6 +252,7 @@ export default function DashboardPage() {
             created_at: s.created_at as string,
             primary_goal: (ob?.primaryGoal as string) || null,
             contact_method: (ob?.contactMethod as string) || null,
+            contact_phone: (ob?.businessPhone as string) || (ob?.contact?.phone as string) || (ob?.phone as string) || null,
             envisioned_pages: Array.isArray(ob?.envisionedPages) ? ob.envisionedPages : null,
             selected_services: Array.isArray(ob?.selectedServices) ? ob.selectedServices : null,
             progress_done: 1,
@@ -613,37 +615,6 @@ export default function DashboardPage() {
                   {/* Recent activity placeholder */}
                   <div className="p-4">
                     {/* Incomplete builds (mobile) */}
-                    {/* Your site(s) */}
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft mb-4">
-                      <div className="text-xs text-neutral-600 mb-2">Your site{deployments.length !== 1 ? 's' : ''}</div>
-                      {deployments.length === 0 ? (
-                        <div className="text-sm text-neutral-700">No deployments yet. Build your site to see it here.</div>
-                      ) : (
-                        <ul className="space-y-2">
-                          {deployments.map((d) => (
-                            <li key={d.id} className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium text-neutral-900 truncate max-w-[12rem]">{d.url ?? 'Pending URL'}</div>
-                                <div className="text-[11px] text-neutral-500">{d.status ?? 'unknown'} • {new Date(d.created_at).toLocaleString()}</div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {d.url && (
-                                  <a href={d.url} target="_blank" rel="noreferrer" className="px-2.5 py-1.5 rounded-md border border-neutral-200 text-[12px] text-neutral-800 hover:bg-neutral-50">View</a>
-                                )}
-                                {d.url && (
-                                  <button
-                                    onClick={async () => { try { await navigator.clipboard.writeText(d.url!); } catch {} }}
-                                    className="px-2.5 py-1.5 rounded-md border border-neutral-200 text-[12px] text-neutral-800 hover:bg-neutral-50"
-                                  >
-                                    Copy URL
-                                  </button>
-                                )}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
 
                     <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft">
                       <div className="text-xs text-neutral-600 mb-2">Recent</div>
@@ -685,7 +656,6 @@ export default function DashboardPage() {
                     <div className="max-w-xl">
                       <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-neutral-900">Account</h3>
-                        <button type="button" onClick={() => setMoreView('menu')} className="text-xs text-neutral-600 hover:text-neutral-800">Back</button>
                       </div>
                       {profileError && (<div className="mb-2 rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700">{profileError}</div>)}
                       {profileSuccess && (<div className="mb-2 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-700">{profileSuccess}</div>)}
@@ -715,7 +685,6 @@ export default function DashboardPage() {
                     <div className="max-w-xl">
                       <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-neutral-900">Billing</h3>
-                        <button type="button" onClick={() => setMoreView('menu')} className="text-xs text-neutral-600 hover:text-neutral-800">Back</button>
                       </div>
                       <p className="text-sm text-neutral-700">Billing portal coming soon. For now, contact support for plan changes and invoices.</p>
                     </div>
@@ -724,7 +693,6 @@ export default function DashboardPage() {
                     <div className="max-w-xl">
                       <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-neutral-900">Support</h3>
-                        <button type="button" onClick={() => setMoreView('menu')} className="text-xs text-neutral-600 hover:text-neutral-800">Back</button>
                       </div>
                       <p className="text-sm text-neutral-700">Email us at <a className="text-success-ink hover:underline" href="mailto:support@hinn.io">support@hinn.io</a>.</p>
                     </div>
@@ -797,10 +765,12 @@ export default function DashboardPage() {
                                     Goal: {w.primary_goal}
                                   </span>
                                 )}
-                                {w.contact_method && (
+                                {(w.contact_method || w.contact_phone) && (
                                   <span className="hidden sm:inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-800">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3 7.18 2 2 0 0 1 5 5h4.09a2 2 0 0 1 2 1.72l.45 2.6a2 2 0 0 1-.54 1.86l-1.27 1.27a16 16 0 0 0 6.88 6.88l1.27-1.27a2 2 0 0 1 1.86-.54l2.6.45A2 2 0 0 1 22 16.92z"/></svg>
-                                    {w.contact_method}
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3 7.18 A2 2 0 0 1 5 5h4.09a2 2 0 0 1 2 1.72l.45 2.6a2 2 0 0 1-.54 1.86l-1.27 1.27a16 16 0 0 0 6.88 6.88l1.27-1.27a2 2 0 0 1 1.86-.54l2.6.45A2 2 0 0 1 22 16.92z"/></svg>
+                                    {(w.contact_phone && ((w.contact_method || '').toLowerCase() === 'phone' || !w.contact_method))
+                                      ? w.contact_phone
+                                      : (w.contact_method || '')}
                                   </span>
                                 )}
                               </div>
@@ -846,37 +816,7 @@ export default function DashboardPage() {
                       </ul>
                     )}
                   </div>
-                  {/* Your sites (desktop) */}
-                  <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-soft mb-6">
-                    <div className="text-sm font-medium text-neutral-900 mb-1">Your site{deployments.length !== 1 ? 's' : ''}</div>
-                    {deployments.length === 0 ? (
-                      <div className="text-sm text-neutral-700">No deployments yet. Build your site to see it here.</div>
-                    ) : (
-                      <ul className="divide-y divide-neutral-200">
-                        {deployments.map((d) => (
-                          <li key={d.id} className="py-2 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium text-neutral-900 truncate max-w-[28rem]">{d.url ?? 'Pending URL'}</div>
-                              <div className="text-[12px] text-neutral-500">{d.status ?? 'unknown'} • {new Date(d.created_at).toLocaleString()}</div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {d.url && (
-                                <a href={d.url} target="_blank" rel="noreferrer" className="px-2.5 py-1.5 rounded-md border border-neutral-200 text-[12px] text-neutral-800 hover:bg-neutral-50">View</a>
-                              )}
-                              {d.url && (
-                                <button
-                                  onClick={async () => { try { await navigator.clipboard.writeText(d.url!); } catch {} }}
-                                  className="px-2.5 py-1.5 rounded-md border border-neutral-200 text-[12px] text-neutral-800 hover:bg-neutral-50"
-                                >
-                                  Copy URL
-                                </button>
-                              )}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                  {/* Your sites (mobile/desktop) removed per request */}
 
                   {/* Onboarding prompt (desktop) */}
                   {onboardingChecked && needsOnboarding && (

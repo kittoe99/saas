@@ -379,10 +379,12 @@ export default function ManageWebsitePage() {
                     Goal: {obData.primaryGoal}
                   </span>
                 )}
-                {obData?.contactMethod && (
+                {(obData?.contactMethod || contactPhone) && (
                   <span className="hidden sm:inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-800">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3 7.18 2 2 0 0 1 5 5h4.09a2 2 0 0 1 2 1.72l.45 2.6a2 2 0 0 1-.54 1.86l-1.27 1.27a16 16 0 0 0 6.88 6.88l1.27-1.27a2 2 0 0 1 1.86-.54l2.6.45A2 2 0 0 1 22 16.92z"/></svg>
-                    {obData.contactMethod}
+                    {(((contactPhone || obData?.contact?.phone || obData?.phone) && (((obData?.contactMethod || '').toLowerCase() === 'phone') || !obData?.contactMethod)))
+                      ? (contactPhone || obData?.contact?.phone || obData?.phone)
+                      : (obData?.contactMethod || '')}
                   </span>
                 )}
               </div>
