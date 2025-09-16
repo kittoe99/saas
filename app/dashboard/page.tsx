@@ -72,13 +72,7 @@ export default function DashboardPage() {
     progress_label?: string;
   }>>([]);
 
-  // Account/Profile state
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
-  const [pfEmail, setPfEmail] = useState<string>("");
-  const [pfFullName, setPfFullName] = useState<string>("");
+  // Account/Profile removed with More tab
 
   // Logout handler
   const handleLogout = async () => {
@@ -91,64 +85,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Load the current user's profile (creates one if missing)
-  const loadProfile = async () => {
-    setProfileError(null);
-    setProfileSuccess(null);
-    setProfileLoading(true);
-    try {
-      const { data: u } = await supabase.auth.getUser();
-      const uid = u?.user?.id;
-      const uemail = u?.user?.email ?? undefined;
-      if (!uid) {
-        throw new Error("Not authenticated");
-      }
-      let { data: row, error } = await supabase
-        .from("profiles")
-        .select("id,email,full_name")
-        .eq("id", uid)
-        .maybeSingle();
-      if (error) throw error;
-      if (!row) {
-        // create a skeleton profile
-        const { error: upErr } = await supabase.from("profiles").upsert({ id: uid, email: uemail ?? null, full_name: uemail ?? null });
-        if (upErr) throw upErr;
-        const resel = await supabase
-          .from("profiles")
-          .select("id,email,full_name")
-          .eq("id", uid)
-          .maybeSingle();
-        row = resel.data as any;
-      }
-      setPfEmail(row?.email ?? "");
-      setPfFullName(row?.full_name ?? "");
-    } catch (e: any) {
-      setProfileError(e?.message || "Failed to load profile");
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  const saveProfile = async () => {
-    setProfileError(null);
-    setProfileSuccess(null);
-    setProfileSaving(true);
-    try {
-      const { data: u } = await supabase.auth.getUser();
-      const uid = u?.user?.id;
-      if (!uid) throw new Error("Not authenticated");
-      const { error } = await supabase
-        .from("profiles")
-        .update({ email: pfEmail || null, full_name: pfFullName || null })
-        .eq("id", uid);
-      if (error) throw error;
-      setProfileSuccess("Profile updated");
-    } catch (e: any) {
-      setProfileError(e?.message || "Failed to update profile");
-    } finally {
-      setProfileSaving(false);
-    }
-  };
+  // Profile handlers removed with More tab
 
   // Create a fresh website and go to onboarding for it
   const handleCreateNewSite = async () => {
@@ -281,14 +218,6 @@ export default function DashboardPage() {
     return () => { mounted = false; };
   }, [authChecked]);
 
-  // Load profile when More panel is opened (desktop/mobile) and user is authenticated
-  useEffect(() => {
-    if (!authChecked) return;
-    if (!showMore) return;
-    loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authChecked, showMore]);
-
   // Close More when clicking outside of the menu or pressing Escape
   useEffect(() => {
     if (!showMore) return;
@@ -377,12 +306,6 @@ export default function DashboardPage() {
           <div className="h-7 w-7 rounded bg-success-accent/20 text-success-ink inline-flex items-center justify-center font-semibold">
             H
           </div>
-
-      {/* Close More on outside click or Escape */}
-      {(() => {
-        // effect-like IIFE inside JSX not allowed; place actual useEffect below
-        return null;
-      })()}
           <div className="text-sm text-neutral-600">Dashboard</div>
           {/* Mobile actions */}
           <div className="ml-auto sm:hidden flex items-center gap-2">
@@ -496,111 +419,35 @@ export default function DashboardPage() {
               <div
                 className={classNames(
                   "mt-2 overflow-hidden transition-all duration-300 ease-out",
-                  showMore ? "max-h-[480px] opacity-100 pointer-events-auto" : "max-h-0 opacity-0 pointer-events-none"
+                  showMore ? "max-h-60 opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
                 )}
                 aria-label="More menu (desktop)"
               >
-                <div ref={desktopMoreRef} className="rounded-2xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="text-sm font-semibold text-neutral-900">More</div>
-                      <p className="mt-0.5 text-xs text-neutral-600">Account and quick links</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 grid grid-cols-12 gap-4">
-                    {/* Account form (moved here) */}
-                    <section className="col-span-7 lg:col-span-8">
-                      <h3 className="text-sm font-semibold text-neutral-900">Account</h3>
-                      <div className="mt-3 space-y-4 max-w-lg">
-                        {profileError && (
-                          <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{profileError}</div>
-                        )}
-                        {profileSuccess && (
-                          <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{profileSuccess}</div>
-                        )}
-                        <div>
-                          <label className="block text-sm font-medium text-neutral-800">Full name</label>
-                          <input
-                            type="text"
-                            value={pfFullName}
-                            onChange={(e) => setPfFullName(e.target.value)}
-                            className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                            placeholder="Your name"
-                            autoComplete="name"
-                            disabled={profileLoading || profileSaving}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-neutral-800">Email</label>
-                          <input
-                            type="email"
-                            value={pfEmail}
-                            onChange={(e) => setPfEmail(e.target.value)}
-                            className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                            placeholder="you@example.com"
-                            autoComplete="email"
-                            disabled={profileLoading || profileSaving}
-                          />
-                        </div>
-                        <div className="pt-2 flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={saveProfile}
-                            disabled={profileLoading || profileSaving}
-                            className="inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-2 text-sm text-white hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent disabled:opacity-60"
-                          >
-                            {profileSaving && (
-                              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                                <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" />
-                              </svg>
-                            )}
-                            Save changes
-                          </button>
-                          <button
-                            type="button"
-                            onClick={loadProfile}
-                            disabled={profileLoading || profileSaving}
-                            className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent disabled:opacity-60"
-                          >
-                            Reload
-                          </button>
-                        </div>
-                        {(profileLoading && !profileSaving) && (
-                          <div className="text-sm text-neutral-600">Loading profile…</div>
-                        )}
-                      </div>
-                    </section>
-                    {/* Quick links */}
-                    <section className="col-span-5 lg:col-span-4">
-                      <h3 className="text-sm font-semibold text-neutral-900">Quick links</h3>
-                      <div className="mt-3 grid grid-cols-1 gap-2">
-                        <a href="/dashboard?tab=Domains" className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white inline-flex items-center gap-2">
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18"/></svg>
-                          </span>
-                          <span className="text-sm text-neutral-900">Domains</span>
-                        </a>
-                        <a href="mailto:support@hinn.io" className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white inline-flex items-center gap-2">
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg>
-                          </span>
-                          <span className="text-sm text-neutral-900">Support</span>
-                        </a>
-                        <button type="button" onClick={handleLogout} className="group rounded-xl border border-neutral-200 bg-white p-3 text-left shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white inline-flex items-center gap-2">
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-                          </span>
-                          <span className="text-sm text-neutral-900">Logout</span>
-                        </button>
-                      </div>
-                    </section>
-                  </div>
+                <div ref={desktopMoreRef} className="rounded-xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-2">
+                  <ul className="space-y-1" role="menu" aria-orientation="vertical">
+                    <li>
+                      <a href="#" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
+                        <span>Account</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/billing" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+                        <span>Billing</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href="mailto:support@hinn.io" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg>
+                        <span>Support</span>
+                      </a>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
           </aside>
-
-          {/* Main panel */}
           <main className="col-span-12 sm:col-span-9 lg:col-span-10">
             <div
               className="rounded-xl border border-neutral-200 bg-white shadow-soft min-h-[40vh]"
@@ -887,8 +734,8 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* Fallback placeholder for non-Home tabs when onboarding required */}
-              {onboardingChecked && needsOnboarding && active !== "Home" && (
+              {/* Fallback placeholder for non-Home tabs when onboarding required (exclude More so it's empty) */}
+              {onboardingChecked && needsOnboarding && active !== "Home" && active !== "More" && (
                 <div className="hidden sm:flex min-h-[40vh] items-center justify-center p-8 text-center">
                   <div className="max-w-md space-y-4">
                     <div className="flex justify-center">
@@ -981,7 +828,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </nav>
-
       {/* Mobile More expandable panel: upward opening above bottom tabs */}
       <div
         className={classNames(
@@ -990,98 +836,36 @@ export default function DashboardPage() {
         )}
         aria-label="More menu (mobile)"
       >
-        <div ref={mobileMoreRef} className="rounded-2xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm font-semibold text-neutral-900">More</div>
-              <p className="mt-0.5 text-xs text-neutral-600">Account and quick links</p>
-            </div>
-          </div>
-          {/* Account form (mobile) */}
-          <section className="mt-3">
-            <h3 className="text-sm font-semibold text-neutral-900">Account</h3>
-            <div className="mt-2 space-y-3">
-              {profileError && (
-                <div className="rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700">{profileError}</div>
-              )}
-              {profileSuccess && (
-                <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2 text-xs text-emerald-700">{profileSuccess}</div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-neutral-800">Full name</label>
-                <input
-                  type="text"
-                  value={pfFullName}
-                  onChange={(e) => setPfFullName(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                  placeholder="Your name"
-                  autoComplete="name"
-                  disabled={profileLoading || profileSaving}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-800">Email</label>
-                <input
-                  type="email"
-                  value={pfEmail}
-                  onChange={(e) => setPfEmail(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  disabled={profileLoading || profileSaving}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={saveProfile}
-                  disabled={profileLoading || profileSaving}
-                  className="inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-2 text-sm text-white hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent disabled:opacity-60"
-                >
-                  {profileSaving && (
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                      <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" />
-                    </svg>
-                  )}
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onClick={loadProfile}
-                  disabled={profileLoading || profileSaving}
-                  className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent disabled:opacity-60"
-                >
-                  Reload
-                </button>
-              </div>
-            </div>
-          </section>
-          {/* Quick links (mobile) */}
-          <section className="mt-4">
-            <h3 className="text-sm font-semibold text-neutral-900">Quick links</h3>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <a href="/dashboard?tab=Domains" onClick={() => setShowMore(false)} className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white inline-flex items-center gap-2">
+        <div ref={mobileMoreRef} className="rounded-2xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-3">
+          <ul className="grid grid-cols-1 gap-2" role="menu" aria-orientation="vertical">
+            <li>
+              <a href="#" className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
                 </span>
-                <span className="text-sm text-neutral-900">Domains</span>
+                <span className="text-sm text-neutral-900">Account</span>
               </a>
-              <a href="mailto:support@hinn.io" onClick={() => setShowMore(false)} className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white inline-flex items-center gap-2">
+            </li>
+            <li>
+              <a href="/billing" className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+                </span>
+                <span className="text-sm text-neutral-900">Billing</span>
+              </a>
+            </li>
+            <li>
+              <a href="mailto:support@hinn.io" className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg>
                 </span>
                 <span className="text-sm text-neutral-900">Support</span>
               </a>
-              <button type="button" onClick={() => { setShowMore(false); handleLogout(); }} className="group rounded-xl border border-neutral-200 bg-white p-3 text-left shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white inline-flex items-center gap-2">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-                </span>
-                <span className="text-sm text-neutral-900">Logout</span>
-              </button>
-            </div>
-          </section>
+            </li>
+          </ul>
         </div>
       </div>
+
     </div>
   );
 }
