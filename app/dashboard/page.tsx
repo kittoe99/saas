@@ -72,7 +72,14 @@ export default function DashboardPage() {
     progress_label?: string;
   }>>([]);
 
-  // Account/Profile removed with More tab
+  // More tab sub-views
+  const [moreView, setMoreView] = useState<'menu' | 'account' | 'billing' | 'support'>('menu');
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
+  const [pfEmail, setPfEmail] = useState<string>("");
+  const [pfFullName, setPfFullName] = useState<string>("");
 
   // Logout handler
   const handleLogout = async () => {
@@ -85,7 +92,63 @@ export default function DashboardPage() {
     }
   };
 
-  // Profile handlers removed with More tab
+  // Load the current user's profile (creates one if missing)
+  const loadProfile = async () => {
+    setProfileError(null);
+    setProfileSuccess(null);
+    setProfileLoading(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      const uemail = u?.user?.email ?? undefined;
+      if (!uid) throw new Error("Not authenticated");
+      let { data: row, error } = await supabase
+        .from("profiles")
+        .select("id,email,full_name")
+        .eq("id", uid)
+        .maybeSingle();
+      if (error) throw error;
+      if (!row) {
+        const { error: upErr } = await supabase.from("profiles").upsert({ id: uid, email: uemail ?? null, full_name: uemail ?? null });
+        if (upErr) throw upErr;
+        const resel = await supabase
+          .from("profiles")
+          .select("id,email,full_name")
+          .eq("id", uid)
+          .maybeSingle();
+        row = resel.data as any;
+      }
+      setPfEmail((row as any)?.email ?? "");
+      setPfFullName((row as any)?.full_name ?? "");
+    } catch (e: any) {
+      setProfileError(e?.message || "Failed to load profile");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    setProfileError(null);
+    setProfileSuccess(null);
+    setProfileSaving(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) throw new Error("Not authenticated");
+      const { error } = await supabase
+        .from("profiles")
+        .update({ email: pfEmail || null, full_name: pfFullName || null })
+        .eq("id", uid);
+      if (error) throw error;
+      setProfileSuccess("Profile updated");
+    } catch (e: any) {
+      setProfileError(e?.message || "Failed to update profile");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  // No inline Account handlers here; Account lives at /dashboard/account
 
   // Create a fresh website and go to onboarding for it
   const handleCreateNewSite = async () => {
@@ -244,6 +307,8 @@ export default function DashboardPage() {
     };
   }, [showMore]);
 
+  // No profile preload; handled in /dashboard/account
+
   // Initialize from URL or localStorage
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -385,11 +450,12 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           onClick={() => {
-                            if (tab === "More") {
+                            if (tab === 'More') {
                               setShowMore((s) => !s);
                             } else {
                               setActive(tab);
                               setShowMore(false);
+                              setMoreView('menu');
                             }
                           }}
                           data-more-trigger={tab === "More" ? "true" : undefined}
@@ -401,7 +467,7 @@ export default function DashboardPage() {
                           )}
                           role="tab"
                           aria-selected={selected}
-                          aria-expanded={tab === "More" ? showMore : undefined}
+                          aria-expanded={tab === 'More' ? showMore : undefined}
                           aria-controls={`panel-${tab.toLowerCase()}`}
                           id={`tab-${tab.toLowerCase()}`}
                           tabIndex={selected ? 0 : -1}
@@ -423,22 +489,27 @@ export default function DashboardPage() {
                 )}
                 aria-label="More menu (desktop)"
               >
-                <div ref={desktopMoreRef} className="rounded-xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-2">
+                <div ref={desktopMoreRef} className="rounded-xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-3">
                   <ul className="space-y-1" role="menu" aria-orientation="vertical">
                     <li>
-                      <a href="#" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
+                      <a
+                        href="#"
+                        onClick={(e) => { e.preventDefault(); setActive("More"); setShowMore(false); setMoreView('account'); loadProfile(); }}
+                        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+                        role="menuitem"
+                      >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
                         <span>Account</span>
                       </a>
                     </li>
                     <li>
-                      <a href="/billing" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
+                      <a href="#" onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('billing'); }} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
                         <span>Billing</span>
                       </a>
                     </li>
                     <li>
-                      <a href="mailto:support@hinn.io" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
+                      <a href="#" onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('support'); }} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg>
                         <span>Support</span>
                       </a>
@@ -573,6 +644,76 @@ export default function DashboardPage() {
                       </ul>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* More tab content */}
+              {active === "More" && (
+                <div className="p-4 sm:p-6">
+                  {moreView === 'menu' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <a href="#" onClick={(e) => { e.preventDefault(); setMoreView('account'); loadProfile(); }} className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
+                        <div className="text-sm font-semibold text-neutral-900">Account</div>
+                        <div className="mt-1 text-xs text-neutral-600">Update your profile details</div>
+                      </a>
+                      <a href="#" onClick={(e) => { e.preventDefault(); setMoreView('billing'); }} className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
+                        <div className="text-sm font-semibold text-neutral-900">Billing</div>
+                        <div className="mt-1 text-xs text-neutral-600">Manage your plan and invoices</div>
+                      </a>
+                      <a href="#" onClick={(e) => { e.preventDefault(); setMoreView('support'); }} className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
+                        <div className="text-sm font-semibold text-neutral-900">Support</div>
+                        <div className="mt-1 text-xs text-neutral-600">Get help</div>
+                      </a>
+                    </div>
+                  )}
+                  {moreView === 'account' && (
+                    <div className="max-w-xl">
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-neutral-900">Account</h3>
+                        <button type="button" onClick={() => setMoreView('menu')} className="text-xs text-neutral-600 hover:text-neutral-800">Back</button>
+                      </div>
+                      {profileError && (<div className="mb-2 rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700">{profileError}</div>)}
+                      {profileSuccess && (<div className="mb-2 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-700">{profileSuccess}</div>)}
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">Full name</label>
+                          <input type="text" value={pfFullName} onChange={(e) => setPfFullName(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white" placeholder="Your name" autoComplete="name" disabled={profileLoading || profileSaving} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">Email</label>
+                          <input type="email" value={pfEmail} onChange={(e) => setPfEmail(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white" placeholder="you@example.com" autoComplete="email" disabled={profileLoading || profileSaving} />
+                        </div>
+                        <div>
+                          <button type="button" onClick={saveProfile} disabled={profileLoading || profileSaving} className="inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-2 text-sm text-white hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent disabled:opacity-60">
+                            {profileSaving && (
+                              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                                <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12" />
+                              </svg>
+                            )}
+                            Save changes
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {moreView === 'billing' && (
+                    <div className="max-w-xl">
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-neutral-900">Billing</h3>
+                        <button type="button" onClick={() => setMoreView('menu')} className="text-xs text-neutral-600 hover:text-neutral-800">Back</button>
+                      </div>
+                      <p className="text-sm text-neutral-700">Billing portal coming soon. For now, contact support for plan changes and invoices.</p>
+                    </div>
+                  )}
+                  {moreView === 'support' && (
+                    <div className="max-w-xl">
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-neutral-900">Support</h3>
+                        <button type="button" onClick={() => setMoreView('menu')} className="text-xs text-neutral-600 hover:text-neutral-800">Back</button>
+                      </div>
+                      <p className="text-sm text-neutral-700">Email us at <a className="text-success-ink hover:underline" href="mailto:support@hinn.io">support@hinn.io</a>.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -839,7 +980,12 @@ export default function DashboardPage() {
         <div ref={mobileMoreRef} className="rounded-2xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-3">
           <ul className="grid grid-cols-1 gap-2" role="menu" aria-orientation="vertical">
             <li>
-              <a href="#" className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('account'); loadProfile(); }}
+                className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2"
+                role="menuitem"
+              >
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
                 </span>
@@ -847,7 +993,7 @@ export default function DashboardPage() {
               </a>
             </li>
             <li>
-              <a href="/billing" className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
+              <a href="#" onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('billing'); }} className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
                 </span>
@@ -855,7 +1001,7 @@ export default function DashboardPage() {
               </a>
             </li>
             <li>
-              <a href="mailto:support@hinn.io" className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
+              <a href="#" onClick={(e) => { e.preventDefault(); setActive('More'); setShowMore(false); setMoreView('support'); }} className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft hover:shadow-card inline-flex items-center gap-2" role="menuitem">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-success-accent/10 text-success-ink">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg>
                 </span>
