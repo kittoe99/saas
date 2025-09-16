@@ -897,7 +897,7 @@ export default function DashboardPage() {
       {/* Mobile bottom tab bar (hides on scroll down, shows on scroll up) */}
       <nav
         className={classNames(
-          "fixed bottom-0 left-0 right-0 z-40 sm:hidden transition-transform duration-200",
+          "fixed bottom-0 left-0 right-0 z-50 sm:hidden transition-transform duration-200",
           showMobileTabs ? "translate-y-0" : "translate-y-full"
         )}
         aria-label="Primary"
@@ -973,7 +973,7 @@ export default function DashboardPage() {
       <div
         className={classNames(
           "sm:hidden fixed left-0 right-0 bottom-[64px] z-40 px-3 transition-all duration-300 ease-out",
-          showMore ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+          showMore ? "translate-y-0 opacity-100 pointer-events-auto" : "translate-y-full opacity-0 pointer-events-none"
         )}
         aria-label="More menu (mobile)"
       >
