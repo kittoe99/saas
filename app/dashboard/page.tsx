@@ -891,8 +891,18 @@ export default function DashboardPage() {
                             </thead>
                             <tbody className="divide-y divide-neutral-200">
                               {suggestions.map((s) => (
-                                <tr key={s.name} className="hover:bg-neutral-50">
-                                  <td className="px-3 py-2 text-neutral-900 font-medium">{s.name}</td>
+                                <tr
+                                  key={s.name}
+                                  className="hover:bg-neutral-50 cursor-pointer"
+                                  onClick={() => handleSelectSuggestion(s.name)}
+                                  role="button"
+                                  tabIndex={0}
+                                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectSuggestion(s.name); } }}
+                                >
+                                  <td className="px-3 py-2 text-neutral-900 font-medium">
+                                    {s.name}
+                                    <span className="sm:hidden text-[11px] text-neutral-500 ml-2">Tap to select</span>
+                                  </td>
                                   <td className="px-3 py-2">
                                     {s.available === null ? (
                                       <span className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-700">Unknown</span>
@@ -903,10 +913,10 @@ export default function DashboardPage() {
                                     )}
                                   </td>
                                   <td className="px-3 py-2 text-neutral-800">{s.price != null ? `$${s.price}` : '—'}</td>
-                                  <td className="px-3 py-2 text-right">
+                                  <td className="px-3 py-2 text-right hidden sm:table-cell">
                                     <button
                                       type="button"
-                                      onClick={() => { handleSelectSuggestion(s.name); }}
+                                      onClick={(e) => { e.stopPropagation(); handleSelectSuggestion(s.name); }}
                                       className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50"
                                     >
                                       Use
