@@ -9,7 +9,13 @@ import ChatWidget from "./ChatWidget";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isDashboardArea = ["/dashboard", "/website", "/onboarding"].some((p) => pathname?.startsWith(p));
+  // Treat dashboard-like areas as those under /dashboard, /onboarding, and nested /website/* (manage pages).
+  // The marketing page at exactly /website should use the standard header/footer layout.
+  const isDashboardArea = (
+    pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/onboarding") ||
+    pathname?.startsWith("/website/") // note trailing slash to exclude the marketing page at /website
+  );
   const suppressBreadcrumb = isDashboardArea;
 
   if (isDashboardArea) {
