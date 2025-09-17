@@ -1138,7 +1138,7 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           onClick={handleCreateNewSite}
-                          className="group h-40 sm:h-48 rounded-2xl border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
+                          className="group h-40 sm:h-48 rounded-2xl border-2 border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
                         >
                           <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1153,7 +1153,7 @@ export default function DashboardPage() {
                           <button
                             type="button"
                             onClick={handleCreateNewSite}
-                            className="w-full h-full min-h-[9.5rem] sm:min-h-[11rem] group rounded-2xl border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
+                            className="w-full h-full min-h-[9.5rem] sm:min-h-[11rem] group rounded-2xl border-2 border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
                           >
                             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
