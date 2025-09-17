@@ -8,7 +8,7 @@ function classNames(...args: Array<string | false | null | undefined>) {
   return args.filter(Boolean).join(" ");
 }
 
-const TABS = ["Home", "Website", "Domains", "More"] as const;
+const TABS = ["Home", "Leads", "Domains", "More"] as const;
 type TabKey = typeof TABS[number];
 
 function TabIcon({ tab, selected }: { tab: TabKey; selected?: boolean }) {
@@ -21,11 +21,11 @@ function TabIcon({ tab, selected }: { tab: TabKey; selected?: boolean }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 10v8a2 2 0 01-2 2h-2m-6 0H7a2 2 0 01-2-2v-8" />
         </svg>
       );
-    case "Website":
+    case "Leads":
       return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={"h-5 w-5 " + cls} aria-hidden>
-          <circle cx="12" cy="12" r="9" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18M12 3c2.5 3 2.5 15 0 18M7 7.5h10M7 16.5h10" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l9 6 9-6" />
         </svg>
       );
     case "Domains":
@@ -120,6 +120,38 @@ export default function DashboardPage() {
   const [myDomainsLoading, setMyDomainsLoading] = useState(false);
   const [myDomainsError, setMyDomainsError] = useState<string | null>(null);
   const [myDomains, setMyDomains] = useState<Array<{ id: string; domain: string; status: string | null; price: number | null; period: number | null; currency: string | null; created_at: string }>>([]);
+
+  // Leads (sorting + data)
+  const [leadsSort, setLeadsSort] = useState<'newest' | 'oldest' | 'name' | 'status'>("newest");
+  const [leadsLoading, setLeadsLoading] = useState<boolean>(false);
+  const [leadsError, setLeadsError] = useState<string | null>(null);
+  const [leads, setLeads] = useState<Array<{ id: string; name: string | null; email: string | null; phone: string | null; source: string | null; status: string | null; created_at: string }>>([]);
+
+  const loadLeads = async () => {
+    setLeadsError(null);
+    setLeadsLoading(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) throw new Error('Not authenticated');
+      let query = supabase
+        .from('leads')
+        .select('id, name, email, phone, source, status, created_at')
+        .eq('user_id', uid);
+      if (leadsSort === 'newest') query = query.order('created_at', { ascending: false });
+      else if (leadsSort === 'oldest') query = query.order('created_at', { ascending: true });
+      else if (leadsSort === 'name') query = query.order('name', { ascending: true, nullsFirst: true });
+      else if (leadsSort === 'status') query = query.order('status', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false });
+      const { data, error } = await query;
+      if (error) throw error;
+      setLeads((data as any[]) || []);
+    } catch (e: any) {
+      setLeadsError(e?.message || 'Failed to load leads');
+      setLeads([]);
+    } finally {
+      setLeadsLoading(false);
+    }
+  };
 
   const loadMyDomains = async () => {
     setMyDomainsError(null);
@@ -543,7 +575,19 @@ export default function DashboardPage() {
     if (active === 'Domains') {
       loadMyDomains();
     }
+    // Load user's leads when switching to Leads tab
+    if (active === 'Leads') {
+      loadLeads();
+    }
   }, [active]);
+
+  // Reload leads when sort changes while on Leads tab
+  useEffect(() => {
+    if (active === 'Leads') {
+      loadLeads();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadsSort]);
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -826,6 +870,75 @@ export default function DashboardPage() {
                           <span className="text-[11px] text-neutral-500">1m</span>
                         </li>
                       </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Leads tab content */
+              // Simple leads list for the current user with sorting (no filters yet)
+              }
+              {active === "Leads" && (
+                <div className="p-4 sm:p-6">
+                  <div className="max-w-5xl space-y-4">
+                    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-semibold text-neutral-900">Leads</div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm text-neutral-700">Sort</label>
+                          <select value={leadsSort} onChange={(e) => setLeadsSort(e.target.value as any)} className="rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="name">Name</option>
+                            <option value="status">Status</option>
+                          </select>
+                          <button type="button" onClick={loadLeads} className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">Refresh</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
+                      <div className="text-sm font-semibold text-neutral-900">Results</div>
+                      <div className="mt-3">
+                        {leadsLoading ? (
+                          <div className="text-sm text-neutral-600">Loading…</div>
+                        ) : leadsError ? (
+                          <div className="text-sm text-red-600">{leadsError}</div>
+                        ) : leads.length === 0 ? (
+                          <div className="text-sm text-neutral-600">No leads match your current filters.</div>
+                        ) : (
+                          <div className="overflow-hidden rounded-md border border-neutral-200">
+                            <table className="w-full text-sm">
+                              <thead className="bg-neutral-50 text-neutral-700">
+                                <tr>
+                                  <th className="text-left px-3 py-2 font-medium">Name</th>
+                                  <th className="text-left px-3 py-2 font-medium">Email</th>
+                                  <th className="text-left px-3 py-2 font-medium">Phone</th>
+                                  <th className="text-left px-3 py-2 font-medium">Source</th>
+                                  <th className="text-left px-3 py-2 font-medium">Status</th>
+                                  <th className="text-left px-3 py-2 font-medium">Created</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-neutral-200">
+                                {leads.map((l) => (
+                                  <tr key={l.id}>
+                                    <td className="px-3 py-2 text-neutral-900">{l.name || '—'}</td>
+                                    <td className="px-3 py-2 text-neutral-800">{l.email || '—'}</td>
+                                    <td className="px-3 py-2 text-neutral-800">{l.phone || '—'}</td>
+                                    <td className="px-3 py-2 text-neutral-800">{l.source || '—'}</td>
+                                    <td className="px-3 py-2">
+                                      {l.status ? (
+                                        <span className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-700">{l.status}</span>
+                                      ) : '—'}
+                                    </td>
+                                    <td className="px-3 py-2 text-neutral-700">{new Date(l.created_at).toLocaleString()}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1138,7 +1251,7 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           onClick={handleCreateNewSite}
-                          className="group h-40 sm:h-48 rounded-2xl border-2 border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
+                          className="group h-40 sm:h-48 rounded-2xl border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
                         >
                           <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1153,7 +1266,7 @@ export default function DashboardPage() {
                           <button
                             type="button"
                             onClick={handleCreateNewSite}
-                            className="w-full h-full min-h-[9.5rem] sm:min-h-[11rem] group rounded-2xl border-2 border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
+                            className="w-full h-full min-h-[9.5rem] sm:min-h-[11rem] group rounded-2xl border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
                           >
                             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
