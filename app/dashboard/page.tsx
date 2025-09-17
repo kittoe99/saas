@@ -901,7 +901,6 @@ export default function DashboardPage() {
                                 >
                                   <td className="px-3 py-2 text-neutral-900 font-medium">
                                     {s.name}
-                                    <span className="sm:hidden text-[11px] text-neutral-500 ml-2">Tap to select</span>
                                   </td>
                                   <td className="px-3 py-2">
                                     {s.available === null ? (
