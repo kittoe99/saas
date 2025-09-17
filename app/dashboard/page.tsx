@@ -116,6 +116,40 @@ export default function DashboardPage() {
   const [suggError, setSuggError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Array<{ name: string; available: boolean | null; price: number | null; period: number | null }>>([]);
 
+  // User-owned/purchased domains
+  const [myDomainsLoading, setMyDomainsLoading] = useState(false);
+  const [myDomainsError, setMyDomainsError] = useState<string | null>(null);
+  const [myDomains, setMyDomains] = useState<Array<{ id: string; domain: string; status: string | null; price: number | null; period: number | null; currency: string | null; created_at: string }>>([]);
+
+  const loadMyDomains = async () => {
+    setMyDomainsError(null);
+    setMyDomainsLoading(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) throw new Error('Not authenticated');
+      const { data, error } = await supabase
+        .from('domain_purchases')
+        .select('id, domain, status, price, period, currency, created_at')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setMyDomains((data as any[])?.map((r) => ({
+        id: r.id as string,
+        domain: r.domain as string,
+        status: (r.status as string) ?? null,
+        price: typeof r.price === 'number' ? r.price : (r.price ? Number(r.price) : null),
+        period: typeof r.period === 'number' ? r.period : (r.period ? Number(r.period) : null),
+        currency: (r.currency as string) ?? 'USD',
+        created_at: r.created_at as string,
+      })) || []);
+    } catch (e: any) {
+      setMyDomainsError(e?.message || 'Failed to load your domains');
+    } finally {
+      setMyDomainsLoading(false);
+    }
+  };
+
   const handleFetchSuggestions = async () => {
     setSuggError(null);
     setSuggestions([]);
@@ -505,6 +539,10 @@ export default function DashboardPage() {
     url.searchParams.set("tab", active);
     window.history.replaceState({}, "", url.toString());
     window.localStorage.setItem("dash.activeTab", active);
+    // Load user's domains when switching to Domains tab
+    if (active === 'Domains') {
+      loadMyDomains();
+    }
   }, [active]);
 
   useEffect(() => {
@@ -1031,6 +1069,59 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     )}
+
+                    {/* Your domains list */}
+                    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-semibold text-neutral-900">Your domains</div>
+                        <button type="button" onClick={loadMyDomains} className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">
+                          Refresh
+                        </button>
+                      </div>
+                      <div className="mt-3">
+                        {myDomainsLoading ? (
+                          <div className="text-sm text-neutral-600">Loading…</div>
+                        ) : myDomainsError ? (
+                          <div className="text-sm text-red-600">{myDomainsError}</div>
+                        ) : myDomains.length === 0 ? (
+                          <div className="text-sm text-neutral-600">No domains yet. After purchasing, they will appear here.</div>
+                        ) : (
+                          <div className="overflow-hidden rounded-md border border-neutral-200">
+                            <table className="w-full text-sm">
+                              <thead className="bg-neutral-50 text-neutral-700">
+                                <tr>
+                                  <th className="text-left px-3 py-2 font-medium">Domain</th>
+                                  <th className="text-left px-3 py-2 font-medium">Status</th>
+                                  <th className="text-left px-3 py-2 font-medium">Price</th>
+                                  <th className="text-left px-3 py-2 font-medium">Purchased</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-neutral-200">
+                                {myDomains.map((d) => (
+                                  <tr key={d.id}>
+                                    <td className="px-3 py-2 text-neutral-900 font-medium">{d.domain}</td>
+                                    <td className="px-3 py-2">
+                                      {d.status ? (
+                                        <span className={classNames(
+                                          'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] border',
+                                          d.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : d.status === 'failed' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-neutral-100 text-neutral-700 border-neutral-200'
+                                        )}>{d.status}</span>
+                                      ) : (
+                                        <span className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-700">—</span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 text-neutral-800">
+                                      {typeof d.price === 'number' ? `${d.currency || 'USD'} $${d.price}${d.period ? ` / ${d.period} yr` : ''}` : '—'}
+                                    </td>
+                                    <td className="px-3 py-2 text-neutral-700">{new Date(d.created_at).toLocaleDateString()}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1043,9 +1134,33 @@ export default function DashboardPage() {
                   {/* Websites (cards) */}
                   <div className="mb-6">
                     {websites.length === 0 ? (
-                      <div className="text-sm text-neutral-700">No websites yet. Click New Site to create one.</div>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <button
+                          type="button"
+                          onClick={handleCreateNewSite}
+                          className="group h-40 sm:h-48 rounded-2xl border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
+                        >
+                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
+                          </span>
+                          <span className="text-sm font-medium">Add your first site</span>
+                          <span className="text-[11px] text-neutral-500">Start a new website and onboarding</span>
+                        </button>
+                      </div>
                     ) : (
                       <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <li>
+                          <button
+                            type="button"
+                            onClick={handleCreateNewSite}
+                            className="w-full h-full min-h-[9.5rem] sm:min-h-[11rem] group rounded-2xl border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
+                          >
+                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
+                            </span>
+                            <span className="text-[13px] font-medium">Add site</span>
+                          </button>
+                        </li>
                         {websites.map((w) => {
                           const dep = deployments.find(d => (d.website_id === w.id) && d.url);
                           const pagesCount = Array.isArray(w.envisioned_pages) ? w.envisioned_pages.length : 0;
