@@ -82,6 +82,166 @@ export default function DashboardPage() {
   const [pfEmail, setPfEmail] = useState<string>("");
   const [pfFullName, setPfFullName] = useState<string>("");
 
+  // Domains purchase state
+  const [domainName, setDomainName] = useState<string>("");
+  const [domainType, setDomainType] = useState<'new' | 'renewal' | 'transfer' | 'redemption'>("new");
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [priceError, setPriceError] = useState<string | null>(null);
+  const [priceData, setPriceData] = useState<{ price: number; period: number } | null>(null);
+
+  const [country, setCountry] = useState<string>("US");
+  const [orgName, setOrgName] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [address1, setAddress1] = useState<string>("");
+  const [address2, setAddress2] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [stateProv, setStateProv] = useState<string>("");
+  const [postalCode, setPostalCode] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [renew, setRenew] = useState<boolean>(true);
+
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  const [purchaseSuccess, setPurchaseSuccess] = useState<string | null>(null);
+  const [purchaseMode, setPurchaseMode] = useState<boolean>(false);
+  const [selectedAvailability, setSelectedAvailability] = useState<boolean | null>(null);
+  const [selectLoading, setSelectLoading] = useState(false);
+  const [selectError, setSelectError] = useState<string | null>(null);
+
+  // Domain suggestions
+  const [suggestQuery, setSuggestQuery] = useState<string>("");
+  const [suggLoading, setSuggLoading] = useState(false);
+  const [suggError, setSuggError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Array<{ name: string; available: boolean | null; price: number | null; period: number | null }>>([]);
+
+  const handleFetchSuggestions = async () => {
+    setSuggError(null);
+    setSuggestions([]);
+    const q = (suggestQuery || domainName).trim();
+    if (!q) { setSuggError('Enter a keyword, brand, or domain base'); return; }
+    // Reset selection-related state for a fresh flow
+    setPurchaseMode(false);
+    setSelectedAvailability(null);
+    setPriceData(null);
+    setSuggLoading(true);
+    try {
+      const resp = await fetch(`/api/domains/suggestions?q=${encodeURIComponent(q)}`, { cache: 'no-store' });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || 'Failed to get suggestions');
+      setSuggestions(Array.isArray(data?.suggestions) ? data.suggestions : []);
+    } catch (e: any) {
+      setSuggError(e?.message || 'Failed to get suggestions');
+    } finally {
+      setSuggLoading(false);
+    }
+  };
+
+  const refreshDomainMeta = async (name: string) => {
+    try {
+      const [aResp, pResp] = await Promise.all([
+        fetch(`/api/domains/availability?name=${encodeURIComponent(name)}`, { cache: 'no-store' }),
+        fetch(`/api/domains/price?name=${encodeURIComponent(name)}&type=new`, { cache: 'no-store' }),
+      ]);
+      const aData = await aResp.json().catch(() => ({}));
+      const pData = await pResp.json().catch(() => ({}));
+      if (aResp.ok) setSelectedAvailability(Boolean(aData?.available));
+      if (pResp.ok && typeof pData?.price === 'number' && typeof pData?.period === 'number') {
+        setPriceData({ price: pData.price, period: pData.period });
+      } else if (!pResp.ok) {
+        throw new Error(pData?.error || 'Failed to get real-time price');
+      }
+    } catch (e: any) {
+      throw new Error(e?.message || 'Failed to refresh domain metadata');
+    }
+  };
+
+  const handleSelectSuggestion = async (name: string) => {
+    setSelectError(null);
+    setPurchaseMode(true);
+    setDomainName(name);
+    // Hide/close suggestions once a domain is selected
+    setSuggestions([]);
+    setSelectLoading(true);
+    try {
+      await refreshDomainMeta(name);
+    } catch (e: any) {
+      setSelectError(e?.message || 'Could not fetch latest availability/price');
+    } finally {
+      setSelectLoading(false);
+    }
+  };
+
+  const handleCheckDomainPrice = async () => {
+    setPriceError(null);
+    setPriceData(null);
+    setPurchaseSuccess(null);
+    if (!domainName) {
+      setPriceError('Enter a domain name');
+      return;
+    }
+    setPriceLoading(true);
+    try {
+      const q = new URLSearchParams({ name: domainName, type: domainType });
+      const resp = await fetch(`/api/domains/price?${q.toString()}`, { cache: 'no-store' });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || 'Failed to get price');
+      setPriceData({ price: data.price, period: data.period });
+      // Also refresh availability real-time
+      try {
+        const a = await fetch(`/api/domains/availability?name=${encodeURIComponent(domainName)}`, { cache: 'no-store' });
+        const aj = await a.json().catch(() => ({}));
+        if (a.ok) setSelectedAvailability(Boolean(aj?.available));
+      } catch {}
+    } catch (e: any) {
+      setPriceError(e?.message || 'Failed to get price');
+    } finally {
+      setPriceLoading(false);
+    }
+  };
+
+  const handlePurchaseDomain = async () => {
+    setPurchaseError(null);
+    setPurchaseSuccess(null);
+    if (!domainName) { setPurchaseError('Enter a domain name'); return; }
+    if (!priceData?.price && priceData?.price !== 0) { setPurchaseError('Check price first'); return; }
+    if (!country || !firstName || !lastName || !address1 || !city || !postalCode || !phone || !email) {
+      setPurchaseError('Fill all required fields');
+      return;
+    }
+    setPurchaseLoading(true);
+    try {
+      const resp = await fetch('/api/domains/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: domainName,
+          expectedPrice: priceData!.price,
+          renew,
+          country,
+          orgName: orgName || undefined,
+          firstName,
+          lastName,
+          address1,
+          address2: address2 || undefined,
+          city,
+          state: stateProv || undefined,
+          postalCode,
+          phone,
+          email,
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data?.error || 'Failed to purchase domain');
+      setPurchaseSuccess('Domain purchase initiated. You can manage it in Vercel.');
+    } catch (e: any) {
+      setPurchaseError(e?.message || 'Failed to purchase domain');
+    } finally {
+      setPurchaseLoading(false);
+    }
+  };
+
   // Logout handler
   const handleLogout = async () => {
     try {
@@ -700,7 +860,171 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* Account tab removed: moved inside More panel */}
+              {/* Domains tab content */}
+              {active === 'Domains' && (
+                <div className="p-4 sm:p-6">
+                  <div className="max-w-3xl space-y-6">
+                    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
+                      <div className="text-sm font-semibold text-neutral-900">Search and purchase a domain</div>
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-neutral-800">Keyword / Brand</label>
+                          <input type="text" value={suggestQuery} onChange={(e) => setSuggestQuery(e.target.value)} placeholder="acme, mybrand, etc" className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white" />
+                        </div>
+                        <div className="flex items-end">
+                          <button type="button" onClick={handleFetchSuggestions} disabled={suggLoading} className={classNames('w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm text-white', suggLoading ? 'bg-neutral-300 cursor-not-allowed' : 'bg-success-accent hover:opacity-90')}>
+                            {suggLoading ? 'Searching…' : 'Search'}
+                          </button>
+                        </div>
+                      </div>
+                      {suggError && <div className="mt-2 text-sm text-red-600">{suggError}</div>}
+                      {suggestions.length > 0 && !purchaseMode && (
+                        <div className="mt-4 overflow-hidden rounded-md border border-neutral-200">
+                          <table className="w-full text-sm">
+                            <thead className="bg-neutral-50 text-neutral-700">
+                              <tr>
+                                <th className="text-left px-3 py-2 font-medium">Domain</th>
+                                <th className="text-left px-3 py-2 font-medium">Availability</th>
+                                <th className="text-left px-3 py-2 font-medium">Price</th>
+                                <th className="px-3 py-2"></th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-200">
+                              {suggestions.map((s) => (
+                                <tr key={s.name} className="hover:bg-neutral-50">
+                                  <td className="px-3 py-2 text-neutral-900 font-medium">{s.name}</td>
+                                  <td className="px-3 py-2">
+                                    {s.available === null ? (
+                                      <span className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-700">Unknown</span>
+                                    ) : s.available ? (
+                                      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700">Available</span>
+                                    ) : (
+                                      <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] text-rose-700">Taken</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 text-neutral-800">{s.price != null ? `$${s.price}` : '—'}</td>
+                                  <td className="px-3 py-2 text-right">
+                                    <button
+                                      type="button"
+                                      onClick={() => { handleSelectSuggestion(s.name); }}
+                                      className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50"
+                                    >
+                                      Use
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                    {purchaseMode && (
+                      <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="text-sm font-semibold text-neutral-900">Selected domain</div>
+                            <div className="mt-1 text-neutral-900 font-medium">{domainName}</div>
+                            <div className="mt-1 flex items-center gap-2 text-sm">
+                              {selectLoading && (
+                                <span className="inline-flex items-center gap-2 text-neutral-700">
+                                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12"/></svg>
+                                  Checking…
+                                </span>
+                              )}
+                              {typeof selectedAvailability === 'boolean' && (
+                                selectedAvailability ? (
+                                  <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700">Available</span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] text-rose-700">Taken</span>
+                                )
+                              )}
+                              {priceData && (
+                                <span className="inline-flex items-center rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-800">${priceData.price} / {priceData.period} yr</span>
+                              )}
+                              {(!priceData && !selectLoading) && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCheckDomainPrice()}
+                                  className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-[12px] text-neutral-900 hover:bg-neutral-50"
+                                >
+                                  Check price
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <button type="button" onClick={() => { setPurchaseMode(false); setSelectedAvailability(null); setPriceData(null); }} className="text-xs text-neutral-600 hover:text-neutral-800">Change</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {purchaseMode && (
+                    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
+                      <div className="text-sm font-semibold text-neutral-900">Registrant information</div>
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">Country</label>
+                          <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="US" className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">Organization (optional)</label>
+                          <input value={orgName} onChange={(e) => setOrgName(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">First name</label>
+                          <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">Last name</label>
+                          <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-neutral-800">Address line 1</label>
+                          <input value={address1} onChange={(e) => setAddress1(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-neutral-800">Address line 2 (optional)</label>
+                          <input value={address2} onChange={(e) => setAddress2(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">City</label>
+                          <input value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">State / Province</label>
+                          <input value={stateProv} onChange={(e) => setStateProv(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">Postal code</label>
+                          <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">Phone</label>
+                          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1.4158551452" className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-800">Email</label>
+                          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="inline-flex items-center gap-2 text-sm text-neutral-800">
+                            <input type="checkbox" checked={renew} onChange={(e) => setRenew(e.target.checked)} />
+                            Auto-renew
+                          </label>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center gap-3">
+                        <button type="button" onClick={handlePurchaseDomain} disabled={purchaseLoading} className={classNames('inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-white', purchaseLoading ? 'bg-neutral-300 cursor-not-allowed' : 'bg-neutral-900 hover:bg-neutral-800')}>
+                          {purchaseLoading ? 'Purchasing…' : priceData ? `Purchase for $${priceData.price}` : 'Purchase'}
+                        </button>
+                        {purchaseError && <span className="text-sm text-red-600">{purchaseError}</span>}
+                        {purchaseSuccess && <span className="text-sm text-emerald-700">{purchaseSuccess}</span>}
+                      </div>
+                    </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Desktop Home content */}
               {active === "Home" && (
@@ -831,7 +1155,7 @@ export default function DashboardPage() {
               )}
 
               {/* Fallback placeholder for non-Home tabs when onboarding required (exclude More so it's empty) */}
-              {onboardingChecked && needsOnboarding && active !== "Home" && active !== "More" && (
+              {onboardingChecked && needsOnboarding && active !== "Home" && active !== "More" && active !== "Domains" && (
                 <div className="hidden sm:flex min-h-[40vh] items-center justify-center p-8 text-center">
                   <div className="max-w-md space-y-4">
                     <div className="flex justify-center">
