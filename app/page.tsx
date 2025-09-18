@@ -272,16 +272,15 @@ export default function Home() {
           </ul>
         </div>
         {/* Hero visual */}
-        <div className="group relative h-[300px] sm:h-[380px] border border-soft rounded-xl overflow-hidden bg-panel shadow-soft hover:shadow-hover transition-shadow duration-300">
-          <div aria-hidden className="absolute -right-10 -top-10 h-60 w-60 rounded-full bg-accent-subtle blur-2xl" />
-          <VectorArt
-            variant="dashboard"
-            className="absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
-            aria-label="Website design preview"
+        <div className="group relative h-[300px] sm:h-[380px] rounded-xl overflow-hidden">
+          <Image
+            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            alt="People working on laptops in a modern office"
+            layout="fill"
+            objectFit="cover"
+            className="transition-transform duration-500 ease-out group-hover:scale-105"
           />
-          <div className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs text-secondary shadow-sm backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent-primary" /> Live preview
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
       </section>
 

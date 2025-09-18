@@ -1251,7 +1251,7 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           onClick={handleCreateNewSite}
-                          className="group h-40 sm:h-48 rounded-2xl border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
+                          className="group h-40 sm:h-48 rounded-2xl keep-border border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                         >
                           <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1266,7 +1266,7 @@ export default function DashboardPage() {
                           <button
                             type="button"
                             onClick={handleCreateNewSite}
-                            className="w-full h-full min-h-[9.5rem] sm:min-h-[11rem] group rounded-2xl border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2"
+                            className="w-full h-full min-h-[9.5rem] sm:min-h-[11rem] group rounded-2xl keep-border border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                           >
                             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1279,7 +1279,7 @@ export default function DashboardPage() {
                           const pagesCount = Array.isArray(w.envisioned_pages) ? w.envisioned_pages.length : 0;
                           const servicesCount = Array.isArray(w.selected_services) ? w.selected_services.length : 0;
                           return (
-                            <li key={w.id} className="group rounded-2xl border border-neutral-200 bg-white p-3 sm:p-4 shadow-soft hover:shadow-card transition-shadow">
+                            <li key={w.id} className="group rounded-2xl ring-1 ring-neutral-200 bg-white p-3 sm:p-4 shadow-sm hover:shadow-md hover:ring-neutral-300 transition-shadow">
                               {/* Header */}
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
@@ -1292,7 +1292,7 @@ export default function DashboardPage() {
                                       <span>Created {new Date(w.created_at).toLocaleDateString()}</span>
                                       <span aria-hidden>•</span>
                                       {(w.vercel_prod_domain || w.domain) ? (
-                                        <a href={`https://${w.vercel_prod_domain || w.domain}`} target="_blank" rel="noreferrer" className="text-success-ink hover:underline truncate max-w-[8rem] sm:max-w-[12rem]" title={(w.vercel_prod_domain || w.domain) || undefined}>{w.vercel_prod_domain || w.domain}</a>
+                                        <a href={`https://${w.vercel_prod_domain || w.domain}`} target="_blank" rel="noreferrer" className="text-success-ink hover:underline truncate max-w-[8rem] sm:max-w-[12rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent rounded" title={(w.vercel_prod_domain || w.domain) || undefined}>{w.vercel_prod_domain || w.domain}</a>
                                       ) : (
                                         <span className="text-neutral-500">Domain not connected</span>
                                       )}
@@ -1303,8 +1303,8 @@ export default function DashboardPage() {
                                   const ready = !!w.vercel_prod_domain;
                                   return (
                                     <span className={classNames(
-                                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] border",
-                                      ready ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-neutral-100 text-neutral-700 border-neutral-200"
+                                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ring-1",
+                                      ready ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-neutral-100 text-neutral-700 ring-neutral-200"
                                     )}>{ready ? 'Active' : 'Not Ready'}</span>
                                   );
                                 })()}
@@ -1312,22 +1312,22 @@ export default function DashboardPage() {
 
                               {/* Chips */}
                               <div className="mt-3 flex flex-wrap gap-2">
-                                <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
+                                <span className="inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14"/></svg>
                                   {pagesCount} pages
                                 </span>
-                                <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
+                                <span className="inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M5 7h14M5 12h14M5 17h9"/></svg>
                                   {servicesCount} services
                                 </span>
                                 {w.primary_goal && (
-                                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md border border-success/30 bg-success-accent/10 px-2 py-1 text-[11px] text-success-ink">
+                                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md ring-1 ring-success/30 bg-success-accent/10 px-2 py-1 text-[11px] text-success-ink">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 3v18M3 12h18"/></svg>
                                     Goal: {w.primary_goal}
                                   </span>
                                 )}
                                 {(w.contact_method || w.contact_phone) && (
-                                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-800">
+                                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-800">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3 7.18 A2 2 0 0 1 5 5h4.09a2 2 0 0 1 2 1.72l.45 2.6a2 2 0 0 1-.54 1.86l-1.27 1.27a16 16 0 0 0 6.88 6.88l1.27-1.27a2 2 0 0 1 1.86-.54l2.6.45A2 2 0 0 1 22 16.92z"/></svg>
                                     {(w.contact_phone && ((w.contact_method || '').toLowerCase() === 'phone' || !w.contact_method))
                                       ? w.contact_phone
@@ -1354,7 +1354,7 @@ export default function DashboardPage() {
                               <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                 <a
                                   href={`/website/${w.id}`}
-                                  className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-success-accent text-white px-3 py-2 text-[12px] hover:opacity-90 shadow-hover"
+                                  className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-success-accent text-white px-3 py-2 text-[12px] hover:opacity-90 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
                                 >
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
                                   Manage Site
@@ -1364,7 +1364,7 @@ export default function DashboardPage() {
                                     href={dep.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-emerald-600 text-white px-3 py-2 text-[12px] hover:bg-emerald-700 shadow-hover"
+                                    className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-emerald-600 text-white px-3 py-2 text-[12px] hover:bg-emerald-700 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40"
                                   >
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M5 12v7a2 2 0 0 0 2 2h7"/></svg>
                                     View Live
