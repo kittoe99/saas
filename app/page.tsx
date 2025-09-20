@@ -100,7 +100,7 @@ function ShowcaseSection() {
       {/* Grid limited to 3 columns on md+ */}
       <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
         {items.map((s) => (
-          <a key={s.title} href="/showcase" className="group rounded-md border border-neutral-200 bg-white overflow-hidden transition-all duration-300 hover:border-success-accent/30">
+          <a key={s.title} href="/showcase" className="group rounded-md ring-1 ring-neutral-200 bg-white overflow-hidden transition-all duration-300 hover:ring-success-accent/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
             <div className="relative h-24 sm:h-24 md:h-28 bg-neutral-200">
               <Image
                 src={s.src}
@@ -235,12 +235,12 @@ export default function Home() {
   return (
     <div className="py-10 md:py-16">
       {/* Hero */}
-      <section className="relative grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-xl border border-soft bg-white shadow-soft">
+      <section className="relative grid md:grid-cols-2 gap-10 items-start p-6 md:p-10 rounded-xl ring-1 ring-neutral-200 bg-white shadow-soft hover:shadow-hover">
         {/* Soft background accent */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-[radial-gradient(1200px_600px_at_10%_-10%,rgba(26,115,232,0.06),transparent_60%),radial-gradient(1000px_500px_at_90%_110%,rgba(26,115,232,0.05),transparent_60%)]" />
 
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1 text-xs text-neutral-600 shadow-xs backdrop-blur">
+          <div className="inline-flex items-center gap-2 rounded-full ring-1 ring-neutral-200 bg-white/70 px-3 py-1 text-xs text-neutral-600 shadow-xs backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" /> No setup fees • Cancel anytime
           </div>
           <h1 className="mt-4 text-4xl md:text-5xl font-semibold leading-tight tracking-tight text-primary">
@@ -260,7 +260,7 @@ export default function Home() {
               Get started
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-2 h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </a>
-            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-soft text-accent-primary bg-white text-sm md:text-base gap-2 transition-all duration-200 hover:bg-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-primary">
+            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-lg ring-1 ring-neutral-200 text-accent-primary bg-white text-sm md:text-base gap-2 transition-all duration-200 hover:bg-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-primary">
               See what’s included
             </a>
           </div>
@@ -369,8 +369,8 @@ export default function Home() {
           <p className="mt-2 text-secondary max-w-2xl mx-auto">From your website to sales automation and payments—built in, simple to use, and ready to scale.</p>
         </header>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6">
-          <div id="features-website" className="group p-5 rounded-xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft hover:shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-soft rounded-lg overflow-hidden bg-panel">
+          <div id="features-website" className="group p-5 rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:ring-accent-soft shadow-soft hover:shadow-hover focus-within:ring-accent-soft">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 ring-1 ring-neutral-200 rounded-lg overflow-hidden bg-panel">
               <VectorArt variant="layout" className="absolute inset-0 h-full w-full" aria-label="Website feature preview" />
             </div>
             <div className="text-sm font-medium text-tertiary">Website</div>
@@ -383,8 +383,8 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div id="features-sales" className="group p-5 rounded-xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft hover:shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-soft rounded-lg overflow-hidden bg-panel">
+          <div id="features-sales" className="group p-5 rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:ring-accent-soft shadow-soft hover:shadow-hover focus-within:ring-accent-soft">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 ring-1 ring-neutral-200 rounded-lg overflow-hidden bg-panel">
               <VectorArt variant="sales" className="absolute inset-0 h-full w-full" aria-label="Sales & automation preview" />
             </div>
             <div className="text-sm font-medium text-tertiary">Sales & Automation <span className="ml-2 inline-flex items-center rounded-full bg-accent-subtle text-accent-primary px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium">Coming soon</span></div>
@@ -397,8 +397,8 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div id="features-ai" className="group p-5 rounded-xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft hover:shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-soft rounded-lg overflow-hidden bg-panel">
+          <div id="features-ai" className="group p-5 rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:ring-accent-soft shadow-soft hover:shadow-hover focus-within:ring-accent-soft">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 ring-1 ring-neutral-200 rounded-lg overflow-hidden bg-panel">
               <VectorArt variant="ai" className="absolute inset-0 h-full w-full" aria-label="AI features preview" />
             </div>
             <div className="text-sm font-medium text-tertiary">Artificial Intelligence <span className="ml-2 inline-flex items-center rounded-full bg-accent-subtle text-accent-primary px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium">Coming soon</span></div>
@@ -411,8 +411,8 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div id="features-payments" className="group p-5 rounded-xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft hover:shadow-hover">
-            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 border border-soft rounded-lg overflow-hidden bg-panel">
+          <div id="features-payments" className="group p-5 rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:ring-accent-soft shadow-soft hover:shadow-hover focus-within:ring-accent-soft">
+            <div className="relative mb-3 sm:mb-4 h-32 md:h-36 ring-1 ring-neutral-200 rounded-lg overflow-hidden bg-panel">
               <VectorArt variant="payments" className="absolute inset-0 h-full w-full" aria-label="Payments preview" />
             </div>
             <div className="text-sm font-medium text-tertiary">Payments <span className="ml-2 inline-flex items-center rounded-full bg-accent-subtle text-accent-primary px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium">Coming soon</span></div>
@@ -434,9 +434,9 @@ export default function Home() {
       <section id="faq" className="scroll-mt-24 mt-20 md:mt-28">
         <h2 className="text-2xl md:text-4xl font-semibold tracking-tight text-primary">FAQ</h2>
         <dl className="mt-4 space-y-4">
-          <div className="rounded-xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">What's included in the monthly plan?</dt><dd className="mt-1 text-sm text-secondary">Design, hosting, SSL, and monthly content updates with support.</dd></div>
-          <div className="rounded-xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-secondary">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
-          <div className="rounded-xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-secondary">We'll align the site with your brand and adjust layouts to fit your content.</dd></div>
+          <div className="rounded-xl ring-1 ring-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">What's included in the monthly plan?</dt><dd className="mt-1 text-sm text-secondary">Design, hosting, SSL, and monthly content updates with support.</dd></div>
+          <div className="rounded-xl ring-1 ring-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">Can I cancel anytime?</dt><dd className="mt-1 text-sm text-secondary">Yes, there are no long‑term contracts—you can cancel whenever you like.</dd></div>
+          <div className="rounded-xl ring-1 ring-neutral-200 bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">Do you work with my existing brand?</dt><dd className="mt-1 text-sm text-secondary">We'll align the site with your brand and adjust layouts to fit your content.</dd></div>
         </dl>
       </section>
 
