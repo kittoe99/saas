@@ -6,7 +6,7 @@ export default function BlogPage() {
       id: 1,
       slug: "welcome-to-hinn-blog",
       category: "Updates",
-      title: "Welcome to the hinn.io Blog",
+      title: "Welcome to the Hinn.dev Blog",
       excerpt:
         "We build modern, fast, and always‑up‑to‑date websites with integrated tools for sales, automation, and analytics.",
       date: "Aug 2025",
@@ -67,7 +67,7 @@ export default function BlogPage() {
         <div className="max-w-3xl">
           <span className="inline-block text-xs tracking-wider uppercase text-neutral-500">News</span>
           <h1 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-900">
-            Insights, updates, and resources from hinn.io
+            Insights, updates, and resources from Hinn.dev
           </h1>
           <p className="mt-3 text-sm sm:text-base text-neutral-600">
             Learn about our Website‑as‑a‑Service approach, explore features like AI chat and automation,

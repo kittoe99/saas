@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Showcase | hinn.io",
-  description: "A selection of recent website builds and concept projects by hinn.io.",
+  title: "Showcase | Hinn.dev",
+  description: "A selection of recent website builds and concept projects by Hinn.dev.",
 };
 
 import Link from "next/link";
@@ -61,7 +61,7 @@ export default function ShowcasePage() {
                 {/* site logo overlay bottom-right */}
                 <img
                   src="/logo.svg"
-                  alt="hinn.io"
+                  alt="Hinn.dev"
                   className="absolute bottom-2 right-2 h-7 w-7 rounded-md bg-white/85 p-1 shadow-sm ring-1 ring-black/5"
                   loading="lazy"
                   decoding="async"

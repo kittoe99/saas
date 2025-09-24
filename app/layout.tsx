@@ -3,6 +3,8 @@ import AppShell from "./components/AppShell";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hinn.dev";
+
 const interSans = Inter({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -12,8 +14,27 @@ const interSans = Inter({
 // Removed mono font to avoid Turbopack internal font resolver issue
 
 export const metadata: Metadata = {
-  title: "hinn.io",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Hinn.dev",
+    template: "%s | Hinn.dev",
+  },
   description: "Pay‑by‑month, all‑inclusive website design.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Hinn.dev",
+    title: "Hinn.dev",
+    description: "Pay‑by‑month, all‑inclusive website design.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hinn.dev",
+    description: "Pay‑by‑month, all‑inclusive website design.",
+  },
 };
 
 export default function RootLayout({
@@ -24,6 +45,35 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${interSans.variable} font-sans antialiased text-neutral-900`}>
+        {/* JSON-LD: Organization and Website */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Hinn.dev",
+              url: SITE_URL,
+              logo: `${SITE_URL}/logo.svg`,
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Hinn.dev",
+              url: SITE_URL,
+              potentialAction: {
+                "@type": "SearchAction",
+                target: `${SITE_URL}/search?q={search_term_string}`,
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
         <AppShell>{children}</AppShell>
       </body>
     </html>

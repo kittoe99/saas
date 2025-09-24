@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Header from "./Header";
 import FooterLinks from "./FooterLinks";
 import ChatWidget from "./ChatWidget";
+import Image from "next/image";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -68,17 +69,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <footer className="mt-20 border-t border-[#2a2119] bg-[#0e0b08] text-[#faf6ec]">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-10">
           <div className="flex items-center gap-2 sm:gap-2 mb-6">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              className="h-7 w-7 sm:h-8 sm:w-8"
-              aria-hidden="true"
-            >
-              <rect x="2" y="2" width="20" height="20" rx="6" fill="#1a73e8" />
-              <rect x="7" y="7" width="3.5" height="10" rx="1.75" fill="#ffffff" />
-              <circle cx="16.5" cy="8.5" r="1.75" fill="#ffffff" />
-            </svg>
-            <span className="text-lg sm:text-xl font-semibold tracking-tight">hinn.io</span>
+            <Image src="/logo.svg" alt="Hinn.dev" width={32} height={32} className="h-7 w-7 sm:h-8 sm:w-8" />
+            <span className="text-lg sm:text-xl font-semibold tracking-tight !text-white">Hinn.dev</span>
           </div>
           <div className="md:flex md:items-end md:justify-between gap-8">
             <div className="md:max-w-md">
@@ -111,7 +103,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <nav aria-label="Footer">
             <FooterLinks />
           </nav>
-          <div className="mt-8 border-t border-neutral-800 pt-6 text-xs text-[#faf6ec]">© {new Date().getFullYear()} hinn.io</div>
+          <div className="mt-8 border-t border-neutral-800 pt-6 text-xs text-white">© {new Date().getFullYear()} Hinn.dev</div>
         </div>
       </footer>
       {/* Floating Support/Chat button */}

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function FooterLinks() {
   return (
-    <ul className="mt-8 text-sm flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-3 text-[#e7dfc6]">
+    <ul className="mt-8 text-sm flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-3 text-white">
       <li>
         <Link href="/#overview" className="hover:text-success-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-accent/60 focus-visible:rounded-sm transition-colors">Overview</Link>
       </li>

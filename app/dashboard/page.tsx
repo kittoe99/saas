@@ -862,7 +862,7 @@ export default function DashboardPage() {
                       <div className="text-xs text-neutral-600 mb-2">Recent</div>
                       <ul className="divide-y divide-neutral-200">
                         <li className="py-2 flex items-center justify-between">
-                          <div className="text-sm text-neutral-800">Welcome to hinn.io</div>
+                          <div className="text-sm text-neutral-800">Welcome to Hinn.dev</div>
                           <span className="text-[11px] text-neutral-500">now</span>
                         </li>
                         <li className="py-2 flex items-center justify-between">

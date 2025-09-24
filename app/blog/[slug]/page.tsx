@@ -10,13 +10,13 @@ const POSTS: Record<string, {
   content: ReactNode;
 }> = {
   "welcome-to-hinn-blog": {
-    title: "Welcome to the hinn.io Blog",
+    title: "Welcome to the Hinn.dev Blog",
     date: "Aug 2025",
     category: "Updates",
     content: (
       <>
         <p>
-          Welcome! At hinn.io, we build modern, fast, and always‑up‑to‑date websites. Think of us as your
+          Welcome! At Hinn.dev, we build modern, fast, and always‑up‑to‑date websites. Think of us as your
           website team: design, build, hosting, and ongoing improvements—handled.
         </p>
         <h2 className="mt-6 text-lg font-semibold">What you can expect here</h2>

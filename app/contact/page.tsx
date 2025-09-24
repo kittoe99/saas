@@ -1,8 +1,8 @@
 import ContactForm from "./ContactForm";
 
 export const metadata = {
-  title: "Contact | hinn.io",
-  description: "Get in touch with the hinn.io team. We'd love to hear from you.",
+  title: "Contact | Hinn.dev",
+  description: "Get in touch with the Hinn.dev team. We'd love to hear from you.",
 };
 
 export default function ContactPage() {

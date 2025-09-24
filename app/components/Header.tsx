@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -72,18 +73,9 @@ export default function Header() {
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
         {/* Top row */}
         <div className="flex items-center justify-between gap-3">
-          <Link href="/" aria-label="hinn.io home" className="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              className="h-6 w-6 sm:h-7 sm:w-7"
-              aria-hidden="true"
-            >
-              <rect x="2" y="2" width="20" height="20" rx="6" fill="#1a73e8" />
-              <rect x="7" y="7" width="3.5" height="10" rx="1.75" fill="#ffffff" />
-              <circle cx="16.5" cy="8.5" r="1.75" fill="#ffffff" />
-            </svg>
-            <span className="text-lg sm:text-xl font-semibold tracking-tight">hinn.io</span>
+          <Link href="/" aria-label="Hinn.dev home" className="flex items-center gap-2">
+            <Image src="/logo.svg" alt="Hinn.dev" width={28} height={28} className="h-6 w-6 sm:h-7 sm:w-7" priority />
+            <span className="text-lg sm:text-xl font-semibold tracking-tight">Hinn.dev</span>
           </Link>
 
           {/* Inline nav on md+ */}
