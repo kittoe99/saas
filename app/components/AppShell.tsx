@@ -103,7 +103,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <nav aria-label="Footer">
             <FooterLinks />
           </nav>
-          <div className="mt-8 border-t border-neutral-800 pt-6 text-xs text-white">© {new Date().getFullYear()} Hinn.dev</div>
+          <div className="mt-8 border-t border-neutral-800 pt-6 text-xs !text-white">© {new Date().getFullYear()} Hinn.dev</div>
         </div>
       </footer>
       {/* Floating Support/Chat button */}
