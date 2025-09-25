@@ -16,11 +16,13 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+# Env import docs (do not commit)
+docs/vercel-env-import.env
 
 # OS / Editor
 .DS_Store
 Thumbs.db
-.vscode/
+vscode/
 .idea/
 
 # TypeScript
