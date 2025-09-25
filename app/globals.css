@@ -1,0 +1,455 @@
+@import "tailwindcss";
+
+:root {
+  /* Light, near-neutral background system */
+  --bg-page: #fefefe; /* very light, near-white background */
+  --panel: #f9f9f9;   /* subtle off-white for cards/surfaces */
+  --panel-hover: #f5f5f5; /* hover state for panels */
+  --border: #e5e5e5;  /* clear, visible borders */
+  --accent: #d97759;  /* brand accent - warm coral */
+  --background: var(--bg-page);
+  --foreground: #0a0a0a; /* strong contrast text */
+  
+  /* Harmonious accent-derived palette */
+  --accent-primary: var(--accent);
+  --accent-hover: color-mix(in srgb, var(--accent) 85%, #000000); /* darker for hover */
+  --accent-focus: color-mix(in srgb, var(--accent) 90%, #000000); /* darker for focus */
+  --accent-subtle: color-mix(in srgb, var(--accent) 8%, #ffffff); /* very light tint */
+  --accent-muted: color-mix(in srgb, var(--accent) 15%, #ffffff); /* light tint */
+  --accent-soft: color-mix(in srgb, var(--accent) 25%, #ffffff); /* medium tint */
+  
+  /* Typography tokens */
+  --text-primary: #0a0a0a;   /* high contrast headings */
+  --text-secondary: #404040; /* readable body text */
+  --text-tertiary: #6b6b6b;  /* muted text */
+  --text-accent: var(--accent-primary);
+  
+  /* Subtle background pattern (minimal) */
+  --pattern-size: 32px;
+  --pattern-dot: rgba(217, 119, 89, 0.02);
+  --pattern-dot-2: rgba(217, 119, 89, 0.01);
+  
+  /* Legacy success tokens (mapped to new system) */
+  --success-accent: var(--accent-primary);
+  --success-bg: var(--accent-subtle);
+  --success-border: var(--accent-soft);
+  --success-pill-bg: var(--accent-muted);
+  --success-pill-text: color-mix(in srgb, var(--accent) 75%, #000000);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Apply page background globally */
+html, body {
+  background-color: var(--bg-page);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    /* Dark mode: soften pattern significantly */
+    --pattern-dot: rgba(250, 246, 236, 0.035);
+    --pattern-dot-2: rgba(250, 246, 236, 0.02);
+  }
+}
+
+body {
+  background-color: var(--background);
+  /* Minimal pattern for texture */
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--pattern-dot) 1px, transparent 1.2px),
+    radial-gradient(circle at calc(var(--pattern-size)/2) calc(var(--pattern-size)/2), var(--pattern-dot-2) 1px, transparent 1.2px);
+  background-repeat: repeat;
+  background-size: var(--pattern-size) var(--pattern-size);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility: hide horizontal scrollbar where needed (e.g., tabs/nav on mobile) */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* Typewriter caret blink */
+@keyframes type-caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.type-caret {
+  display: inline-block;
+  width: 1ch; /* keeps space while blinking */
+  border-right: 2px solid currentColor;
+  margin-left: 2px;
+  animation: type-caret-blink 1s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .type-caret { animation: none; }
+}
+
+/* Mobile menu subtle entry animation */
+@keyframes slide-fade-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-mobile-menu {
+  animation: slide-fade-down 180ms ease-out;
+}
+
+/* Rotate chevrons when <details> is open */
+details[open] > summary .chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-mobile-menu { animation: none; }
+}
+
+/* Accordion: smooth open/close for <details> content used on Get started */
+details .accordion {
+  overflow: hidden;
+}
+
+details .accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms ease, opacity 220ms ease, transform 220ms ease;
+}
+
+details[open] .accordion-content {
+  grid-template-rows: 1fr;
+}
+
+/* Ensure children can collapse within grid row */
+.accordion-content > * {
+  min-height: 0; /* critical for grid 0fr -> 1fr trick */
+}
+
+/* Subtle fade/slide for inner content */
+.fade-slide {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+details[open] .fade-slide {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  details .accordion-content { transition: none; }
+  .fade-slide { opacity: 1; transform: none; }
+}
+
+/* Border-match utilities: make container borders equal to their background color */
+/* Default: page background */
+.border-match { border-color: var(--background) !important; }
+/* Common explicit backgrounds */
+.bg-white.border-match { border-color: #ffffff !important; }
+/* Escape Tailwind arbitrary color class for warm backgrounds */
+.bg-\[\#faf6ec\].border-match { border-color: #faf6ec !important; }
+.bg-\[\#efeae2\].border-match { border-color: #efeae2 !important; }
+
+/* Typography utilities */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-tertiary { color: var(--text-tertiary) !important; }
+.text-accent { color: var(--text-accent) !important; }
+
+/* Heading styles with proper weights and tracking */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* Body text improvements */
+p, span, div {
+  color: var(--text-secondary);
+}
+
+/* Label styles with proper letter-spacing */
+label, .label {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+/* Theme utilities */
+.bg-page { background-color: var(--bg-page) !important; }
+.bg-panel { background-color: var(--panel) !important; }
+.hover\:bg-panel-hover:hover { background-color: var(--panel-hover) !important; }
+.border-soft { border-color: var(--border) !important; }
+.text-accent { color: var(--accent) !important; }
+
+/* Accent system utilities */
+.bg-accent-primary { background-color: var(--accent-primary) !important; }
+.bg-accent-subtle { background-color: var(--accent-subtle) !important; }
+.bg-accent-muted { background-color: var(--accent-muted) !important; }
+.bg-accent-soft { background-color: var(--accent-soft) !important; }
+.text-accent-primary { color: var(--accent-primary) !important; }
+.border-accent-soft { border-color: var(--accent-soft) !important; }
+.border-accent-muted { border-color: var(--accent-muted) !important; }
+
+/* Success (accent-based) utilities - legacy support */
+.bg-success-bg { background-color: var(--success-bg) !important; }
+.border-success { border-color: var(--success-border) !important; }
+.bg-success-accent { background-color: var(--success-accent) !important; }
+.text-success-accent { color: var(--success-accent) !important; }
+.text-success-ink { color: var(--success-accent) !important; }
+.bg-success-pill { background-color: var(--success-pill-bg) !important; }
+.text-success-pill { color: var(--success-pill-text) !important; }
+
+/* Optional helpers for convenience */
+.border-on-page { border-color: var(--background) !important; }
+.border-on-white { border-color: #ffffff !important; }
+.border-on-warm { border-color: #faf6ec !important; }
+.border-on-gray { border-color: #efeae2 !important; }
+
+ 
+
+/* Global container border reset: hide borders on typical containers */
+div.border:not(.keep-border),
+section.border:not(.keep-border),
+article.border:not(.keep-border),
+header.border:not(.keep-border),
+footer.border:not(.keep-border),
+aside.border:not(.keep-border),
+nav.border:not(.keep-border),
+main.border:not(.keep-border),
+form.border:not(.keep-border),
+fieldset.border:not(.keep-border),
+details.border:not(.keep-border),
+summary.border:not(.keep-border),
+figure.border:not(.keep-border),
+ul.border:not(.keep-border),
+li.border:not(.keep-border) {
+  border-color: transparent !important;
+}
+
+/* NOTE: Avoid broad universal overrides to prevent affecting buttons/links */
+
+/* Navigation menus: remove borders on nav containers by default (not links/buttons) */
+nav.border:not(.keep-border) { border-color: transparent !important; }
+nav > div.border:not(.keep-border),
+nav > section.border:not(.keep-border),
+nav > ul.border:not(.keep-border),
+nav > li.border:not(.keep-border),
+nav > aside.border:not(.keep-border),
+nav > article.border:not(.keep-border) {
+  border-color: transparent !important;
+}
+
+/* Remove nav/header bottom shadow and border */
+header,
+header > nav,
+nav {
+  box-shadow: none !important;
+  border-bottom: 0 !important;
+}
+
+/* Remove shadows from interactive items within the header */
+header button,
+header button:hover,
+header button:focus,
+header button:active,
+header [role="button"],
+header [role="button"]:hover,
+header [role="button"]:focus,
+header [role="button"]:active,
+header a.no-btn-shadow,
+header a.no-btn-shadow:hover,
+header a.no-btn-shadow:focus,
+header a.no-btn-shadow:active,
+header .no-btn-shadow,
+header .no-btn-shadow:hover,
+header .no-btn-shadow:focus,
+header .no-btn-shadow:active {
+  box-shadow: none !important;
+}
+
+/* Shadow system: low shadows for cards, high for modals */
+.shadow-soft {
+  /* Low shadow for cards and general surfaces (softer) */
+  box-shadow:
+    0 1px 1.5px rgba(0, 0, 0, 0.03),
+    0 1.5px 6px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-elevated {
+  /* High shadow for modals, drawers, and elevated content (softer) */
+  box-shadow:
+    0 3px 5px rgba(0, 0, 0, 0.04),
+    0 8px 18px rgba(0, 0, 0, 0.08),
+    0 16px 32px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-hover {
+  /* Interactive shadow for hover states (softer) */
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 3px 10px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+.shadow-hover:hover {
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.05),
+    0 6px 16px rgba(0, 0, 0, 0.10);
+}
+
+/* Compose helpers */
+.shadow-card { box-shadow: 0 1px 1px rgba(17,17,17,0.015), 0 3px 8px rgba(17,17,17,0.04); }
+.shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(17,17,17,0.04); }
+
+/* Form elements with solid backgrounds and clear focus states */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  background-color: #ffffff;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 0 0 3px var(--accent-subtle);
+}
+
+/* Button styles with proper radius and shadows */
+button,
+[role="button"],
+.button,
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.035);
+}
+
+button:hover,
+[role="button"]:hover,
+.button:hover,
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.07);
+}
+
+button:focus,
+button:focus-visible,
+[role="button"]:focus,
+[role="button"]:focus-visible,
+.button:focus,
+.button:focus-visible,
+.btn:focus,
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.035),
+    0 0 0 3px var(--accent-subtle);
+}
+
+button:active,
+[role="button"]:active,
+.button:active,
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.035);
+}
+
+/* Utility class to opt-out when needed */
+.no-btn-shadow {
+  box-shadow: none !important;
+}
+
+/* Dark mode tuning: reduce spread/opacity for softer look */
+@media (prefers-color-scheme: dark) {
+  .shadow-soft {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.16),
+      0 4px 10px rgba(0, 0, 0, 0.20);
+  }
+  .shadow-elevated {
+    box-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.12),
+      0 6px 16px rgba(0, 0, 0, 0.20),
+      0 12px 24px rgba(0, 0, 0, 0.16);
+  }
+  .shadow-hover,
+  .shadow-hover:hover,
+  .shadow-hover:focus,
+  .shadow-hover:focus-visible,
+  .shadow-hover:active {
+    box-shadow:
+      0 3px 6px rgba(0, 0, 0, 0.20),
+      0 12px 28px rgba(0, 0, 0, 0.26);
+  }
+  .shadow-card { box-shadow: 0 1px 1px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.20); }
+  .shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(0,0,0,0.16); }
+  /* Dark mode button shadows */
+  button,
+  [role="button"],
+  .button,
+  .btn {
+    box-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.10),
+      0 2px 6px rgba(0, 0, 0, 0.16);
+  }
+  button:hover,
+  button:focus,
+  button:focus-visible,
+  button:active,
+  [role="button"]:hover,
+  [role="button"]:focus,
+  [role="button"]:focus-visible,
+  [role="button"]:active,
+  .button:hover,
+  .button:focus,
+  .button:focus-visible,
+  .button:active,
+  .btn:hover,
+  .btn:focus,
+  .btn:focus-visible,
+  .btn:active {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.14),
+      0 8px 18px rgba(0, 0, 0, 0.20);
+  }
+}
