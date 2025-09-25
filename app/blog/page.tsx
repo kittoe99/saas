@@ -1,4 +1,11 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description: "Insights, updates, and resources from Hinn.dev: website design, monthly updates, and tools.",
+  alternates: { canonical: "/blog" },
+};
 
 export default function BlogPage() {
   const posts = [

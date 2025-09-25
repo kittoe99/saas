@@ -97,7 +97,7 @@ function StepSummary({
             {personal.phone && <div className="text-neutral-600">{personal.phone}</div>}
           </div>
           <div className="mt-4 text-xs text-neutral-500">
-            This is a mock payment for demo purposes only.
+            You’ll complete payment securely on Stripe Checkout.
           </div>
         </div>
       </div>
@@ -139,7 +139,7 @@ function StepCheckout({
   return (
     <div>
       <h2 className="text-lg font-medium tracking-tight">Checkout</h2>
-      <p className="mt-1 text-sm text-neutral-600">Mock checkout only. No card will be charged.</p>
+      <p className="mt-1 text-sm text-neutral-600">You’ll be redirected to Stripe Checkout to complete your subscription.</p>
 
       <div className="mt-5 space-y-4">
         {/* Order summary (collapsible) */}
@@ -233,88 +233,26 @@ function StepCheckout({
         </form>
       </div>
 
-      {/* Card details (mock, Stripe-like UI) */}
+      {/* Stripe Checkout trigger */}
       {showCard && (
       <div className="mt-5 rounded-xl border border-neutral-200 p-4 shadow-soft">
-        <div className="text-sm font-medium text-neutral-700">Payment method (mock)</div>
-        {paid ? (
-          <div className="mt-3 rounded-md bg-success-bg border border-success text-success-ink text-sm p-3">
-            Payment successful. Your subscription is activated (mock).
-          </div>
-        ) : (
-          <>
-            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Card number">
-                <Input
-                  type="text"
-                  placeholder="4242 4242 4242 4242"
-                  defaultValue="4242 4242 4242 4242"
-                  readOnly
-                />
-              </Field>
-              <Field label="Name on card">
-                <Input
-                  type="text"
-                  placeholder="Name on card"
-                  defaultValue="JANE DOE"
-                  readOnly
-                />
-              </Field>
-              <Field label="Expiration">
-                <Input type="text" placeholder="MM/YY" defaultValue="12/34" readOnly />
-              </Field>
-              <Field label="CVC">
-                <Input type="text" placeholder="CVC" defaultValue="123" readOnly />
-              </Field>
-            </div>
-            {error && (
-              <div className="mt-3 text-sm text-red-600">{error}</div>
-            )}
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={onPay}
-                disabled={loading || !canPay}
-                className={classNames(
-                  "w-full sm:w-auto px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                  loading || !canPay ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
-                )}
-              >
-                {loading ? "Processing..." : `Pay $${total}/mo (Mock)`}
-              </button>
-            </div>
-            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-neutral-600">
-              <div className="flex items-center gap-2 text-success-accent">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <rect x="3" y="11" width="18" height="10" rx="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                SSL Secured
-              </div>
-              <div className="flex items-center gap-2 text-success-accent">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <rect x="2" y="5" width="20" height="14" rx="2"/>
-                  <path d="M2 10h20"/>
-                </svg>
-                PCI DSS (mock)
-              </div>
-              <div className="flex items-center gap-2 text-success-accent">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M12 22s8-4 8-10V6l-8-4-8 4v6c0 6 8 10 8 10z"/>
-                  <path d="m9 12 2 2 4-4"/>
-                </svg>
-                Privacy First
-              </div>
-              <div className="flex items-center gap-2 text-success-accent">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M12 6v6l4 2"/>
-                </svg>
-                99.9% Uptime
-              </div>
-            </div>
-          </>
+        <div className="text-sm font-medium text-neutral-700">Checkout with Stripe</div>
+        {error && (
+          <div className="mt-3 text-sm text-red-600">{error}</div>
         )}
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={onPay}
+            disabled={loading || !canPay}
+            className={classNames(
+              "w-full sm:w-auto px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
+              loading || !canPay ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+            )}
+          >
+            {loading ? "Redirecting..." : `Proceed to secure checkout — $${total}/mo`}
+          </button>
+        </div>
       </div>
       )}
     </div>

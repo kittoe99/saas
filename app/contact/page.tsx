@@ -1,8 +1,10 @@
 import ContactForm from "./ContactForm";
+import type { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Contact | Hinn.dev",
   description: "Get in touch with the Hinn.dev team. We'd love to hear from you.",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

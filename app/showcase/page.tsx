@@ -1,6 +1,9 @@
-export const metadata = {
-  title: "Showcase | Hinn.dev",
-  description: "A selection of recent website builds and concept projects by Hinn.dev.",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Showcase",
+  description: "Selected website work by Hinn.dev: responsive, fast, and easy to evolve with monthly updates.",
+  alternates: { canonical: "/showcase" },
 };
 
 import Link from "next/link";
