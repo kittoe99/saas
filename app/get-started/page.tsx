@@ -15,6 +15,8 @@ type Step = 1 | 2 | 3 | 4;
 
 const TOTAL_STEPS: Step = 4;
 
+type BillingCycle = "monthly" | "annual";
+
 type PlanOption = {
   id: string;
   name: string;
@@ -24,9 +26,25 @@ type PlanOption = {
 };
 
 const PLANS: PlanOption[] = [
-  { id: "small", name: "Small Businesses", price: "$59/mo", description: "Great for local and solo businesses", recommended: true },
-  { id: "ecom_large", name: "Ecommerce / Large Businesses", price: "$99/mo", description: "Online store + growing operations" },
-  { id: "startup", name: "Large Businesses/Startups", price: "$169/mo", description: "Advanced needs and faster support" },
+  {
+    id: "business",
+    name: "Business",
+    price: "$59/mo",
+    description: "Up to 5-page responsive site, brand setup, basic SEO, contact form",
+    recommended: true,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: "$99/mo",
+    description: "Up to 15 pages, blog/CMS, advanced SEO, analytics, priority support",
+  },
+  {
+    id: "scale",
+    name: "Scale",
+    price: "$199/mo",
+    description: "Custom design system, unlimited pages, e‑commerce & integrations, SLA support",
+  },
 ];
 
 type BillingInfo = {
@@ -44,28 +62,47 @@ function classNames(...classes: (string | false | null | undefined)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-function getPlanPrice(planId: string): number {
-  switch (planId) {
-    case "small":
-      return 59;
-    case "ecom_large":
-      return 99;
-    case "startup":
-      return 169;
-    default:
-      return 0;
-  }
+function getPlanPrice(planId: string, cycle: BillingCycle = "monthly"): number {
+  // Monthly and annual (yearly) prices
+  // Annual uses 10x monthly pricing (e.g., $59/mo => $599/yr)
+  const monthly: Record<string, number> = {
+    business: 59,
+    pro: 99,
+    scale: 199,
+  };
+  const annual: Record<string, number> = {
+    business: 599,
+    pro: 999,
+    scale: 1999,
+  };
+  const table = cycle === "annual" ? annual : monthly;
+  return table[planId] ?? 0;
+}
+
+function formatPlanPrice(planId: string, cycle: BillingCycle = "monthly"): string {
+  const amount = getPlanPrice(planId, cycle);
+  return cycle === "annual" ? `$${amount}/yr` : `$${amount}/mo`;
+}
+
+function formatEquivalentMonthly(planId: string, cycle: BillingCycle = "monthly"): string | null {
+  if (cycle !== "annual") return null;
+  const annual = getPlanPrice(planId, "annual");
+  const perMonth = annual / 12;
+  // Keep two decimals to avoid confusion on non-round values
+  return `$${perMonth.toFixed(2)}/mo`;
 }
 
 function StepSummary({
   personal,
   planId,
+  cycle,
 }: {
   personal: PersonalInfo;
   planId: string;
+  cycle: BillingCycle;
 }) {
   const plan = PLANS.find((p) => p.id === planId)!;
-  const planPrice = getPlanPrice(planId);
+  const planPrice = getPlanPrice(planId, cycle);
   const total = planPrice;
 
   return (
@@ -80,12 +117,18 @@ function StepSummary({
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex items-start justify-between">
               <dt className="text-neutral-600">Plan</dt>
-              <dd className="text-neutral-900 font-medium">{plan.name} — {plan.price}</dd>
+              <dd className="text-neutral-900 font-medium">{plan.name} — {formatPlanPrice(planId, cycle)}</dd>
             </div>
             <div className="flex items-start justify-between border-t border-neutral-200 pt-2 mt-2">
-              <dt className="text-neutral-700">Total due monthly</dt>
-              <dd className="text-neutral-900 font-semibold">${total}/mo</dd>
+              <dt className="text-neutral-700">Total due {cycle === "annual" ? "yearly" : "monthly"}</dt>
+              <dd className="text-neutral-900 font-semibold">${total}/{cycle === "annual" ? "yr" : "mo"}</dd>
             </div>
+            {cycle === "annual" && (
+              <div className="flex items-start justify-between">
+                <dt className="text-neutral-600">Approx. monthly</dt>
+                <dd className="text-neutral-800">{formatEquivalentMonthly(planId, cycle)}</dd>
+              </div>
+            )}
           </dl>
         </div>
 
@@ -109,6 +152,7 @@ function StepSummary({
 function StepCheckout({
   personal,
   planId,
+  cycle,
   onPay,
   loading,
   paid,
@@ -118,6 +162,7 @@ function StepCheckout({
 }: {
   personal: PersonalInfo;
   planId: string;
+  cycle: BillingCycle;
   onPay: () => void | Promise<void>;
   loading: boolean;
   paid: boolean;
@@ -126,7 +171,7 @@ function StepCheckout({
   onBillingChange: <K extends keyof BillingInfo>(key: K, value: BillingInfo[K]) => void;
 }) {
   const plan = PLANS.find((p) => p.id === planId)!;
-  const planPrice = getPlanPrice(planId);
+  const planPrice = getPlanPrice(planId, cycle);
   const total = planPrice;
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [showCard, setShowCard] = useState<boolean>(false);
@@ -150,7 +195,7 @@ function StepCheckout({
             className="w-full flex items-center justify-between p-4 text-left hover:bg-neutral-50"
           >
             <div className="text-sm text-neutral-700">
-              <span className="font-medium">Order total:</span> ${total}/mo
+              <span className="font-medium">Order total:</span> ${total}/{cycle === "annual" ? "yr" : "mo"}
             </div>
             <span className="text-xs text-neutral-600 underline">{showDetails ? "Hide details" : "View details"}</span>
           </button>
@@ -159,12 +204,18 @@ function StepCheckout({
               <dl className="space-y-2 text-sm">
                 <div className="flex items-start justify-between">
                   <dt className="text-neutral-600">Plan</dt>
-                  <dd className="text-neutral-900 font-medium">{plan.name} — {plan.price}</dd>
+                  <dd className="text-neutral-900 font-medium">{plan.name} — {formatPlanPrice(planId, cycle)}</dd>
                 </div>
                 <div className="flex items-start justify-between border-t border-neutral-200 pt-2 mt-2">
-                  <dt className="text-neutral-700">Total due monthly</dt>
-                  <dd className="text-neutral-900 font-semibold">${total}/mo</dd>
+                  <dt className="text-neutral-700">Total due {cycle === "annual" ? "yearly" : "monthly"}</dt>
+                  <dd className="text-neutral-900 font-semibold">${total}/{cycle === "annual" ? "yr" : "mo"}</dd>
                 </div>
+                {cycle === "annual" && (
+                  <div className="flex items-start justify-between">
+                    <dt className="text-neutral-600">Approx. monthly</dt>
+                    <dd className="text-neutral-800">{formatEquivalentMonthly(planId, cycle)}</dd>
+                  </div>
+                )}
               </dl>
             </div>
           )}
@@ -280,7 +331,7 @@ function StepCheckout({
                   loading || !canPay ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
                 )}
               >
-                {loading ? "Processing..." : `Pay $${total}/mo (Mock)`}
+                {loading ? "Processing..." : `Pay $${total}/${cycle === "annual" ? "yr" : "mo"} (Mock)`}
               </button>
             </div>
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-neutral-600">
@@ -333,7 +384,8 @@ function StepCheckout({
         email: "",
         phone: "",
       });
-      const [selectedPlan, setSelectedPlan] = useState<string | null>("small");
+      const [selectedPlan, setSelectedPlan] = useState<string | null>("business");
+      const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
       const [checkoutLoading, setCheckoutLoading] = useState<boolean>(false);
       const [checkoutError, setCheckoutError] = useState<string | null>(null);
       const [mockPaid, setMockPaid] = useState<boolean>(false);
@@ -583,6 +635,8 @@ function StepCheckout({
                       <StepPackageSelection
                         plans={PLANS}
                         selectedPlan={selectedPlan}
+                        billingCycle={billingCycle}
+                        onCycleChange={setBillingCycle}
                         onSelect={(id) => {
                           setSelectedPlan(id);
                         }}
@@ -651,7 +705,7 @@ function StepCheckout({
                   <div className="accordion border-t border-neutral-200">
                     <div className="accordion-content p-4 sm:p-5 fade-slide">
                       {selectedPlan && (
-                        <StepSummary personal={data} planId={selectedPlan} />
+                        <StepSummary personal={data} planId={selectedPlan} cycle={billingCycle} />
                       )}
                       <div className="mt-4 flex items-center justify-between">
                         <button
@@ -667,7 +721,7 @@ function StepCheckout({
                           disabled={!selectedPlan}
                           className={classNames(
                             "px-4 py-2 rounded-md text-white text-sm",
-                            !selectedPlan ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                            !selectedPlan ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
                           )}
                         >
                           Continue
@@ -706,6 +760,7 @@ function StepCheckout({
                         <StepCheckout
                           personal={data}
                           planId={selectedPlan}
+                          cycle={billingCycle}
                           onPay={handleCheckout}
                           loading={checkoutLoading}
                           paid={mockPaid}
@@ -743,9 +798,9 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={classNames(
-        "w-full rounded-md border px-3 py-2 text-sm outline-none shadow-sm",
-        "border-neutral-300 placeholder-neutral-400",
-        "focus:ring-2 focus:ring-black/30 focus:border-black",
+        "w-full rounded-lg border px-3 py-2 text-sm outline-none shadow-sm bg-white",
+        "border-neutral-300 placeholder-neutral-400 hover:border-neutral-400",
+        "focus:ring-2 focus:ring-success-accent/40 focus:border-success",
         props.className || ""
       )}
     />
@@ -799,16 +854,58 @@ function ProgressSidebar({ current }: { current: number }) {
 function StepPackageSelection({
   plans,
   selectedPlan,
+  billingCycle,
+  onCycleChange,
   onSelect,
 }: {
   plans: PlanOption[];
   selectedPlan: string | null;
+  billingCycle: BillingCycle;
+  onCycleChange: (cycle: BillingCycle) => void;
   onSelect: (id: string) => void;
 }) {
   return (
     <div>
       <h2 className="text-lg font-medium tracking-tight">Choose your package</h2>
       <p className="mt-1 text-sm text-neutral-600">Pick the plan that fits your needs. You can change later.</p>
+
+      {/* Billing cycle toggle */}
+      <div className="mt-4">
+        <div className="inline-flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white p-1 shadow-soft">
+          <button
+            type="button"
+            onClick={() => onCycleChange("monthly")}
+            className={classNames(
+              "relative px-4 py-2 rounded-xl text-sm transition",
+              billingCycle === "monthly"
+                ? "bg-success-accent text-white shadow"
+                : "text-neutral-800 hover:bg-neutral-100"
+            )}
+            aria-pressed={billingCycle === "monthly"}
+          >
+            <span className="font-medium">Monthly</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onCycleChange("annual")}
+            className={classNames(
+              "relative px-4 py-2 rounded-xl text-sm transition",
+              billingCycle === "annual"
+                ? "bg-success-accent text-white shadow"
+                : "text-neutral-800 hover:bg-neutral-100"
+            )}
+            aria-pressed={billingCycle === "annual"}
+          >
+            <span className="font-medium">Annual</span>
+            <span className="ml-2 inline-flex items-center rounded-full bg-success-bg px-2 py-0.5 text-[11px] font-medium text-success-ink border border-success/60">
+              Save 2 months
+            </span>
+          </button>
+        </div>
+        <div className="mt-2 text-xs text-neutral-600">
+          Pay annually and get roughly 2 months free compared with paying monthly.
+        </div>
+      </div>
 
       <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {plans.map((p) => {
@@ -821,7 +918,7 @@ function StepPackageSelection({
               className={classNames(
                 "relative text-left w-full p-4 rounded-xl border bg-white transition shadow-soft shadow-hover",
                 active
-                  ? "border-black ring-2 ring-black/20"
+                  ? "border-success ring-2 ring-success-accent/30"
                   : "border-neutral-200 hover:border-neutral-300"
               )}
             >
@@ -833,18 +930,23 @@ function StepPackageSelection({
               <div className="flex items-start justify-between">
                 <div>
                   <div className="text-sm text-neutral-500">{p.name}</div>
-                  <div className="mt-1 text-xl font-semibold text-neutral-900">{p.price}</div>
+                  <div className="mt-1 text-xl font-semibold text-neutral-900">{formatPlanPrice(p.id, billingCycle)}</div>
+                  {billingCycle === "annual" && (
+                    <div className="mt-0.5 text-xs text-neutral-600">
+                      Equivalent to <span className="font-medium text-neutral-800">{formatEquivalentMonthly(p.id, billingCycle)}</span>, billed annually
+                    </div>
+                  )}
                   {p.description && (
                     <div className="mt-1 text-sm text-neutral-600">{p.description}</div>
                   )}
                 </div>
                 <div className={classNames(
                   "ml-3 h-5 w-5 rounded-full border flex items-center justify-center",
-                  active ? "border-black" : "border-neutral-300"
+                  active ? "border-success" : "border-neutral-300"
                 )}>
                   <span className={classNames(
                     "h-2.5 w-2.5 rounded-full",
-                    active ? "bg-black" : "bg-transparent"
+                    active ? "bg-success-accent" : "bg-transparent"
                   )} />
                 </div>
               </div>
