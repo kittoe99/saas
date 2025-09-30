@@ -183,7 +183,7 @@ export default function AmaBar() {
       <div
         className={`fixed inset-x-0 z-50 transition-transform duration-300 ${
           isBottom ? "" : "top-0"
-        } ${(showSticky || nearBottom) ? "translate-y-0" : (isBottom) ? "translate-y-full" : "-translate-y-full"}`}
+        } ${(showSticky || nearBottom) ? "translate-y-0 pointer-events-auto" : (isBottom) ? "translate-y-full pointer-events-none" : "-translate-y-full pointer-events-none"}`}
         style={isBottom ? { bottom: "calc(env(safe-area-inset-bottom) + 8px)" } : undefined}
         aria-hidden={!(showSticky || nearBottom)}
       >
@@ -253,7 +253,7 @@ export default function AmaBar() {
             </div>
           </form>
           <div className="mt-3 md:mt-4">
-            <div className="overflow-x-auto hide-scrollbar px-2" aria-label="Suggested questions">
+            <div className="overflow-x-auto hide-scrollbar px-2 touch-pan-x" aria-label="Suggested questions">
               <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap sm:justify-center snap-x snap-mandatory">
                 <button type="button" onClick={(e) => handleSuggestion(e, "What’s included in the plan?")} className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">What’s included in the plan?</button>
                 <button type="button" onClick={(e) => handleSuggestion(e, "How fast can you launch?")} className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">How fast can you launch?</button>
