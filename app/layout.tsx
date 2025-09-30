@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import AppShell from "./components/AppShell";
-import { Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hinn.dev";
 
-const interSans = Inter({
+const manropeSans = Manrope({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -44,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${interSans.variable} font-sans antialiased text-neutral-900`}>
+      <body className={`${manropeSans.variable} font-sans antialiased text-black`}>
         {/* JSON-LD: Organization and Website */}
         <script
           type="application/ld+json"
