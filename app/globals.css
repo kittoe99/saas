@@ -46,6 +46,10 @@
 /* Apply page background globally */
 html, body {
   background-color: var(--bg-page);
+  /* Reduce scroll chaining/jank on mobile */
+  overscroll-behavior-y: contain;
+  /* Favor vertical scrolling across the page */
+  touch-action: pan-y;
 }
 
 @media (prefers-color-scheme: dark) {

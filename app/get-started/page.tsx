@@ -171,7 +171,7 @@ function StepCheckout({
         </div>
 
         {/* Billing form (editable) */}
-        <form className="rounded-xl border border-neutral-200 p-4 bg-white shadow-soft" autoComplete="on" onSubmit={(e) => e.preventDefault()}>
+        <form className="rounded-3xl border border-soft p-4 bg-white shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]" autoComplete="on" onSubmit={(e) => e.preventDefault()}>
           <div className="text-sm font-medium text-neutral-700">Billing information</div>
           <div className="mt-3 grid grid-cols-1 gap-3">
             <Field label="Full name" required>
@@ -222,8 +222,8 @@ function StepCheckout({
                 onClick={() => setShowCard(true)}
                 disabled={!canContinueBilling}
                 className={classNames(
-                  "w-full sm:w-auto px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                  !canContinueBilling ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                  "w-full sm:w-auto px-5 py-3 rounded-full bg-accent-primary text-white border border-accent-primary text-sm md:text-base transition-colors focus:outline-none",
+                  !canContinueBilling ? "opacity-60 cursor-not-allowed" : "hover:brightness-95"
                 )}
               >
                 Continue
@@ -235,7 +235,7 @@ function StepCheckout({
 
       {/* Stripe Checkout trigger */}
       {showCard && (
-      <div className="mt-5 rounded-xl border border-neutral-200 p-4 shadow-soft">
+      <div className="mt-5 rounded-3xl border border-soft p-4 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]">
         <div className="text-sm font-medium text-neutral-700">Checkout with Stripe</div>
         {error && (
           <div className="mt-3 text-sm text-red-600">{error}</div>
@@ -246,8 +246,8 @@ function StepCheckout({
             onClick={onPay}
             disabled={loading || !canPay}
             className={classNames(
-              "w-full sm:w-auto px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-              loading || !canPay ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+              "w-full sm:w-auto px-5 py-3 rounded-full bg-accent-primary text-white border border-accent-primary text-sm md:text-base transition-colors focus:outline-none",
+              loading || !canPay ? "opacity-60 cursor-not-allowed" : "hover:brightness-95"
             )}
           >
             {loading ? "Redirecting..." : `Proceed to secure checkout — $${total}/mo`}
@@ -408,8 +408,8 @@ function StepCheckout({
               </div>
             </div>
           )}
-          <h1 className="text-2xl font-semibold">Get Started</h1>
-          <p className="mt-1 text-sm text-gray-600">Complete a few quick steps to continue your account setup.</p>
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-primary">Get started</h1>
+          <p className="mt-1 text-sm md:text-base text-secondary">Complete a few quick steps to continue your account setup.</p>
 
           <div className="mt-8 grid grid-cols-12 gap-8">
             {/* Sidebar */}
@@ -425,8 +425,8 @@ function StepCheckout({
                   ref={step1Ref as any}
                   open={step === 1}
                   className={classNames(
-                    "relative rounded-xl border shadow-soft shadow-hover",
-                    step > 1 ? "bg-success-bg border-success" : "bg-white border-neutral-200"
+                    "relative rounded-3xl border shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]",
+                    step > 1 ? "bg-success-bg border-success" : "bg-white border-soft"
                   )}
                   onToggle={(e) => {
                     const el = e.currentTarget as HTMLDetailsElement;
@@ -465,8 +465,8 @@ function StepCheckout({
                           onClick={handleNext}
                           disabled={!canProceedStep1}
                           className={classNames(
-                            "px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                            !canProceedStep1 ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                            "px-5 py-3 rounded-full bg-accent-primary text-white border border-accent-primary text-sm md:text-base transition-colors focus:outline-none",
+                            !canProceedStep1 ? "opacity-60 cursor-not-allowed" : "hover:brightness-95"
                           )}
                         >
                           Continue
@@ -481,8 +481,8 @@ function StepCheckout({
                   ref={step2Ref as any}
                   open={step === 2}
                   className={classNames(
-                    "relative rounded-xl border shadow-soft shadow-hover",
-                    step > 2 ? "bg-success-bg border-success" : step >= 2 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+                    "relative rounded-3xl border shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]",
+                    step > 2 ? "bg-success-bg border-success" : step >= 2 ? "bg-white border-soft" : "bg-white border-neutral-100 opacity-70"
                   )}
                   onToggle={(e) => {
                     const el = e.currentTarget as HTMLDetailsElement;
@@ -529,7 +529,7 @@ function StepCheckout({
                         <button
                           type="button"
                           onClick={handleBack}
-                          className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50 shadow-soft shadow-hover"
+                          className="px-4 py-2 rounded-full border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50"
                         >
                           Back
                         </button>
@@ -538,8 +538,8 @@ function StepCheckout({
                           onClick={handleNext}
                           disabled={!selectedPlan}
                           className={classNames(
-                            "px-4 py-2 rounded-md text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent",
-                            !selectedPlan ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                            "px-5 py-3 rounded-full bg-accent-primary text-white border border-accent-primary text-sm md:text-base transition-colors focus:outline-none",
+                            !selectedPlan ? "opacity-60 cursor-not-allowed" : "hover:brightness-95"
                           )}
                         >
                           Continue
@@ -554,8 +554,8 @@ function StepCheckout({
                   ref={step3Ref as any}
                   open={step === 3}
                   className={classNames(
-                    "relative rounded-xl border shadow-soft shadow-hover",
-                    step > 3 ? "bg-success-bg border-success" : step >= 3 ? "bg-white border-neutral-200" : "bg-white border-neutral-100 opacity-70"
+                    "relative rounded-3xl border shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]",
+                    step > 3 ? "bg-success-bg border-success" : step >= 3 ? "bg-white border-soft" : "bg-white border-neutral-100 opacity-70"
                   )}
                   onToggle={(e) => {
                     const el = e.currentTarget as HTMLDetailsElement;
@@ -595,7 +595,7 @@ function StepCheckout({
                         <button
                           type="button"
                           onClick={handleBack}
-                          className="px-4 py-2 rounded-md border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50"
+                          className="px-4 py-2 rounded-full border border-neutral-300 text-sm text-neutral-700 bg-white hover:bg-neutral-50"
                         >
                           Back
                         </button>
@@ -604,8 +604,8 @@ function StepCheckout({
                           onClick={handleNext}
                           disabled={!selectedPlan}
                           className={classNames(
-                            "px-4 py-2 rounded-md text-white text-sm",
-                            !selectedPlan ? "bg-neutral-300 cursor-not-allowed" : "bg-black hover:bg-neutral-900"
+                            "px-5 py-3 rounded-full bg-accent-primary text-white border border-accent-primary text-sm md:text-base transition-colors",
+                            !selectedPlan ? "opacity-60 cursor-not-allowed" : "hover:brightness-95"
                           )}
                         >
                           Continue
@@ -619,7 +619,7 @@ function StepCheckout({
                 <details
                   ref={step4Ref as any}
                   open={step === 4}
-                  className={classNames("rounded-xl border bg-white shadow-soft shadow-hover", step >= 4 ? "border-neutral-200" : "border-neutral-100 opacity-70")}
+                  className={classNames("rounded-3xl border bg-white shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]", step >= 4 ? "border-soft" : "border-neutral-100 opacity-70")}
                   onToggle={(e) => {
                     const el = e.currentTarget as HTMLDetailsElement;
                     if (el.open && step >= 4) setStep(4);

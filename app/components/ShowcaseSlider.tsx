@@ -36,7 +36,7 @@ export default function ShowcaseSlider({ children, ariaLabel = "Showcase slider"
       `}</style>
       <div
         ref={scrollerRef}
-        className="overflow-x-auto hide-scrollbar snap-x snap-mandatory p-2 sm:p-3 touch-pan-x overscroll-x-contain"
+        className="overflow-x-auto hide-scrollbar snap-x snap-proximity p-2 sm:p-3 touch-pan-x overscroll-x-contain"
         style={{ WebkitOverflowScrolling: 'touch' }}
         aria-label={ariaLabel}
         tabIndex={0}
