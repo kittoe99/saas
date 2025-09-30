@@ -1,10 +1,11 @@
+import ShowcaseSlider from "./components/ShowcaseSlider";
 import AmaBar from "./components/AmaBar";
 
 export default function Home() {
   return (
-    <div className="py-10 md:py-16">
+    <div className="py-12 md:py-16">
       {/* Hero (updated to match static design) */}
-      <section className="bg-transparent mb-8 md:mb-12">
+      <section className="bg-transparent mb-12 md:mb-16">
         <div className="max-w-3xl mx-auto text-center px-3 sm:px-4">
           <div className="inline-flex items-center gap-2 rounded-full ring-1 ring-neutral-200 bg-white/70 px-3 py-1 text-xs text-neutral-600 shadow-xs backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" /> No setup fees • Cancel anytime
@@ -23,75 +24,153 @@ export default function Home() {
               See what’s included
             </a>
           </div>
-          <div className="mt-4 md:mt-5 text-xs text-tertiary">All essentials covered. Simple pricing, no surprises.</div>
-          
         </div>
       </section>
 
       {/* Ask Me Anything */}
       <AmaBar />
 
-      {/* Showcase (match static index.html) */}
-      <section id="showcase" className="mt-8 md:mt-12 py-10 md:py-12">
+      <section id="products" className="mt-12 md:mt-20">
         <div className="max-w-5xl mx-auto px-2.5 md:px-4">
-          <header className="mb-8 text-center">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-primary">Showcase</h2>
-            <p className="mt-2 text-sm text-secondary">A few recent projects.</p>
+          <header className="mb-6 md:mb-8 text-center">
+            <div className="text-xs uppercase tracking-wider text-tertiary">Products</div>
+            <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight text-primary">What we build</h2>
           </header>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            <a href="#" className="group relative block overflow-hidden rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:ring-[color:var(--accent-soft)]">
-              <div className="h-24 sm:h-28 bg-neutral-200">
-                <img loading="lazy" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1200&auto=format&fit=crop" alt="Aurora Fitness" className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]" />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/40 to-transparent text-white">
-                <div className="text-xs font-medium">Aurora Fitness</div>
-              </div>
-            </a>
-            <a href="#" className="group relative block overflow-hidden rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:ring-[color:var(--accent-soft)]">
-              <div className="h-24 sm:h-28 bg-neutral-200">
-                <img loading="lazy" src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop" alt="Summit Outdoors" className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]" />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/40 to-transparent text-white">
-                <div className="text-xs font-medium">Summit Outdoors</div>
-              </div>
-            </a>
-            <a href="#" className="group relative block overflow-hidden rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:ring-[color:var(--accent-soft)]">
-              <div className="h-24 sm:h-28 bg-neutral-200">
-                <img loading="lazy" src="https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=1200&auto=format&fit=crop" alt="Bluegrain Coffee Co." className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]" />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/40 to-transparent text-white">
-                <div className="text-xs font-medium">Bluegrain Coffee Co.</div>
+          <div className="space-y-6 md:space-y-8">
+            {/* Websites */}
+            <a href="/website" className="group block rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="md:min-w-[14rem]">
+                  <h3 className="text-2xl md:text-3xl font-serif tracking-tight text-primary">Websites</h3>
+                </div>
+                <div className="flex-1 md:pl-4">
+                  <p className="text-sm md:text-base text-secondary">Modern, fast, and SEO‑ready sites designed, hosted, and maintained for you—no upfront fees.</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-tertiary">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1">Design system</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1">CMS & updates</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1">Analytics</span>
+                  </div>
+                </div>
+                <div className="md:pl-4">
+                  <span className="inline-flex items-center rounded-full bg-[color:var(--accent-subtle)] text-accent-primary px-3 py-1 text-xs font-medium shadow-xs">Explore →</span>
+                </div>
               </div>
             </a>
-            <a href="#" className="group relative block overflow-hidden rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:ring-[color:var(--accent-soft)]">
-              <div className="h-24 sm:h-28 bg-neutral-200">
-                <img loading="lazy" src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop" alt="Northstar Consulting" className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]" />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/40 to-transparent text-white">
-                <div className="text-xs font-medium">Northstar Consulting</div>
+
+            {/* AI Agents */}
+            <a href="/agents" className="group block rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="md:min-w-[14rem]">
+                  <h3 className="text-2xl md:text-3xl font-serif tracking-tight text-primary">AI Agents</h3>
+                </div>
+                <div className="flex-1 md:pl-4">
+                  <p className="text-sm md:text-base text-secondary">Automate support, lead‑qualifying, and ops with reliable agents integrated into your stack.</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-tertiary">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1">RAG & tools</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1">Workflows</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1">Observability</span>
+                  </div>
+                </div>
+                <div className="md:pl-4">
+                  <span className="inline-flex items-center rounded-full bg-[color:var(--accent-subtle)] text-accent-primary px-3 py-1 text-xs font-medium shadow-xs">See details →</span>
+                </div>
               </div>
             </a>
-            <a href="#" className="group relative block overflow-hidden rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:ring-[color:var(--accent-soft)]">
-              <div className="h-24 sm:h-28 bg-neutral-200">
-                <img loading="lazy" src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1200&auto=format&fit=crop" alt="Crescent Studio" className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]" />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/40 to-transparent text-white">
-                <div className="text-xs font-medium">Crescent Studio</div>
-              </div>
-            </a>
-            <a href="#" className="group relative block overflow-hidden rounded-xl ring-1 ring-neutral-200 bg-white transition-all duration-300 hover:ring-[color:var(--accent-soft)]">
-              <div className="h-24 sm:h-28 bg-neutral-200">
-                <img loading="lazy" src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop" alt="Evergreen Nonprofit" className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]" />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/40 to-transparent text-white">
-                <div className="text-xs font-medium">Evergreen Nonprofit</div>
+
+            {/* Marketing & Branding */}
+            <a href="/contact" className="group block rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="md:min-w-[14rem]">
+                  <h3 className="text-2xl md:text-3xl font-serif tracking-tight text-primary">Marketing & Branding</h3>
+                </div>
+                <div className="flex-1 md:pl-4">
+                  <p className="text-sm md:text-base text-secondary">Positioning, visual identity, and campaigns that match your goals and amplify your reach.</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-tertiary">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1">Brand identity</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1">Content</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1">Campaigns</span>
+                  </div>
+                </div>
+                <div className="md:pl-4">
+                  <span className="inline-flex items-center rounded-full bg-[color:var(--accent-subtle)] text-accent-primary px-3 py-1 text-xs font-medium shadow-xs">Work with us →</span>
+                </div>
               </div>
             </a>
           </div>
         </div>
       </section>
 
-      
+      {/* Showcase */}
+      <section id="showcase" className="mt-12 md:mt-20">
+        <div className="max-w-5xl mx-auto px-2.5 md:px-4">
+          <header className="mb-6 md:mb-8 text-center">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-primary">Showcase</h2>
+            <p className="mt-2 text-sm text-secondary">Recent work and case studies</p>
+          </header>
+          <ShowcaseSlider ariaLabel="Showcase slider">
+            <div className="flex gap-3 md:gap-4 w-max px-1">
+              <a href="#" className="group snap-start w-56 sm:w-64 flex-none rounded-lg border border-soft bg-white shadow-soft hover:border-[color:var(--accent-soft)] hover:shadow-hover transition-all overflow-hidden">
+                <div className="relative">
+                  <img loading="lazy" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1200&auto=format&fit=crop" alt="Aurora Fitness" className="h-28 w-full object-cover" />
+                  <span className="absolute top-2 left-2 rounded-full bg-white/90 text-[11px] px-2 py-0.5 ring-1 ring-neutral-200">Website</span>
+                </div>
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold text-primary group-hover:underline">Aurora Fitness</h3>
+                  <p className="mt-1 text-xs text-secondary line-clamp-2">Sleek site with schedules, trainer bios, and conversion pages.</p>
+                  <span className="mt-2 inline-flex items-center text-xs font-medium text-accent-primary">view project →</span>
+                </div>
+              </a>
+
+              <a href="#" className="group snap-start w-56 sm:w-64 flex-none rounded-lg border border-soft bg-white shadow-soft hover:border-[color:var(--accent-soft)] hover:shadow-hover transition-all overflow-hidden">
+                <div className="relative">
+                  <img loading="lazy" src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop" alt="Summit Outdoors" className="h-28 w-full object-cover" />
+                  <span className="absolute top-2 left-2 rounded-full bg-white/90 text-[11px] px-2 py-0.5 ring-1 ring-neutral-200">CMS</span>
+                </div>
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold text-primary group-hover:underline">Summit Outdoors</h3>
+                  <p className="mt-1 text-xs text-secondary line-clamp-2">Catalog layout with product stories and lightweight ecommerce.</p>
+                  <span className="mt-2 inline-flex items-center text-xs font-medium text-accent-primary">view project →</span>
+                </div>
+              </a>
+
+              <a href="#" className="group snap-start w-56 sm:w-64 flex-none rounded-lg border border-soft bg-white shadow-soft hover:border-[color:var(--accent-soft)] hover:shadow-hover transition-all overflow-hidden">
+                <div className="relative">
+                  <img loading="lazy" src="https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=1200&auto=format&fit=crop" alt="Bluegrain Coffee Co." className="h-28 w-full object-cover" />
+                  <span className="absolute top-2 left-2 rounded-full bg-white/90 text-[11px] px-2 py-0.5 ring-1 ring-neutral-200">Brand</span>
+                </div>
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold text-primary group-hover:underline">Bluegrain Coffee Co.</h3>
+                  <p className="mt-1 text-xs text-secondary line-clamp-2">Editorial design, storytelling pages, newsletter growth.</p>
+                  <span className="mt-2 inline-flex items-center text-xs font-medium text-accent-primary">view project →</span>
+                </div>
+              </a>
+
+              <a href="#" className="group snap-start w-56 sm:w-64 flex-none rounded-lg border border-soft bg-white shadow-soft hover:border-[color:var(--accent-soft)] hover:shadow-hover transition-all overflow-hidden">
+                <div className="relative">
+                  <img loading="lazy" src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop" alt="Northstar Consulting" className="h-28 w-full object-cover" />
+                  <span className="absolute top-2 left-2 rounded-full bg-white/90 text-[11px] px-2 py-0.5 ring-1 ring-neutral-200">Case study</span>
+                </div>
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold text-primary group-hover:underline">Northstar Consulting</h3>
+                  <p className="mt-1 text-xs text-secondary line-clamp-2">Professional presence with case study templates.</p>
+                  <span className="mt-2 inline-flex items-center text-xs font-medium text-accent-primary">view project →</span>
+                </div>
+              </a>
+
+              <a href="#" className="group snap-start w-56 sm:w-64 flex-none rounded-lg border border-soft bg-white shadow-soft hover:border-[color:var(--accent-soft)] hover:shadow-hover transition-all overflow-hidden">
+                <div className="relative">
+                  <img loading="lazy" src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop" alt="Evergreen Nonprofit" className="h-28 w-full object-cover" />
+                </div>
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold text-primary group-hover:underline">Evergreen Nonprofit</h3>
+                  <p className="mt-1 text-xs text-secondary line-clamp-2">Accessible site with donation flows and impact highlights.</p>
+                  <span className="mt-2 inline-flex items-center text-xs font-medium text-accent-primary">view project →</span>
+                </div>
+              </a>
+            </div>
+          </ShowcaseSlider>
+        </div>
+      </section>
 
     </div>
   );

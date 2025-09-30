@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import FooterLinks from "./FooterLinks";
-import ChatWidget from "./ChatWidget";
 import Image from "next/image";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -106,8 +105,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="mt-8 border-t border-neutral-800 pt-6 text-xs !text-white">© {new Date().getFullYear()} Hinn.dev</div>
         </div>
       </footer>
-      {/* Floating Support/Chat button */}
-      <ChatWidget />
+      {/* Floating Support/Chat button removed per request */}
     </>
   );
 }
