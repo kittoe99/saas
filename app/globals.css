@@ -184,8 +184,8 @@ h1, h2 { font-weight: 800; letter-spacing: -0.02em; }
 h3, h4 { font-weight: 700; letter-spacing: -0.015em; }
 h5, h6 { font-weight: 700; letter-spacing: -0.01em; }
 
-/* Body text improvements */
-p, span, div {
+/* Body text improvements: apply secondary color to paragraphs only */
+p {
   color: var(--text-secondary);
 }
 
@@ -231,13 +231,7 @@ label, .label {
 /* Global container border reset: hide borders on typical containers */
 /* Removed previous rules that hid borders for common containers to allow thin borders to show */
 
-/* Remove nav/header bottom shadow and border */
-header,
-header > nav,
-nav {
-  box-shadow: none !important;
-  border-bottom: 0 !important;
-}
+/* Header/nav shadows are disabled via specific classes elsewhere. Keep borders controllable per component. */
 
 /* Remove shadows from interactive items within the header */
 header button,
@@ -260,37 +254,11 @@ header .no-btn-shadow:active {
 }
 
 /* Shadow system: low shadows for cards, high for modals */
-.shadow-soft {
-  /* Low shadow for cards and general surfaces (softer) */
-  box-shadow:
-    0 1px 1.5px rgba(0, 0, 0, 0.03),
-    0 1.5px 6px rgba(0, 0, 0, 0.05);
-}
-
-.shadow-elevated {
-  /* High shadow for modals, drawers, and elevated content (softer) */
-  box-shadow:
-    0 3px 5px rgba(0, 0, 0, 0.04),
-    0 8px 18px rgba(0, 0, 0, 0.08),
-    0 16px 32px rgba(0, 0, 0, 0.06);
-}
-
-.shadow-hover {
-  /* Interactive shadow for hover states (softer) */
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    0 3px 10px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.2s ease;
-}
-.shadow-hover:hover {
-  box-shadow:
-    0 3px 6px rgba(0, 0, 0, 0.05),
-    0 6px 16px rgba(0, 0, 0, 0.10);
-}
+.shadow-soft, .shadow-elevated, .shadow-hover, .shadow-hover:hover { box-shadow: none !important; }
 
 /* Compose helpers */
-.shadow-card { box-shadow: 0 1px 1px rgba(17,17,17,0.015), 0 3px 8px rgba(17,17,17,0.04); }
-.shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(17,17,17,0.04); }
+.shadow-card { box-shadow: none !important; }
+.shadow-inset-soft { box-shadow: none !important; }
 
 /* Form elements with solid backgrounds and clear focus states */
 input[type="text"],
@@ -308,7 +276,7 @@ select {
   font-size: 16px;
   line-height: 1.5;
   color: var(--text-primary);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -322,9 +290,9 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.04),
-    0 0 0 3px var(--accent-subtle);
+  box-shadow: none;
+  outline: 3px solid var(--accent-subtle);
+  outline-offset: 1px;
 }
 
 /* Button styles with proper radius and shadows */
@@ -337,7 +305,7 @@ button,
   font-weight: 500;
   letter-spacing: 0.01em;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.035);
+  box-shadow: none;
 }
 
 button:hover,
@@ -345,7 +313,7 @@ button:hover,
 .button:hover,
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.07);
+  box-shadow: none;
 }
 
 button:focus,
@@ -357,9 +325,9 @@ button:focus-visible,
 .btn:focus,
 .btn:focus-visible {
   outline: none;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.035),
-    0 0 0 3px var(--accent-subtle);
+  box-shadow: none;
+  outline: 3px solid var(--accent-subtle);
+  outline-offset: 2px;
 }
 
 button:active,
@@ -367,7 +335,7 @@ button:active,
 .button:active,
 .btn:active {
   transform: translateY(0);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.035);
+  box-shadow: none;
 }
 
 /* Utility class to opt-out when needed */
@@ -382,55 +350,14 @@ button:active,
 
 /* Dark mode tuning: reduce spread/opacity for softer look */
 @media (prefers-color-scheme: dark) {
-  .shadow-soft {
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.16),
-      0 4px 10px rgba(0, 0, 0, 0.20);
-  }
-  .shadow-elevated {
-    box-shadow:
-      0 1px 1px rgba(0, 0, 0, 0.12),
-      0 6px 16px rgba(0, 0, 0, 0.20),
-      0 12px 24px rgba(0, 0, 0, 0.16);
-  }
-  .shadow-hover,
-  .shadow-hover:hover,
-  .shadow-hover:focus,
-  .shadow-hover:focus-visible,
-  .shadow-hover:active {
-    box-shadow:
-      0 3px 6px rgba(0, 0, 0, 0.20),
-      0 12px 28px rgba(0, 0, 0, 0.26);
-  }
-  .shadow-card { box-shadow: 0 1px 1px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.20); }
-  .shadow-inset-soft { box-shadow: inset 0 1px 2px rgba(0,0,0,0.16); }
-  /* Dark mode button shadows */
-  button,
-  [role="button"],
-  .button,
-  .btn {
-    box-shadow:
-      0 1px 1px rgba(0, 0, 0, 0.10),
-      0 2px 6px rgba(0, 0, 0, 0.16);
-  }
-  button:hover,
-  button:focus,
-  button:focus-visible,
-  button:active,
-  [role="button"]:hover,
-  [role="button"]:focus,
-  [role="button"]:focus-visible,
-  [role="button"]:active,
-  .button:hover,
-  .button:focus,
-  .button:focus-visible,
-  .button:active,
-  .btn:hover,
-  .btn:focus,
-  .btn:focus-visible,
-  .btn:active {
-    box-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.14),
-      0 8px 18px rgba(0, 0, 0, 0.20);
+  .shadow-soft, .shadow-elevated, .shadow-hover, .shadow-hover:hover,
+  .shadow-hover:focus, .shadow-hover:focus-visible, .shadow-hover:active,
+  .shadow-card, .shadow-inset-soft,
+  button, [role="button"], .button, .btn,
+  button:hover, button:focus, button:focus-visible, button:active,
+  [role="button"]:hover, [role="button"]:focus, [role="button"]:focus-visible, [role="button"]:active,
+  .button:hover, .button:focus, .button:focus-visible, .button:active,
+  .btn:hover, .btn:focus, .btn:focus-visible, .btn:active {
+    box-shadow: none !important;
   }
 }

@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import AppShell from "./components/AppShell";
-import { Space_Grotesk } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hinn.dev";
 
-const spaceGroteskSans = Space_Grotesk({
+const spaceGroteskSans = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 

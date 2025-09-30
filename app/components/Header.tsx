@@ -69,7 +69,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-page">
+    <header className="sticky top-0 z-50 bg-page border-b border-neutral-200">
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
         {/* Top row */}
         <div className="flex items-center justify-between gap-3">
@@ -79,11 +79,11 @@ export default function Header() {
           </Link>
 
           {/* Inline nav on md+ */}
-          <nav className="hidden md:flex items-center gap-3 lg:gap-4 text-sm text-neutral-900 bg-page">
+          <nav className="hidden md:flex items-center gap-3 lg:gap-4 text-base text-neutral-900 bg-page">
             {/* Overview */}
             <a
               href="#overview"
-              className="hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+              className="font-semibold hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               Overview
             </a>
@@ -98,7 +98,7 @@ export default function Header() {
               onMouseLeave={scheduleFeaturesClose}
             >
               <div className="inline-flex items-center gap-1">
-                <span className="cursor-default select-none">Features</span>
+                <span className="cursor-default select-none font-semibold">Features</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
@@ -130,7 +130,7 @@ export default function Header() {
             {/* Showcase */}
             <Link
               href="/showcase"
-              className="hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+              className="font-semibold hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               Showcase
             </Link>
@@ -145,7 +145,7 @@ export default function Header() {
               onMouseLeave={scheduleToolsClose}
             >
               <div className="inline-flex items-center gap-1">
-                <span className="cursor-default select-none">Tools</span>
+                <span className="cursor-default select-none font-semibold">Tools</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
@@ -182,14 +182,14 @@ export default function Header() {
             {/* News */}
             <Link
               href="/blog"
-              className="hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+              className="font-semibold hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               News
             </Link>
             {/* Contact */}
             <Link
               href="/contact"
-              className="hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+              className="font-semibold hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
             >
               Contact
             </Link>
@@ -197,6 +197,23 @@ export default function Header() {
 
           {/* Actions (pill buttons) */}
           <div className="hidden md:flex items-center gap-2 lg:gap-3">
+            <a
+              href="/signup"
+              className="inline-flex items-center justify-center px-5 py-3 rounded-full font-semibold bg-black text-white border border-black text-sm md:text-base transition-colors hover:bg-neutral-900 focus:outline-none whitespace-nowrap"
+            >
+              <span>Get started</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
             <a
               href={loginHref}
               className="inline-flex items-center px-3 lg:px-4 py-2 rounded-full font-semibold bg-accent-primary text-white text-sm lg:text-base shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_26px_rgba(217,119,89,0.22)]"
@@ -302,6 +319,24 @@ export default function Header() {
                 Contact
               </Link>
               <div className="p-3.5 flex flex-col gap-2 bg-white">
+                <a
+                  href="/signup"
+                  className="w-full inline-flex items-center justify-center px-5 py-3 rounded-full font-semibold bg-black text-white border border-black text-base transition-colors hover:bg-neutral-900 focus:outline-none whitespace-nowrap"
+                  onClick={() => setOpen(false)}
+                >
+                  <span>Get started</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
                 <a
                   href={loginHref}
                   className="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-full font-semibold bg-accent-primary text-white text-base shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_26px_rgba(217,119,89,0.22)]"
