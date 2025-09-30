@@ -43,7 +43,7 @@ export default function ContactForm() {
   }
 
   return (
-    <div className="md:col-span-2 rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-soft shadow-hover">
+    <div className="md:col-span-2 rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
@@ -89,10 +89,10 @@ export default function ContactForm() {
           </div>
         )}
         <div className="flex items-center gap-3">
-          <button type="submit" disabled={submitting} className="px-4 py-2.5 rounded-md bg-success-accent text-white transition-opacity hover:opacity-90 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-success-accent">
+          <button type="submit" disabled={submitting} className="px-5 py-3 rounded-full bg-black text-white border border-black text-sm md:text-base transition-colors hover:bg-neutral-900 disabled:opacity-60 focus:outline-none">
             {submitting ? "Sending..." : "Send message"}
           </button>
-          <a href="mailto:hello@hinn.io" className="text-sm text-neutral-900 hover:underline">Or email us directly</a>
+          <a href="mailto:hello@hinn.io" className="text-sm text-accent-primary hover:underline">Or email us directly</a>
         </div>
       </form>
     </div>
