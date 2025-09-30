@@ -2,7 +2,7 @@ export default function Home() {
   return (
     <div className="py-10 md:py-16">
       {/* Hero (updated to match static design) */}
-      <section className="bg-transparent">
+      <section className="bg-transparent mb-8 md:mb-12">
         <div className="max-w-3xl mx-auto text-center px-3 sm:px-4">
           <div className="inline-flex items-center gap-2 rounded-full ring-1 ring-neutral-200 bg-white/70 px-3 py-1 text-xs text-neutral-600 shadow-xs backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" /> No setup fees • Cancel anytime
@@ -21,38 +21,50 @@ export default function Home() {
               See what’s included
             </a>
           </div>
-          <div className="mt-3 text-xs text-tertiary">All essentials covered. Simple pricing, no surprises.</div>
-          <ul className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-secondary max-w-2xl mx-auto">
-            <li className="flex items-center gap-2">
-              {/* Pencil icon */}
-              <svg className="h-4 w-4 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 3.487l3.651 3.651m-9.9 9.9l-4.613 1.23 1.23-4.613 9.9-9.9 3.382 3.382-9.899 9.901z" />
-              </svg>
-              <span>Design + build included</span>
-            </li>
-            <li className="flex items-center gap-2">
-              {/* Lock icon */}
-              <svg className="h-4 w-4 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <rect x="5" y="10" width="14" height="9" rx="2" ry="2"></rect>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10V7a4 4 0 118 0v3"></path>
-              </svg>
-              <span>Managed hosting & SSL</span>
-            </li>
-            <li className="flex items-center gap-2">
-              {/* Refresh icon */}
-              <svg className="h-4 w-4 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12a9 9 0 0115.364-6.364M21 12a9 9 0 01-15.364 6.364" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 8V4H4" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 16v4h4" />
-              </svg>
-              <span>Monthly content updates</span>
-            </li>
-          </ul>
+          <div className="mt-4 md:mt-5 text-xs text-tertiary">All essentials covered. Simple pricing, no surprises.</div>
+          
+        </div>
+      </section>
+
+      {/* Ask Me Anything */}
+      <section className="py-6 md:py-8">
+        <div className="max-w-3xl mx-auto px-3 sm:px-4">
+          <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-primary text-center flex items-center justify-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-5 w-5 text-accent-primary"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 12c0 3.866-3.582 7-8 7-1.168 0-2.272-.22-3.254-.615L4 20l1.748-3.059C5.27 16.02 5 14.997 5 14c0-3.866 3.582-7 8-7s8 3.134 8 7z" />
+            </svg>
+            <span>Ask Me Anything</span>
+          </h2>
+          <p className="mt-2 text-sm md:text-base text-secondary text-center">Ask about pricing, features, timelines, or your website needs—I'll help instantly.</p>
+          <form className="mt-5">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Ask about pricing, features, timelines, content updates..."
+                aria-label="Ask Me Anything"
+                className="w-full rounded-full border border-neutral-200 bg-white px-5 py-3 pr-28 text-sm md:text-base text-primary shadow-soft focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-soft)]"
+              />
+              <button
+                type="submit"
+                className="absolute right-1 top-1.5 inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold bg-accent-primary text-white shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95"
+              >
+                Ask
+              </button>
+            </div>
+          </form>
         </div>
       </section>
 
       {/* Showcase (match static index.html) */}
-      <section id="showcase" className="py-12 sm:py-16">
+      <section id="showcase" className="mt-8 md:mt-12 py-10 md:py-12">
         <div className="max-w-5xl mx-auto px-2.5 md:px-4">
           <header className="mb-8 text-center">
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-primary">Showcase</h2>
