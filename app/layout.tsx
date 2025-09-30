@@ -44,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en">
       <body className={`${spaceGroteskSans.variable} font-sans antialiased text-black`}>
         {/* JSON-LD: Organization and Website */}
         <script

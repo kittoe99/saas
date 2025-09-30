@@ -179,31 +179,28 @@ export default function AmaBar() {
 
   return (
     <>
-      {/* Sticky minimal bar shown when section scrolled away */}
-      <div
-        className={`fixed inset-x-0 z-50 transition-transform duration-300 ${
-          isBottom ? "" : "top-0"
-        } ${(showSticky || nearBottom) ? "translate-y-0 pointer-events-auto" : (isBottom) ? "translate-y-full pointer-events-none" : "-translate-y-full pointer-events-none"}`}
-        style={isBottom ? { bottom: "calc(env(safe-area-inset-bottom) + 8px)" } : undefined}
-        aria-hidden={!(showSticky || nearBottom)}
-      >
-        <div className={`backdrop-blur bg-white/80 border-neutral-200 ${
-          isBottom ? "border-t" : "border-b"
-        }`}>
-          <div className={`max-w-3xl mx-auto px-3 sm:px-4 py-2 ${
-            isBottom ? "" : ""
-          }`}>
+      {/* Sticky minimal bar shown at the bottom only when section scrolled away */}
+      {showSticky && (
+        <div
+          className="fixed inset-x-0 z-50 flex justify-center touch-pan-y pointer-events-none"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 10px)" }}
+          aria-hidden={false}
+        >
+          <div className="pointer-events-auto">
             <form onSubmit={onSubmit} className="">
-              <div className="relative">
+              <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white/95 backdrop-blur px-2 py-1.5 shadow-md">
+                <div className="pl-1 text-neutral-500" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12c0 3.866-3.582 7-8 7-1.168 0-2.272-.22-3.254-.615L4 20l1.748-3.059C5.27 16.02 5 14.997 5 14c0-3.866 3.582-7 8-7s8 3.134 8 7z"/></svg>
+                </div>
                 <input
                   type="text"
-                  placeholder="Ask anything about pricing, features, timelines..."
+                  placeholder="Ask me anything…"
                   aria-label="Ask Me Anything"
-                  className="w-full rounded-full border border-neutral-200 bg-white px-4 py-2 pr-28 text-sm text-primary shadow-xs focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-soft)]"
+                  className="w-[56vw] max-w-[28rem] min-w-[220px] rounded-full border-0 bg-transparent px-2 py-1.5 text-sm text-primary placeholder:text-neutral-400 focus:outline-none"
                 />
                 <button
                   type="submit"
-                  className="absolute right-1 top-1 inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold bg-accent-primary text-white shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95"
+                  className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm font-semibold bg-accent-primary text-white shadow-[0_6px_16px_rgba(217,119,89,0.18)] transition-all hover:brightness-95"
                 >
                   Ask
                 </button>
@@ -211,7 +208,7 @@ export default function AmaBar() {
             </form>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Full section in-flow */}
       <section ref={sectionRef} className="py-6 md:py-8">
@@ -254,7 +251,7 @@ export default function AmaBar() {
           </form>
           <div className="mt-3 md:mt-4">
             <div className="overflow-x-auto hide-scrollbar px-2 touch-pan-x" aria-label="Suggested questions">
-              <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap sm:justify-center snap-x snap-mandatory">
+              <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap sm:justify-center">
                 <button type="button" onClick={(e) => handleSuggestion(e, "What’s included in the plan?")} className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">What’s included in the plan?</button>
                 <button type="button" onClick={(e) => handleSuggestion(e, "How fast can you launch?")} className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">How fast can you launch?</button>
                 <button type="button" onClick={(e) => handleSuggestion(e, "Can you use my domain?")} className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">Can you use my domain?</button>

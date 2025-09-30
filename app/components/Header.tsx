@@ -232,16 +232,26 @@ export default function Header() {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              fill="none"
               viewBox="0 0 24 24"
-              strokeWidth={1.5}
+              fill="none"
               stroke="currentColor"
+              strokeWidth={1.8}
               className="h-5 w-5"
+              aria-hidden="true"
             >
               {open ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <>
+                  <circle cx="12" cy="12" r="9" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 8l8 8" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 8l-8 8" />
+                </>
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                <>
+                  <circle cx="12" cy="12" r="9" />
+                  <path strokeLinecap="round" d="M7.5 9.5h9" />
+                  <path strokeLinecap="round" d="M7.5 12h9" />
+                  <path strokeLinecap="round" d="M7.5 14.5h9" />
+                </>
               )}
             </svg>
           </button>
