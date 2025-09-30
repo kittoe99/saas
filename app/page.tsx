@@ -17,7 +17,7 @@ export default function Home() {
               Get started
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-2 h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </a>
-            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-full font-semibold bg-white text-accent-primary border border-[color:var(--accent-soft)] text-sm md:text-base gap-2 transition-colors hover:bg-[color:var(--accent-subtle)] focus:outline-none">
+            <a href="#features" className="inline-flex items-center justify-center px-5 py-3 rounded-full font-semibold bg-white text-black border border-black text-sm md:text-base gap-2 transition-colors hover:bg-neutral-50 focus:outline-none">
               See what’s included
             </a>
           </div>
