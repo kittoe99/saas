@@ -43,6 +43,11 @@ export default function Home() {
             </svg>
             <span>Ask Me Anything</span>
           </h2>
+          <style>{`
+            /* Hide scrollbar for chips slider */
+            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+          `}</style>
           <p className="mt-2 text-sm md:text-base text-secondary text-center">Ask about pricing, features, timelines, or your website needs—I'll help instantly.</p>
           <form className="mt-5">
             <div className="relative">
@@ -60,6 +65,17 @@ export default function Home() {
               </button>
             </div>
           </form>
+          <div className="mt-3 md:mt-4 -mx-3 sm:mx-0">
+            <div className="overflow-x-auto hide-scrollbar px-3 sm:px-0" aria-label="Suggested questions">
+              <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap sm:justify-center snap-x snap-mandatory">
+                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">What’s included in the plan?</a>
+                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">How fast can you launch?</a>
+                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">Can you use my domain?</a>
+                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">Do you handle updates?</a>
+                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">How much does it cost?</a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
