@@ -1,119 +1,122 @@
-"use client";
 import React from "react";
 import Link from "next/link";
 
 export default function WebsitePage() {
   return (
-    <div className="py-8 sm:py-12">
-      {/* Hero (replaced with design from static index.html) */}
-      <section className="rounded-3xl border border-soft bg-white p-6 sm:p-10 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
-        <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-flex items-center gap-2 rounded-full ring-1 ring-neutral-200 bg-white px-3 py-1 text-xs text-neutral-600 shadow-soft">
-            No setup fees • Cancel anytime
-          </span>
-          <h1 className="mt-4 text-4xl md:text-5xl font-semibold leading-tight tracking-tight text-primary">
-            Pay‑by‑month websites
-            <span className="block text-accent-primary">design, hosting, updates</span>
+    <div className="py-12 md:py-16">
+      {/* Hero (aligned to Agents: plain header, no card container) */}
+      <section>
+        <div className="max-w-3xl mx-auto text-center px-3 sm:px-4">
+          <h1 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-primary flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-subtle">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-accent-primary" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16v12H4z" />
+              </svg>
+            </span>
+            <span>Websites</span>
           </h1>
-          <p className="mt-4 text-base md:text-lg text-secondary max-w-xl mx-auto">
-            Launch a professional site without large upfront costs. One simple monthly plan covers design,
-            hosting, updates, and support—so you can focus on your business.
+          <p className="mt-2 text-sm md:text-base text-secondary max-w-2xl mx-auto">
+            Pay‑by‑month websites with design, hosting, and updates included—so you can focus on your business.
           </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/get-started" className="inline-flex items-center justify-center px-4 py-2.5 rounded-full font-semibold bg-accent-primary text-white shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_26px_rgba(217,119,89,0.22)]">
-              Get started
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="ml-2 h-4 w-4" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </Link>
-            <a href="#features" className="inline-flex items-center justify-center px-4 py-2.5 rounded-full font-semibold bg-white text-accent-primary border border-[color:var(--accent-soft)] hover:bg-[color:var(--accent-subtle)]">
-              See features
-            </a>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <Link href="/get-started" className="px-5 py-3 rounded-full bg-accent-primary text-white border border-accent-primary text-sm md:text-base transition-colors hover:brightness-95">Get started</Link>
+            <a href="#highlights" className="px-5 py-3 rounded-full border border-neutral-300 bg-white text-sm text-neutral-800 hover:bg-neutral-50">See details</a>
           </div>
-          <ul className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-secondary max-w-2xl mx-auto">
-            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Design + build included</span></li>
-            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Managed hosting & SSL</span></li>
-            <li className="flex items-center gap-2"><svg className="h-4 w-4 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg><span>Monthly content updates</span></li>
-          </ul>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="scroll-mt-24 mt-8 md:mt-12">
+      {/* Highlights (aligned to Agents) */}
+      <section id="highlights" className="scroll-mt-24 mt-8 md:mt-12">
         <header className="mb-6 md:mb-8 text-center">
-          <div className="text-xs uppercase tracking-wider text-tertiary">Features</div>
-          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight text-primary">Everything included</h2>
-          <p className="mt-2 text-secondary max-w-2xl mx-auto">Design, hosting, SEO, analytics, and ongoing content updates—done for you.</p>
+          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-primary">What you get</h2>
+          <p className="mt-2 text-sm md:text-base text-secondary max-w-2xl mx-auto">Design, hosting, and ongoing updates—done for you.</p>
         </header>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6">
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8 items-stretch">
           {[
-            { title: "Design & build", desc: "Custom layout matched to your brand." },
-            { title: "Managed hosting", desc: "Fast global CDN, SSL, backups." },
-            { title: "Monthly updates", desc: "Keep content fresh with our help." },
-            { title: "Analytics & SEO", desc: "Best practices baked in from day one." },
-          ].map((f) => (
-            <div key={f.title} className="group p-5 rounded-3xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]">
-              <div className="mb-3 sm:mb-4 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-xs text-neutral-600 shadow-xs">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
-                Website
+            { title: "Design & build", desc: "Custom layout matched to your brand.", icon: (<path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16v12H4z" />) },
+            { title: "Managed hosting", desc: "Fast global CDN, SSL, backups.", icon: (<path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M5 16h10M5 8h10" />) },
+            { title: "Monthly updates", desc: "Keep content fresh with our help.", icon: (<path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />) },
+          ].map((item) => (
+            <div key={item.title} className="rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent-subtle">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-accent-primary" aria-hidden>
+                  {item.icon}
+                </svg>
               </div>
-              <div className="text-sm font-medium text-tertiary">Website</div>
-              <h3 className="mt-2 text-lg font-semibold text-primary">{f.title}</h3>
-              <p className="mt-2 text-sm text-secondary">{f.desc}</p>
+              <h3 className="mt-3 text-base font-semibold tracking-tight text-primary">{item.title}</h3>
+              <p className="mt-1 text-sm text-secondary">{item.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* How it works (aligned to Agents) */}
+      <section className="mt-10 md:mt-14 rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]">
+        <h2 className="text-base font-semibold tracking-tight text-primary">How it works</h2>
+        <ol className="mt-4 grid md:grid-cols-3 gap-4 text-sm text-secondary">
+          <li className="rounded-xl border border-neutral-200 bg-white p-4">
+            <div className="font-medium text-primary">1. Share your goals</div>
+            <p className="mt-1">We capture requirements and any brand assets you have.</p>
+          </li>
+          <li className="rounded-xl border border-neutral-200 bg-white p-4">
+            <div className="font-medium text-primary">2. Design & build</div>
+            <p className="mt-1">We design, build, and set up hosting and analytics.</p>
+          </li>
+          <li className="rounded-xl border border-neutral-200 bg-white p-4">
+            <div className="font-medium text-primary">3. Update monthly</div>
+            <p className="mt-1">Send updates anytime—content and improvements ship monthly.</p>
+          </li>
+        </ol>
+      </section>
+
+      {/* Pricing (aligned to Agents) */}
       <section id="pricing" className="scroll-mt-24 mt-12 md:mt-16">
         <header className="mb-6 md:mb-8 text-center">
-          <div className="text-xs uppercase tracking-wider text-tertiary">Pricing</div>
-          <h2 className="mt-1 text-2xl md:text-4xl font-semibold tracking-tight text-primary">Simple monthly plan</h2>
-          <p className="mt-2 text-secondary max-w-2xl mx-auto">Transparent pricing with everything you need to run your site.</p>
+          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-primary">Simple monthly pricing</h2>
+          <p className="mt-2 text-sm md:text-base text-secondary max-w-2xl mx-auto">Transparent plans with everything you need to run your site.</p>
         </header>
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-5">
-          <div className="rounded-3xl border border-soft bg-white p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]">
-            <div className="text-sm font-medium text-tertiary">Starter</div>
-            <div className="mt-2 text-3xl font-semibold text-primary">$99<span className="text-base font-normal text-secondary">/mo</span></div>
-            <ul className="mt-4 space-y-2 text-sm text-secondary">
-              <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-accent-primary"/> 4 pages included</li>
-              <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-accent-primary"/> Managed hosting & SSL</li>
-              <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-accent-primary"/> Monthly content updates</li>
-            </ul>
-            <div className="mt-5"><Link href="/get-started" className="inline-flex items-center justify-center px-4 py-2.5 rounded-full font-semibold bg-accent-primary text-white shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_26px_rgba(217,119,89,0.22)]">Choose Starter</Link></div>
-          </div>
-          <div className="rounded-3xl border border-accent-soft bg-white p-6 shadow-soft ring-1 ring-accent-subtle">
-            <div className="inline-flex items-center gap-2 rounded-full bg-accent-subtle text-accent-primary px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium">Popular</div>
-            <div className="mt-2 text-3xl font-semibold text-primary">$199<span className="text-base font-normal text-secondary">/mo</span></div>
-            <ul className="mt-4 space-y-2 text-sm text-secondary">
-              <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-accent-primary"/> Up to 10 pages</li>
-              <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-accent-primary"/> Priority updates</li>
-              <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-accent-primary"/> On-page SEO</li>
-            </ul>
-            <div className="mt-5"><Link href="/get-started" className="inline-flex items-center justify-center px-4 py-2.5 rounded-full font-semibold bg-accent-primary text-white shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_26px_rgba(217,119,89,0.22)]">Choose Growth</Link></div>
-          </div>
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+          {[
+            { name: "Starter", price: "$99/mo", features: ["4 pages", "Managed hosting & SSL", "Monthly updates"] },
+            { name: "Growth", price: "$199/mo", features: ["Up to 10 pages", "Priority updates", "On-page SEO"] },
+            { name: "Scale", price: "$299/mo", features: ["Unlimited pages", "Custom components", "Priority support"] },
+          ].map((tier) => (
+            <div key={tier.name} className="rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]">
+              <div className="flex items-baseline justify-between">
+                <div className="text-base font-semibold text-primary">{tier.name}</div>
+                <div className="text-primary font-semibold">{tier.price}</div>
+              </div>
+              <ul className="mt-3 space-y-2 text-sm text-secondary">
+                {tier.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-accent-primary mt-0.5" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4">
+                <Link href="/get-started" className="inline-flex items-center justify-center px-5 py-3 rounded-full bg-accent-primary text-white border border-accent-primary text-sm transition-colors hover:brightness-95">
+                  Choose {tier.name}
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* FAQ teaser (aligned to Agents) */}
       <section id="faq" className="scroll-mt-24 mt-12 md:mt-16">
-        <h2 className="text-2xl md:text-4xl font-semibold tracking-tight text-primary">FAQ</h2>
-        <dl className="mt-4 space-y-4">
-          <div className="rounded-3xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft"><dt className="font-medium text-primary">What do I need to get started?</dt><dd className="mt-1 text-sm text-secondary">Share your business details and any brand assets—our team takes it from there.</dd></div>
-          <div className="rounded-3xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft"><dt className="font-medium text-primary">Can I use my own domain?</dt><dd className="mt-1 text-sm text-secondary">Yes. We set up and manage DNS and SSL so your site is secure on your domain.</dd></div>
-          <div className="rounded-3xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft"><dt className="font-medium text-primary">How fast is the turnaround?</dt><dd className="mt-1 text-sm text-secondary">An initial version is typically ready within a few days, with refinements following.</dd></div>
-        </dl>
-      </section>
-
-      {/* CTA */}
-      <section className="mt-12 md:mt-16">
-        <div className="rounded-3xl border border-soft bg-white p-6 md:p-8 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] text-center">
-          <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-primary">Ready to launch your website?</h2>
-          <p className="mt-2 text-sm md:text-base text-secondary">Start your monthly plan—no long‑term contracts.</p>
-          <div className="mt-4">
-            <Link href="/get-started" className="inline-flex items-center justify-center px-4 py-2.5 rounded-full font-semibold bg-accent-primary text-white shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_26px_rgba(217,119,89,0.22)]">
-              Get started
-            </Link>
-          </div>
+        <div className="grid gap-3">
+          <details className="rounded-xl border border-neutral-200 bg-white p-4">
+            <summary className="cursor-pointer select-none text-sm font-medium text-primary">Can you use my existing domain?</summary>
+            <p className="mt-2 text-sm text-secondary">Yes. We manage DNS and SSL so your site is secure on your domain.</p>
+          </details>
+          <details className="rounded-xl border border-neutral-200 bg-white p-4">
+            <summary className="cursor-pointer select-none text-sm font-medium text-primary">How do monthly updates work?</summary>
+            <p className="mt-2 text-sm text-secondary">Send requests anytime—most changes go live within a few days.</p>
+          </details>
         </div>
       </section>
     </div>
