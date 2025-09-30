@@ -6,8 +6,12 @@ export const metadata = {
 export default function AgentsPage() {
   return (
     <div className="py-12 md:py-16">
-      <section className="scroll-mt-24">
+      <section className="scroll-mt-24 relative">
         <header className="mb-6 md:mb-10 text-center">
+          {/* Subtle decorative glow */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 flex justify-center">
+            <div className="h-40 md:h-52 w-[70%] max-w-2xl translate-y-6 rounded-full bg-[color:var(--accent-subtle)] blur-3xl opacity-70 animate-pulse-slow" />
+          </div>
           <h1 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-primary flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-2">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-subtle">
               <svg
@@ -61,8 +65,12 @@ export default function AgentsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h6v6H4V7zm0 10h6v-2H4v2zm10 0h6v-6h-6v6zm0-10h6V5h-6v2z" />
               ),
             },
-          ].map((item) => (
-            <div key={item.title} className="rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
+          ].map((item, i) => (
+            <div
+              key={item.title}
+              className="rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all duration-300 hover:-translate-y-1 fade-in-up"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
               <div className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent-subtle">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-accent-primary" aria-hidden>
                   {item.icon}
@@ -75,18 +83,18 @@ export default function AgentsPage() {
         </div>
 
         {/* How it works */}
-        <div className="mt-10 md:mt-14 rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]">
+        <div className="mt-10 md:mt-14 rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] fade-in-up" style={{ animationDelay: '260ms' }}>
           <h2 className="text-base font-semibold tracking-tight text-primary">How it works</h2>
           <ol className="mt-4 grid md:grid-cols-3 gap-4 text-sm text-secondary">
-            <li className="rounded-xl border border-neutral-200 bg-white p-4">
+            <li className="rounded-xl border border-neutral-200 bg-white p-4 fade-in-up" style={{ animationDelay: '300ms' }}>
               <div className="font-medium text-primary">1. Connect your data</div>
               <p className="mt-1">Sync your site, docs, and knowledge base for instant context.</p>
             </li>
-            <li className="rounded-xl border border-neutral-200 bg-white p-4">
+            <li className="rounded-xl border border-neutral-200 bg-white p-4 fade-in-up" style={{ animationDelay: '380ms' }}>
               <div className="font-medium text-primary">2. Define actions</div>
               <p className="mt-1">Add workflows: create leads, send emails, book meetings, and more.</p>
             </li>
-            <li className="rounded-xl border border-neutral-200 bg-white p-4">
+            <li className="rounded-xl border border-neutral-200 bg-white p-4 fade-in-up" style={{ animationDelay: '460ms' }}>
               <div className="font-medium text-primary">3. Launch everywhere</div>
               <p className="mt-1">Embed on your site and connect channels like chat, email, or SMS.</p>
             </li>
@@ -99,8 +107,12 @@ export default function AgentsPage() {
             { name: "Starter", price: "$59/mo", features: ["1 agent", "Email support", "Site embed"] },
             { name: "Growth", price: "$99/mo", features: ["3 agents", "CRM actions", "Multiple channels"] },
             { name: "Scale", price: "$169/mo", features: ["10 agents", "Advanced workflows", "Priority support"] },
-          ].map((tier) => (
-            <div key={tier.name} className="rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]">
+          ].map((tier, i) => (
+            <div
+              key={tier.name}
+              className="rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all duration-300 hover:-translate-y-1 fade-in-up"
+              style={{ animationDelay: `${200 + i * 100}ms` }}
+            >
               <div className="flex items-baseline justify-between">
                 <div className="text-base font-semibold text-primary">{tier.name}</div>
                 <div className="text-primary font-semibold">{tier.price}</div>
@@ -126,15 +138,16 @@ export default function AgentsPage() {
 
         {/* FAQ teaser */}
         <div className="mt-10 md:mt-14 grid gap-3">
-          <details className="rounded-xl border border-neutral-200 bg-white p-4">
+          <details className="rounded-xl border border-neutral-200 bg-white p-4 fade-in-up" style={{ animationDelay: '120ms' }}>
             <summary className="cursor-pointer select-none text-sm font-medium text-primary">Can agents escalate to humans?</summary>
             <p className="mt-2 text-sm text-secondary">Yes. Agents can hand off to your team with context in your preferred channels.</p>
           </details>
-          <details className="rounded-xl border border-neutral-200 bg-white p-4">
+          <details className="rounded-xl border border-neutral-200 bg-white p-4 fade-in-up" style={{ animationDelay: '180ms' }}>
             <summary className="cursor-pointer select-none text-sm font-medium text-primary">Where do they get answers?</summary>
             <p className="mt-2 text-sm text-secondary">From the data sources you connect (site, docs, knowledge base) plus configured actions.</p>
           </details>
         </div>
+
       </section>
     </div>
   );

@@ -365,3 +365,15 @@ button:active,
     box-shadow: none !important;
   }
 }
+
+/* === Animations (global, to keep pages as Server Components) === */
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in-up { opacity: 0; animation: fade-in-up 420ms ease forwards; will-change: transform, opacity; }
+
+@keyframes pulse-slow { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.85; } }
+.animate-pulse-slow { animation: pulse-slow 3.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up { animation: none; opacity: 1; transform: none; }
+  .animate-pulse-slow { animation: none; }
+}
