@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import AppShell from "./components/AppShell";
-import { Manrope } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hinn.dev";
 
-const manropeSans = Manrope({
+const spaceGroteskSans = Space_Grotesk({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -45,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${manropeSans.variable} font-sans antialiased text-black`}>
+      <body className={`${spaceGroteskSans.variable} font-sans antialiased text-black`}>
         {/* JSON-LD: Organization and Website */}
         <script
           type="application/ld+json"
