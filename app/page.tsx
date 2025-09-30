@@ -1,3 +1,5 @@
+import AmaBar from "./components/AmaBar";
+
 export default function Home() {
   return (
     <div className="py-10 md:py-16">
@@ -27,57 +29,7 @@ export default function Home() {
       </section>
 
       {/* Ask Me Anything */}
-      <section className="py-6 md:py-8">
-        <div className="max-w-3xl mx-auto px-3 sm:px-4">
-          <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-primary text-center flex items-center justify-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-5 w-5 text-accent-primary"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 12c0 3.866-3.582 7-8 7-1.168 0-2.272-.22-3.254-.615L4 20l1.748-3.059C5.27 16.02 5 14.997 5 14c0-3.866 3.582-7 8-7s8 3.134 8 7z" />
-            </svg>
-            <span>Ask Me Anything</span>
-          </h2>
-          <style>{`
-            /* Hide scrollbar for chips slider */
-            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            .hide-scrollbar::-webkit-scrollbar { display: none; }
-          `}</style>
-          <p className="mt-2 text-sm md:text-base text-secondary text-center">Ask about pricing, features, timelines, or your website needs—I'll help instantly.</p>
-          <form className="mt-5">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Ask about pricing, features, timelines, content updates..."
-                aria-label="Ask Me Anything"
-                className="w-full rounded-full border border-neutral-200 bg-white px-5 py-3 pr-28 text-sm md:text-base text-primary shadow-soft focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-soft)]"
-              />
-              <button
-                type="submit"
-                className="absolute right-1 top-1.5 inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold bg-accent-primary text-white shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95"
-              >
-                Ask
-              </button>
-            </div>
-          </form>
-          <div className="mt-3 md:mt-4 -mx-3 sm:mx-0">
-            <div className="overflow-x-auto hide-scrollbar px-3 sm:px-0" aria-label="Suggested questions">
-              <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap sm:justify-center snap-x snap-mandatory">
-                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">What’s included in the plan?</a>
-                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">How fast can you launch?</a>
-                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">Can you use my domain?</a>
-                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">Do you handle updates?</a>
-                <a href="#" className="shrink-0 snap-start px-3 py-1.5 rounded-full border border-neutral-200 bg-white text-xs md:text-sm text-primary hover:bg-neutral-50">How much does it cost?</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <AmaBar />
 
       {/* Showcase (match static index.html) */}
       <section id="showcase" className="mt-8 md:mt-12 py-10 md:py-12">
