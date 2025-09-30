@@ -6,7 +6,7 @@ export default function WebsitePage() {
   return (
     <div className="py-8 sm:py-12">
       {/* Hero (replaced with design from static index.html) */}
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 sm:p-10 shadow-soft shadow-hover">
+      <section className="rounded-3xl border border-soft bg-white p-6 sm:p-10 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
         <div className="max-w-3xl mx-auto text-center">
           <span className="inline-flex items-center gap-2 rounded-full ring-1 ring-neutral-200 bg-white px-3 py-1 text-xs text-neutral-600 shadow-soft">
             No setup fees • Cancel anytime
@@ -50,7 +50,7 @@ export default function WebsitePage() {
             { title: "Monthly updates", desc: "Keep content fresh with our help." },
             { title: "Analytics & SEO", desc: "Best practices baked in from day one." },
           ].map((f) => (
-            <div key={f.title} className="group p-5 rounded-xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft hover:shadow-hover">
+            <div key={f.title} className="group p-5 rounded-3xl border border-soft bg-white transition-all duration-300 hover:-translate-y-1 hover:border-accent-soft shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]">
               <div className="mb-3 sm:mb-4 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-xs text-neutral-600 shadow-xs">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-success-accent" />
                 Website
@@ -71,7 +71,7 @@ export default function WebsitePage() {
           <p className="mt-2 text-secondary max-w-2xl mx-auto">Transparent pricing with everything you need to run your site.</p>
         </header>
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-5">
-          <div className="rounded-xl border border-soft bg-white p-6 shadow-soft">
+          <div className="rounded-3xl border border-soft bg-white p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)]">
             <div className="text-sm font-medium text-tertiary">Starter</div>
             <div className="mt-2 text-3xl font-semibold text-primary">$99<span className="text-base font-normal text-secondary">/mo</span></div>
             <ul className="mt-4 space-y-2 text-sm text-secondary">
@@ -81,7 +81,7 @@ export default function WebsitePage() {
             </ul>
             <div className="mt-5"><Link href="/get-started" className="inline-flex items-center justify-center px-4 py-2.5 rounded-full font-semibold bg-accent-primary text-white shadow-[0_6px_20px_rgba(217,119,89,0.18)] transition-all hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_26px_rgba(217,119,89,0.22)]">Choose Starter</Link></div>
           </div>
-          <div className="rounded-xl border border-accent-soft bg-white p-6 shadow-soft ring-1 ring-accent-subtle">
+          <div className="rounded-3xl border border-accent-soft bg-white p-6 shadow-soft ring-1 ring-accent-subtle">
             <div className="inline-flex items-center gap-2 rounded-full bg-accent-subtle text-accent-primary px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium">Popular</div>
             <div className="mt-2 text-3xl font-semibold text-primary">$199<span className="text-base font-normal text-secondary">/mo</span></div>
             <ul className="mt-4 space-y-2 text-sm text-secondary">
@@ -98,15 +98,15 @@ export default function WebsitePage() {
       <section id="faq" className="scroll-mt-24 mt-12 md:mt-16">
         <h2 className="text-2xl md:text-4xl font-semibold tracking-tight text-primary">FAQ</h2>
         <dl className="mt-4 space-y-4">
-          <div className="rounded-xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">What do I need to get started?</dt><dd className="mt-1 text-sm text-secondary">Share your business details and any brand assets—our team takes it from there.</dd></div>
-          <div className="rounded-xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">Can I use my own domain?</dt><dd className="mt-1 text-sm text-secondary">Yes. We set up and manage DNS and SSL so your site is secure on your domain.</dd></div>
-          <div className="rounded-xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft hover:shadow-hover"><dt className="font-medium text-primary">How fast is the turnaround?</dt><dd className="mt-1 text-sm text-secondary">An initial version is typically ready within a few days, with refinements following.</dd></div>
+          <div className="rounded-3xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft"><dt className="font-medium text-primary">What do I need to get started?</dt><dd className="mt-1 text-sm text-secondary">Share your business details and any brand assets—our team takes it from there.</dd></div>
+          <div className="rounded-3xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft"><dt className="font-medium text-primary">Can I use my own domain?</dt><dd className="mt-1 text-sm text-secondary">Yes. We set up and manage DNS and SSL so your site is secure on your domain.</dd></div>
+          <div className="rounded-3xl border border-soft bg-white p-4 transition-colors duration-200 hover:bg-panel shadow-soft"><dt className="font-medium text-primary">How fast is the turnaround?</dt><dd className="mt-1 text-sm text-secondary">An initial version is typically ready within a few days, with refinements following.</dd></div>
         </dl>
       </section>
 
       {/* CTA */}
       <section className="mt-12 md:mt-16">
-        <div className="rounded-xl border border-soft bg-white p-6 md:p-8 shadow-soft text-center">
+        <div className="rounded-3xl border border-soft bg-white p-6 md:p-8 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] text-center">
           <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-primary">Ready to launch your website?</h2>
           <p className="mt-2 text-sm md:text-base text-secondary">Start your monthly plan—no long‑term contracts.</p>
           <div className="mt-4">

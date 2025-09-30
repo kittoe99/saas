@@ -78,7 +78,7 @@ export default function Home() {
             </a>
 
             {/* Marketing & Branding */}
-            <a href="/contact" className="group block rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
+            <a href="/marketing" className="group block rounded-3xl border border-soft bg-white p-5 sm:p-6 shadow-soft ring-1 ring-transparent hover:ring-[color:var(--accent-subtle)] transition-all">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="md:min-w-[14rem]">
                   <h3 className="text-2xl md:text-3xl font-serif tracking-tight text-primary">Marketing & Branding</h3>
@@ -92,7 +92,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="md:pl-4">
-                  <span className="inline-flex items-center rounded-full bg-[color:var(--accent-subtle)] text-accent-primary px-3 py-1 text-xs font-medium shadow-xs">Work with us →</span>
+                  <span className="inline-flex items-center rounded-full bg-[color:var(--accent-subtle)] text-accent-primary px-3 py-1 text-xs font-medium shadow-xs">See details →</span>
                 </div>
               </div>
             </a>
