@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
     const quantity = Number(body?.quantity || 1);
     const userId = body?.user_id ? String(body.user_id) : undefined;
     const email = body?.email ? String(body.email) : undefined;
+    const websiteId = body?.website_id ? String(body.website_id) : undefined;
+    const plan = body?.plan ? String(body.plan) : undefined; // plan name
+    const planId = body?.plan_id ? String(body.plan_id) : undefined; // internal plan id
 
     if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json({ error: "amount_cents must be a positive integer" }, { status: 400 });
@@ -54,6 +57,9 @@ export async function POST(req: NextRequest) {
       customer_email: email,
       metadata: {
         user_id: userId,
+        website_id: websiteId,
+        plan, // plan name
+        plan_id: planId,
         name,
       },
       automatic_tax: { enabled: true },
