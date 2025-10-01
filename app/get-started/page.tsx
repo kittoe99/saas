@@ -347,15 +347,12 @@ function StepCheckout({
         setStep((s) => (Math.max(1, (s - 1) as Step)) as Step);
       }
 
-      // Mock checkout kept here for potential future integration reference.
+      // Hosted Stripe Checkout: create session on server and redirect to Stripe
       async function handleCheckout() {
         if (!selectedPlan) return;
         setCheckoutError(null);
         setCheckoutLoading(true);
         try {
-          // Simulate processing time
-          await new Promise((r) => setTimeout(r, 1200));
-
           // Ensure user is authenticated and get user_id
           const { data: auth } = await supabase.auth.getUser();
           const user = auth?.user;
@@ -364,26 +361,43 @@ function StepCheckout({
             return;
           }
 
-          // Build submission payload
-          const submission = {
-            personal: data,
-            billing,
-            planId: selectedPlan,
-          };
+          // Determine amount from plan (in cents)
+          const dollars = getPlanPrice(selectedPlan);
+          const amount_cents = Math.max(1, Math.floor(dollars * 100));
+          const plan = PLANS.find((p) => p.id === selectedPlan)!;
 
-          // Persist to API (server will write to Supabase)
-          const res = await fetch("/api/get-started", {
+          // Optionally persist onboarding submission first (kept as-is)
+          try {
+            const submission = { personal: data, billing, planId: selectedPlan };
+            await fetch("/api/get-started", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ user_id: user.id, plan: selectedPlan, data: submission }),
+            });
+          } catch { /* non-fatal for payment */ }
+
+          // Create Checkout Session (server will attach user_id/email)
+          const res = await fetch("/api/stripe/checkout", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: user.id, plan: selectedPlan, data: submission }),
+            body: JSON.stringify({
+              amount_cents,
+              name: `${plan.name} — ${plan.price}`,
+              currency: "usd",
+              quantity: 1,
+              user_id: user.id,
+              email: user.email,
+              // Success/cancel default to /checkout/*; override to Get-Started if desired:
+              success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+              cancel_url: `${window.location.origin}/checkout/cancel`,
+            }),
           });
-          if (!res.ok) {
-            const j = await res.json().catch(() => ({}));
-            throw new Error(j?.error || "Failed to save get-started submission");
-          }
+          const j = await res.json().catch(() => null);
+          if (!res.ok) throw new Error(j?.error || `Checkout failed (${res.status})`);
 
-          setMockPaid(true);
-          router.push("/get-started/success");
+          const url = j?.url as string | undefined;
+          if (!url) throw new Error("No Checkout session URL returned");
+          window.location.href = url; // Redirect to Stripe hosted UI
         } catch (e: any) {
           setCheckoutError(e?.message || "Something went wrong while processing your payment.");
         } finally {
