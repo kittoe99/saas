@@ -42,8 +42,12 @@ export async function POST(req: NextRequest) {
     }
 
     const origin = req.headers.get("origin") || req.nextUrl.origin || "http://localhost:3000";
-    // Include session_id placeholder so success page can query details if needed
-    const success = (body?.success_url as string) || `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+    // Include session_id placeholder so success page can query details if needed. Also pass website_id when available.
+    let success = (body?.success_url as string) || `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+    if (websiteId && !success.includes("website_id=")) {
+      const sep = success.includes("?") ? "&" : "?";
+      success = `${success}${sep}website_id=${encodeURIComponent(websiteId)}`;
+    }
     const cancel = (body?.cancel_url as string) || `${origin}/checkout/cancel`;
 
     // Build params for Stripe Checkout Session (mode=payment) with inline price_data

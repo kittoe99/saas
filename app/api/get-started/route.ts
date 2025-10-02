@@ -20,6 +20,20 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseServer();
 
+    // 0) One-time gate: if user already completed Get-Started, block
+    try {
+      const { data: existingOb } = await supabase
+        .from("onboarding")
+        .select("get_started_completed")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (existingOb && existingOb.get_started_completed === true) {
+        return NextResponse.json({ ok: false, error: "already_completed", redirect: "/dashboard" }, { status: 409 });
+      }
+    } catch {}
+
     // 1) Ensure there is a website for this user (create one if none exists)
     const { data: existingSites, error: siteErr } = await supabase
       .from("websites")
@@ -55,6 +69,15 @@ export async function POST(req: Request) {
     if (obErr) {
       return NextResponse.json({ error: obErr.message }, { status: 500 });
     }
+
+    // 3) Mark Get-Started as completed for this user/site (one-time)
+    try {
+      await supabase
+        .from("onboarding")
+        .update({ get_started_completed: true })
+        .eq("website_id", website_id)
+        .eq("user_id", user_id);
+    } catch {}
 
     return NextResponse.json({ ok: true, website_id }, { status: 200 });
   } catch (e: any) {

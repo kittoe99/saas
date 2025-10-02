@@ -322,6 +322,30 @@ function StepCheckout({
         return () => { active = false; };
       }, [router]);
 
+      // One-time completion gate: if already completed, redirect to dashboard
+      useEffect(() => {
+        let ignore = false;
+        (async () => {
+          if (gateChecking) return; // wait for auth gate
+          try {
+            const { data: u } = await supabase.auth.getUser();
+            const uid = u?.user?.id;
+            if (!uid) return;
+            const { data: row } = await supabase
+              .from('onboarding')
+              .select('get_started_completed')
+              .eq('user_id', uid)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (!ignore && row && row.get_started_completed === true) {
+              router.replace('/dashboard');
+            }
+          } catch {}
+        })();
+        return () => { ignore = true; };
+      }, [gateChecking, router]);
+
       // Auto-scroll disabled per design: keep position stable between steps
       useEffect(() => {
         // no-op

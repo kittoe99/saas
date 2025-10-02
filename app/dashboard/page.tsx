@@ -8,6 +8,23 @@ function classNames(...args: Array<string | false | null | undefined>) {
   return args.filter(Boolean).join(" ");
 }
 
+// Simple plan catalog reused from Get-Started
+const PLAN_OPTIONS = [
+  { id: "small", name: "Small Businesses", price: "$59/mo", amount: 59 },
+  { id: "ecom_large", name: "Ecommerce / Large Businesses", price: "$99/mo", amount: 99 },
+  { id: "startup", name: "Large Businesses/Startups", price: "$169/mo", amount: 169 },
+] as const;
+type PlanId = typeof PLAN_OPTIONS[number]["id"];
+
+function getPlanPriceDollars(planId: string): number {
+  switch (planId) {
+    case "small": return 59;
+    case "ecom_large": return 99;
+    case "startup": return 169;
+    default: return 0;
+  }
+}
+
 const TABS = ["Home", "Leads", "Domains", "More"] as const;
 type TabKey = typeof TABS[number];
 
@@ -68,10 +85,17 @@ export default function DashboardPage() {
     contact_phone?: string | null;
     envisioned_pages?: string[] | null;
     selected_services?: string[] | null;
+    onboarding_completed?: boolean | null;
     progress_done?: number;
     progress_total?: number;
     progress_label?: string;
   }>>([]);
+
+  // Create new site modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newSitePlan, setNewSitePlan] = useState<PlanId>("small");
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   // More tab sub-views
   const [moreView, setMoreView] = useState<'menu' | 'account' | 'billing' | 'support'>('menu');
@@ -392,18 +416,59 @@ export default function DashboardPage() {
 
   // No inline Account handlers here; Account lives at /dashboard/account
 
-  // Create a fresh website and go to onboarding for it
-  const handleCreateNewSite = async () => {
+  // Open modal to choose plan and pay before onboarding
+  const handleCreateNewSite = () => {
+    setCreateError(null);
+    setShowCreateModal(true);
+  };
+
+  // Start Stripe Checkout for new site
+  const handleStartNewSiteCheckout = async () => {
+    setCreateError(null);
+    setCreateLoading(true);
     try {
+      // Ensure user is authenticated
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      const email = u?.user?.email || undefined;
+      if (!uid) {
+        window.location.href = "/login?next=/dashboard";
+        return;
+      }
+
+      // 1) Create the draft website (server will tie it to user)
       const res = await fetch('/api/websites/create', { method: 'POST' });
       const j = await res.json().catch(() => ({} as any));
       if (!res.ok) throw new Error(j?.error || 'Failed to create website');
-      const wid = j?.website_id as string | undefined;
-      if (!wid) throw new Error('Missing website_id');
-      window.location.href = `/dashboard/onboarding?website_id=${encodeURIComponent(wid)}`;
-    } catch (e) {
-      // fallback to plain onboarding
-      window.location.href = '/dashboard/onboarding';
+      const website_id = j?.website_id as string | undefined;
+      if (!website_id) throw new Error('Missing website_id');
+
+      // 2) Create Stripe Checkout Session
+      const planMeta = PLAN_OPTIONS.find(p => p.id === newSitePlan)!;
+      const amount_cents = Math.max(1, Math.floor(getPlanPriceDollars(newSitePlan) * 100));
+      const checkout = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount_cents,
+          name: `${planMeta.name} — ${planMeta.price}`,
+          currency: 'usd',
+          quantity: 1,
+          user_id: uid,
+          email,
+          website_id,
+          plan: newSitePlan,
+        })
+      });
+      const cj = await checkout.json().catch(() => null);
+      if (!checkout.ok) throw new Error(cj?.error || `Checkout failed (${checkout.status})`);
+      const url = cj?.url as string | undefined;
+      if (!url) throw new Error('No Checkout session URL returned');
+      window.location.href = url; // Stripe hosted UI
+    } catch (e: any) {
+      setCreateError(e?.message || 'Could not start checkout');
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -461,7 +526,7 @@ export default function DashboardPage() {
       // Load websites for this user and detect unfinished builder steps
       const { data: sites } = await supabase
         .from('websites')
-        .select('id, name, domain, vercel_prod_domain, status, created_at, onboarding(data)')
+        .select('id, name, domain, vercel_prod_domain, status, created_at, onboarding(completed,data)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (mounted && sites) {
@@ -469,6 +534,9 @@ export default function DashboardPage() {
           const ob = Array.isArray(s?.onboarding)
             ? ((s.onboarding[0]?.data as any) || {})
             : ((s?.onboarding?.data as any) || {});
+          const obCompleted = Array.isArray(s?.onboarding)
+            ? (s.onboarding[0]?.completed ?? null)
+            : (s?.onboarding?.completed ?? null);
           return {
             id: s.id as string,
             name: (s.name as string) || null,
@@ -481,6 +549,7 @@ export default function DashboardPage() {
             contact_phone: (ob?.businessPhone as string) || (ob?.contact?.phone as string) || (ob?.phone as string) || null,
             envisioned_pages: Array.isArray(ob?.envisionedPages) ? ob.envisionedPages : null,
             selected_services: Array.isArray(ob?.selectedServices) ? ob.selectedServices : null,
+            onboarding_completed: (typeof obCompleted === 'boolean') ? obCompleted : null,
             progress_done: 1,
             progress_total: 3,
             progress_label: 'Preparing build',
@@ -1310,67 +1379,86 @@ export default function DashboardPage() {
                                 })()}
                               </div>
 
-                              {/* Chips */}
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                <span className="inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14"/></svg>
-                                  {pagesCount} pages
-                                </span>
-                                <span className="inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M5 7h14M5 12h14M5 17h9"/></svg>
-                                  {servicesCount} services
-                                </span>
-                                {w.primary_goal && (
-                                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md ring-1 ring-success/30 bg-success-accent/10 px-2 py-1 text-[11px] text-success-ink">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 3v18M3 12h18"/></svg>
-                                    Goal: {w.primary_goal}
-                                  </span>
-                                )}
-                                {(w.contact_method || w.contact_phone) && (
-                                  <span className="hidden sm:inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-800">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3 7.18 A2 2 0 0 1 5 5h4.09a2 2 0 0 1 2 1.72l.45 2.6a2 2 0 0 1-.54 1.86l-1.27 1.27a16 16 0 0 0 6.88 6.88l1.27-1.27a2 2 0 0 1 1.86-.54l2.6.45A2 2 0 0 1 22 16.92z"/></svg>
-                                    {(w.contact_phone && ((w.contact_method || '').toLowerCase() === 'phone' || !w.contact_method))
-                                      ? w.contact_phone
-                                      : (w.contact_method || '')}
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Build progress (3-step) */}
-                              <div className="mt-3">
-                                <div className="flex items-center justify-between text-[11px] text-neutral-600">
-                                  <span>{w.progress_label || 'Preparing build'}</span>
-                                  <span>Step {(w.progress_done ?? 1)} of {(w.progress_total ?? 3)}</span>
+                              {w.onboarding_completed === false ? (
+                                <div className="mt-3">
+                                  <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
+                                    Onboarding not completed yet. Finish onboarding to configure your site.
+                                  </div>
+                                  <div className="mt-3">
+                                    <a
+                                      href={`/dashboard/onboarding?website_id=${w.id}`}
+                                      className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-success-accent text-white px-3 py-2 text-[12px] hover:opacity-90 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+                                    >
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14"/></svg>
+                                      Complete Onboarding
+                                    </a>
+                                  </div>
                                 </div>
-                                <div className="mt-1 h-2 w-full rounded-full bg-neutral-100 overflow-hidden">
-                                  <div
-                                    className="h-full bg-success-accent transition-all"
-                                    style={{ width: `${Math.round(((w.progress_done ?? 1) / (w.progress_total ?? 3)) * 100)}%` }}
-                                  />
-                                </div>
-                              </div>
+                              ) : (
+                                <>
+                                  {/* Chips */}
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    <span className="inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14"/></svg>
+                                      {pagesCount} pages
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M5 7h14M5 12h14M5 17h9"/></svg>
+                                      {servicesCount} services
+                                    </span>
+                                    {w.primary_goal && (
+                                      <span className="hidden sm:inline-flex items-center gap-1 rounded-md ring-1 ring-success/30 bg-success-accent/10 px-2 py-1 text-[11px] text-success-ink">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 3v18M3 12h18"/></svg>
+                                        Goal: {w.primary_goal}
+                                      </span>
+                                    )}
+                                    {(w.contact_method || w.contact_phone) && (
+                                      <span className="hidden sm:inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-800">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3 7.18 A2 2 0 0 1 5 5h4.09a2 2 0 0 1 2 1.72l.45 2.6a2 2 0 0 1-.54 1.86l-1.27 1.27a16 16 0 0 0 6.88 6.88l1.27-1.27a2 2 0 0 1 1.86-.54l2.6.45A2 2 0 0 1 22 16.92z"/></svg>
+                                        {(w.contact_phone && ((w.contact_method || '').toLowerCase() === 'phone' || !w.contact_method))
+                                          ? w.contact_phone
+                                          : (w.contact_method || '')}
+                                      </span>
+                                    )}
+                                  </div>
 
-                              {/* Actions */}
-                              <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                                <a
-                                  href={`/website/${w.id}`}
-                                  className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-success-accent text-white px-3 py-2 text-[12px] hover:opacity-90 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-                                >
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
-                                  Manage Site
-                                </a>
-                                {dep?.url && (
-                                  <a
-                                    href={dep.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-emerald-600 text-white px-3 py-2 text-[12px] hover:bg-emerald-700 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40"
-                                  >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M5 12v7a2 2 0 0 0 2 2h7"/></svg>
-                                    View Live
-                                  </a>
-                                )}
-                              </div>
+                                  {/* Build progress (3-step) */}
+                                  <div className="mt-3">
+                                    <div className="flex items-center justify-between text-[11px] text-neutral-600">
+                                      <span>{w.progress_label || 'Preparing build'}</span>
+                                      <span>Step {(w.progress_done ?? 1)} of {(w.progress_total ?? 3)}</span>
+                                    </div>
+                                    <div className="mt-1 h-2 w-full rounded-full bg-neutral-100 overflow-hidden">
+                                      <div
+                                        className="h-full bg-success-accent transition-all"
+                                        style={{ width: `${Math.round(((w.progress_done ?? 1) / (w.progress_total ?? 3)) * 100)}%` }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Actions */}
+                                  <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                    <a
+                                      href={`/website/${w.id}`}
+                                      className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-success-accent text-white px-3 py-2 text-[12px] hover:opacity-90 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+                                    >
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
+                                      Manage Site
+                                    </a>
+                                    {dep?.url && (
+                                      <a
+                                        href={dep.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-emerald-600 text-white px-3 py-2 text-[12px] hover:bg-emerald-700 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40"
+                                      >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M5 12v7a2 2 0 0 0 2 2h7"/></svg>
+                                        View Live
+                                      </a>
+                                    )}
+                                  </div>
+                                </>
+                              )}
                             </li>
                           );
                         })}
@@ -1409,6 +1497,51 @@ export default function DashboardPage() {
           </main>
         </div>
       </div>
+
+      {/* Create New Site modal (root-level so it works from any tab) */}
+      {showCreateModal && (
+        <div role="dialog" aria-modal className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" onClick={() => !createLoading && setShowCreateModal(false)} />
+          <div className="relative w-full max-w-md mx-3 rounded-2xl border border-neutral-200 bg-white shadow-2xl p-4">
+            <div className="flex items-start justify-between">
+              <h3 className="text-base font-semibold text-neutral-900">Choose a plan</h3>
+              <button
+                type="button"
+                onClick={() => !createLoading && setShowCreateModal(false)}
+                className="rounded-md p-1 text-neutral-500 hover:bg-neutral-100"
+                aria-label="Close"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+              </button>
+            </div>
+            <div className="mt-3 space-y-2">
+              {PLAN_OPTIONS.map(p => (
+                <label key={p.id} className={`flex items-center justify-between rounded-lg border px-3 py-2 cursor-pointer ${newSitePlan===p.id? 'border-success bg-success-bg' : 'border-neutral-200 hover:bg-neutral-50'}`}>
+                  <div>
+                    <div className="text-sm font-medium text-neutral-900">{p.name}</div>
+                    <div className="text-xs text-neutral-600">{p.price}</div>
+                  </div>
+                  <input
+                    type="radio"
+                    name="plan"
+                    value={p.id}
+                    checked={newSitePlan===p.id}
+                    onChange={() => setNewSitePlan(p.id)}
+                    className="h-4 w-4"
+                  />
+                </label>
+              ))}
+            </div>
+            {createError && <div className="mt-3 text-sm text-red-600">{createError}</div>}
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button type="button" className="px-4 py-2 rounded-md border border-neutral-300 bg-white text-sm" disabled={createLoading} onClick={() => setShowCreateModal(false)}>Cancel</button>
+              <button type="button" className="px-4 py-2 rounded-md bg-success-accent text-white text-sm disabled:opacity-60" onClick={handleStartNewSiteCheckout} disabled={createLoading}>
+                {createLoading ? 'Starting…' : 'Continue to payment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile bottom tab bar (hides on scroll down, shows on scroll up) */}
       <nav
