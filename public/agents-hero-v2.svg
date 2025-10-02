@@ -1,0 +1,47 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Focused AI Core illustration">
+  <defs>
+    <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(58, 142, 246, 0.4)"/>
+      <stop offset="100%" stop-color="rgba(58, 142, 246, 0)"/>
+    </radialGradient>
+    <linearGradient id="stream" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#AECBFF"/>
+      <stop offset="100%" stop-color="#3A8EF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#F9FAFB"/>
+
+  <!-- Central Core -->
+  <g transform="translate(600, 400)">
+    <circle r="120" fill="url(#coreGlow)"/>
+    <circle r="50" fill="white" stroke="#E5E7EB" stroke-width="2"/>
+    <circle r="40" fill="url(#stream)"/>
+    <path d="M-25 0 a25 25 0 0 1 50 0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" transform="rotate(-45)"/>
+  </g>
+
+  <!-- Data Streams (Incoming) -->
+  <g stroke="#D1D5DB" stroke-width="2" fill="none">
+    <path d="M200,250 C 400,250 450,400 540,400"/>
+    <path d="M250,550 C 400,550 450,400 540,400"/>
+    <path d="M300,150 C 450,150 500,300 560,370"/>
+    <path d="M300,650 C 450,650 500,500 560,430"/>
+  </g>
+  <g>
+    <circle cx="200" cy="250" r="6" fill="#D1D5DB"/>
+    <circle cx="250" cy="550" r="6" fill="#D1D5DB"/>
+    <circle cx="300" cy="150" r="4" fill="#E5E7EB"/>
+    <circle cx="300" cy="650" r="4" fill="#E5E7EB"/>
+  </g>
+
+  <!-- Data Streams (Outgoing) -->
+  <g stroke="url(#stream)" stroke-width="3" fill="none">
+    <path d="M660,400 C 750,400 800,250 1000,250"/>
+    <path d="M660,400 C 750,400 800,550 1000,550"/>
+  </g>
+  <g>
+    <circle cx="1000" cy="250" r="8" fill="url(#stream)"/>
+    <circle cx="1000" cy="550" r="8" fill="url(#stream)"/>
+  </g>
+</svg>
