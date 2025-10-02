@@ -3,22 +3,21 @@
 export const dynamic = "force-dynamic";
 
 import React, { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 
 export default function CheckoutSuccessPage() {
-  const router = useRouter();
-  const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const sid = params.get("session_id");
-        const widFromUrl = params.get("website_id");
+        if (typeof window === 'undefined') return;
+        const sp = new URLSearchParams(window.location.search);
+        const sid = sp.get("session_id");
+        const widFromUrl = sp.get("website_id");
         // 1) Prefer website_id if present in URL
         if (widFromUrl) {
-          if (!cancelled) router.replace(`/dashboard/onboarding?website_id=${encodeURIComponent(widFromUrl)}`);
+          if (!cancelled) window.location.replace(`/dashboard/onboarding?website_id=${encodeURIComponent(widFromUrl)}`);
           return;
         }
         // 2) Resolve via our API using session_id
@@ -29,23 +28,23 @@ export default function CheckoutSuccessPage() {
             const meta = j?.session?.metadata || {};
             const wid = meta.website_id || meta.websiteId || null;
             if (wid) {
-              if (!cancelled) router.replace(`/dashboard/onboarding?website_id=${encodeURIComponent(wid)}`);
+              if (!cancelled) window.location.replace(`/dashboard/onboarding?website_id=${encodeURIComponent(wid)}`);
               return;
             }
           }
         }
         // 3) Fallback: go to onboarding landing (it can infer latest site by user)
-        if (!cancelled) router.replace(`/dashboard/onboarding`);
+        if (!cancelled) window.location.replace(`/dashboard/onboarding`);
       } catch (e: any) {
         if (!cancelled) {
           setError(e?.message || "Could not redirect to onboarding");
           // Give user a way out
-          setTimeout(() => router.replace("/dashboard"), 2000);
+          setTimeout(() => { try { window.location.replace("/dashboard"); } catch {} }, 2000);
         }
       }
     })();
     return () => { cancelled = true; };
-  }, [params, router]);
+  }, []);
 
   return (
     <div className="mx-auto max-w-2xl p-6">
