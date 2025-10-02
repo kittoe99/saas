@@ -107,9 +107,38 @@ export default function DashboardPage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // AMA modal state (header search)
+  // AMA popover state (header search)
   const [amaOpen, setAmaOpen] = useState(false);
   const [amaPrompt, setAmaPrompt] = useState<string>("");
+  const amaContainerRef = useRef<HTMLDivElement | null>(null);
+  const [amaMessages, setAmaMessages] = useState<Array<{ id: number; role: 'user' | 'assistant'; text: string }>>([]);
+
+  function handleAmaSubmit(text: string) {
+    const t = text.trim();
+    if (!t) return;
+    setAmaPrompt(t);
+    setAmaOpen(true);
+    setAmaMessages((prev) => {
+      const next = [...prev, { id: Date.now(), role: 'user' as const, text: t }];
+      // Minimal placeholder assistant reply to simulate chatbot flow
+      next.push({ id: Date.now() + 1, role: 'assistant' as const, text: "Thanks! We'll use this here for now while wiring up the full assistant." });
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const el = amaContainerRef.current;
+      if (!el) return;
+      if (amaOpen && !el.contains(e.target as Node)) {
+        setAmaOpen(false);
+      }
+    }
+    if (amaOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [amaOpen]);
 
   // More tab sub-views
   const [moreView, setMoreView] = useState<'menu' | 'account' | 'billing' | 'support'>('menu');
@@ -731,10 +760,10 @@ export default function DashboardPage() {
                         setMoreView('menu');
                       }}
                       className={classNames(
-                        "relative inline-block px-2 py-2 text-sm transition-colors",
+                        "relative inline-flex items-center rounded-md px-2.5 py-1.5 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300",
                         selected
-                          ? "text-neutral-900 font-medium after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-neutral-900"
-                          : "text-neutral-700 hover:text-neutral-900"
+                          ? "text-neutral-900 font-medium bg-neutral-100 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.06)]"
+                          : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
                       )}
                       role="tab"
                       aria-selected={selected}
@@ -755,31 +784,78 @@ export default function DashboardPage() {
                 const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
                 const q = (input?.value || '').trim();
                 if (!q) return;
-                setAmaPrompt(q);
-                setAmaOpen(true);
+                handleAmaSubmit(q);
                 if (input) input.value = '';
               }}
               role="search"
               aria-label="Ask Me Anything"
               className="hidden md:block"
             >
-              <div className="relative">
-                <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white/95 backdrop-blur px-2 py-1.5 shadow-md">
+              <div className="relative" ref={amaContainerRef}>
+                <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5">
                   <span className="pl-0.5 text-neutral-500" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12c0 3.866-3.582 7-8 7-1.168 0-2.272-.22-3.254-.615L4 20l1.748-3.059C5.27 16.02 5 14.997 5 14c0-3.866 3.582-7 8-7s8 3.134 8 7z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
                   </span>
                   <input
                     type="text"
                     placeholder="Ask me anything…"
-                    className="w-[18rem] min-w-[14rem] rounded-full border-0 bg-transparent px-1.5 py-1.5 text-sm text-primary placeholder:text-neutral-400 focus:outline-none"
+                    className="w-[18rem] min-w-[14rem] border-0 bg-transparent px-2 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none"
                   />
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm font-semibold bg-accent-primary text-white shadow-[0_6px_16px_rgba(217,119,89,0.18)] transition-all hover:brightness-95"
+                    className="inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-sm font-medium bg-accent-primary text-white hover:brightness-95"
+                    aria-label="Submit AMA query"
                   >
-                    Ask
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M5 12h14"/><path d="M13 5l7 7-7 7"/></svg>
                   </button>
                 </div>
+                {amaOpen && (
+                  <div
+                    className="absolute left-0 top-full mt-2 w-[18rem] z-40 rounded-2xl border border-neutral-200 bg-white shadow-xl ring-1 ring-black/5"
+                    role="dialog"
+                    aria-label="Ask Me Anything"
+                  >
+                    <span className="absolute -top-1 left-6 block h-2 w-2 rotate-45 bg-white border-t border-l border-neutral-200" aria-hidden="true" />
+                    <div className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="text-[13px] font-medium text-neutral-900">Ask Me Anything</div>
+                        <button type="button" onClick={() => setAmaOpen(false)} aria-label="Close" className="p-1 text-neutral-500 hover:text-neutral-800">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+                        </button>
+                      </div>
+                      <div className="mt-2 max-h-48 overflow-auto pr-1 space-y-2">
+                        {amaMessages.map(m => (
+                          <div key={m.id} className={m.role === 'user' ? 'text-neutral-900' : 'text-neutral-800'}>
+                            <div className={m.role === 'user' ? 'text-[11px] text-neutral-500 mb-0.5' : 'text-[11px] text-neutral-500 mb-0.5'}>
+                              {m.role === 'user' ? 'You' : 'Assistant'}
+                            </div>
+                            <div className={m.role === 'user' ? 'rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-sm' : 'rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm'}>
+                              {m.text}
+                            </div>
+                          </div>
+                        ))}
+                        {amaMessages.length === 0 && (
+                          <div className="text-xs text-neutral-600">Type a question to begin…</div>
+                        )}
+                      </div>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
+                          const q = (input?.value || '').trim();
+                          if (!q) return;
+                          handleAmaSubmit(q);
+                          if (input) input.value = '';
+                        }}
+                        className="mt-3 flex items-center gap-2"
+                        aria-label="Follow up"
+                      >
+                        <input type="text" placeholder="Ask a follow-up…" className="flex-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-soft)]" />
+                        <button type="submit" className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-accent-primary text-white hover:brightness-95">Send</button>
+                      </form>
+                    </div>
+                  </div>
+                )}
               </div>
             </form>
             <a
@@ -804,107 +880,21 @@ export default function DashboardPage() {
           {/* Sidebar removed; use full-width main to center content container */}
           <main className="col-span-12 sm:col-span-12 lg:col-span-12">
             <div
-              className="min-h-[40vh] mx-auto w-full max-w-6xl md:max-w-7xl px-3 sm:px-6"
+              className="min-h-[40vh] mx-auto w-full max-w-5xl rounded-2xl border border-neutral-200 bg-white px-4 sm:px-6 py-4 sm:py-6 shadow-sm"
               role="tabpanel"
               id={`panel-${active.toLowerCase()}`}
               aria-labelledby={`tab-${active.toLowerCase()}`}
               aria-label={active}
             >
               {/* Mobile (native-like) Home */}
-              {active === "Home" && (
-                <div>
-                  {/* Greeting / hero */}
-                  <div className="bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-4 rounded-t-xl border-b border-neutral-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-xs text-neutral-600">Welcome{userEmail ? "," : ""}</div>
-                        <div className="text-lg font-semibold text-neutral-900 truncate max-w-[80%]">{userEmail ?? "to your dashboard"}</div>
-                      </div>
-                      <div className="h-9 w-9 rounded-full bg-success-accent/20 text-success-ink inline-flex items-center justify-center font-semibold">H</div>
-                    </div>
-                    {onboardingChecked && needsOnboarding && (
-                      <div className="mt-3">
-                        <a href="/dashboard/onboarding" className="w-full inline-flex items-center justify-center rounded-lg bg-success-accent px-3 py-2 text-white text-sm shadow-hover">
-                          Start onboarding
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* KPI cards */}
-                  <div className="grid grid-cols-2 gap-3 p-4">
-                    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-card">
-                      <div className="text-[11px] text-neutral-500">Site status</div>
-                      <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-neutral-900">
-                        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" /> Online
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-card">
-                      <div className="text-[11px] text-neutral-500">Visitors</div>
-                      <div className="mt-1 text-lg font-semibold text-neutral-900">—</div>
-                    </div>
-                    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-card">
-                      <div className="text-[11px] text-neutral-500">Leads</div>
-                      <div className="mt-1 text-lg font-semibold text-neutral-900">—</div>
-                    </div>
-                    <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-card">
-                      <div className="text-[11px] text-neutral-500">Domains</div>
-                      <div className="mt-1 text-sm font-semibold text-neutral-900">Setup</div>
-                    </div>
-                  </div>
-
-                  {/* Quick actions */}
-                  <div className="px-4">
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft">
-                      <div className="text-xs text-neutral-600 mb-2">Quick actions</div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <button type="button" onClick={handleCreateNewSite} className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><path d="M12 5v14M5 12h14"/></svg>
-                          <span className="text-[11px] text-neutral-700">Create new site</span>
-                        </button>
-                        <a href="/dashboard?tab=Website" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
-                          <span className="text-[11px] text-neutral-700">Edit site</span>
-                        </a>
-                        <a href="/dashboard?tab=Domains" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18"/></svg>
-                          <span className="text-[11px] text-neutral-700">Buy domain</span>
-                        </a>
-                        <a href="mailto:support@hinn.io" className="flex flex-col items-center gap-1 rounded-xl border border-neutral-200 p-3 hover:bg-neutral-50">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-700"><path d="M4 4h16v16H4z"/><path d="M22 6 12 13 2 6"/></svg>
-                          <span className="text-[11px] text-neutral-700">Support</span>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Recent activity placeholder */}
-                  <div className="p-4">
-                    {/* Incomplete builds (mobile) */}
-
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-soft">
-                      <div className="text-xs text-neutral-600 mb-2">Recent</div>
-                      <ul className="divide-y divide-neutral-200">
-                        <li className="py-2 flex items-center justify-between">
-                          <div className="text-sm text-neutral-800">Welcome to Hinn.dev</div>
-                          <span className="text-[11px] text-neutral-500">now</span>
-                        </li>
-                        <li className="py-2 flex items-center justify-between">
-                          <div className="text-sm text-neutral-800">Get started by completing onboarding</div>
-                          <span className="text-[11px] text-neutral-500">1m</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {active === "Home" && null}
 
               {/* Leads tab content */
               // Simple leads list for the current user with sorting (no filters yet)
               }
               {active === "Leads" && (
                 <div className="p-4 sm:p-6">
-                  <div className="mx-auto max-w-5xl space-y-4">
+                  <div className="space-y-4">
                     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-semibold text-neutral-900">Leads</div>
@@ -964,6 +954,41 @@ export default function DashboardPage() {
                         )}
                       </div>
                     </div>
+
+                    {/* Website feature highlights */}
+                    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
+                      <div className="text-sm font-semibold text-neutral-900">Website capabilities</div>
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-success-accent/15 text-success-ink">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg>
+                            </span>
+                            <div className="text-sm font-medium text-neutral-900">AI Capabilities</div>
+                          </div>
+                          <p className="mt-2 text-[13px] leading-5 text-neutral-700">Generate copy, sections, and suggestions with built-in AI. Iterate quickly with follow‑ups.</p>
+                        </div>
+                        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-success-accent/15 text-success-ink">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
+                            </span>
+                            <div className="text-sm font-medium text-neutral-900">Custom designs</div>
+                          </div>
+                          <p className="mt-2 text-[13px] leading-5 text-neutral-700">Tailor layout, colors, and components to your brand. Rapidly preview and publish.</p>
+                        </div>
+                        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-success-accent/15 text-success-ink">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M3 12h18"/><path d="M12 3v18"/></svg>
+                            </span>
+                            <div className="text-sm font-medium text-neutral-900">Optimized for SEO</div>
+                          </div>
+                          <p className="mt-2 text-[13px] leading-5 text-neutral-700">Fast pages with semantic markup, meta tags, and best‑practice structure out of the box.</p>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               )}
@@ -972,7 +997,7 @@ export default function DashboardPage() {
               {active === "More" && (
                 <div className="p-4 sm:p-6">
                   {moreView === 'menu' && (
-                    <div className="mx-auto max-w-6xl grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <a href="#" onClick={(e) => { e.preventDefault(); setMoreView('account'); loadProfile(); }} className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                         <div className="text-sm font-semibold text-neutral-900">Account</div>
                         <div className="mt-1 text-xs text-neutral-600">Update your profile details</div>
@@ -1038,7 +1063,7 @@ export default function DashboardPage() {
               {/* Domains tab content */}
               {active === 'Domains' && (
                 <div className="p-4 sm:p-6">
-                  <div className="mx-auto max-w-3xl space-y-6">
+                  <div className="space-y-6">
                     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
                       <div className="text-sm font-semibold text-neutral-900">Search and purchase a domain</div>
                       <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
