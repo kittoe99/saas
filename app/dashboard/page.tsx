@@ -25,8 +25,18 @@ function getPlanPriceDollars(planId: string): number {
   }
 }
 
-const TABS = ["Home", "Leads", "Domains", "More"] as const;
+const TABS = ["Home", "Domains", "Leads", "Branding", "More", "Settings"] as const;
 type TabKey = typeof TABS[number];
+
+// Display labels requested by user while reusing existing content keys
+const TAB_LABELS: Record<TabKey, string> = {
+  Home: "Home",
+  Domains: "Website",
+  Leads: "Agents",
+  Branding: "Branding",
+  More: "More",
+  Settings: "Settings",
+};
 
 function TabIcon({ tab, selected }: { tab: TabKey; selected?: boolean }) {
   const cls = selected ? "text-success-ink" : "text-neutral-500";
@@ -96,6 +106,10 @@ export default function DashboardPage() {
   const [newSitePlan, setNewSitePlan] = useState<PlanId>("small");
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  // AMA modal state (header search)
+  const [amaOpen, setAmaOpen] = useState(false);
+  const [amaPrompt, setAmaPrompt] = useState<string>("");
 
   // More tab sub-views
   const [moreView, setMoreView] = useState<'menu' | 'account' | 'billing' | 'support'>('menu');
@@ -695,161 +709,102 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
       {/* App header */}
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center gap-3">
-          <div className="h-7 w-7 rounded bg-success-accent/20 text-success-ink inline-flex items-center justify-center font-semibold">
-            H
-          </div>
-          <div className="text-sm text-neutral-600">Dashboard</div>
-          {/* Mobile actions */}
-          <div className="ml-auto sm:hidden flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCreateNewSite}
-              className="px-3 py-1.5 rounded-md bg-success-accent text-white text-sm hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
+        {/* Row 1: brand + project selector + right actions */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2 flex items-center gap-2">
+          <a href="/dashboard" className="flex items-center gap-2 text-neutral-900">
+            <div className="h-7 w-7 rounded bg-success-accent/20 text-success-ink inline-flex items-center justify-center font-semibold">H</div>
+            <span className="text-sm font-medium">Hinn</span>
+          </a>
+          {/* Tabs on same row */}
+          <nav aria-label="Sections" className="flex flex-1 justify-center overflow-x-auto whitespace-nowrap">
+            <ul className="flex items-center gap-2" role="tablist">
+              {TABS.map((tab) => {
+                const selected = active === tab;
+                return (
+                  <li key={tab}>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActive(tab);
+                        setShowMore(false);
+                        setMoreView('menu');
+                      }}
+                      className={classNames(
+                        "relative inline-block px-2 py-2 text-sm transition-colors",
+                        selected
+                          ? "text-neutral-900 font-medium after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-neutral-900"
+                          : "text-neutral-700 hover:text-neutral-900"
+                      )}
+                      role="tab"
+                      aria-selected={selected}
+                      aria-controls={`panel-${tab.toLowerCase()}`}
+                      id={`tabtop-${tab.toLowerCase()}`}
+                    >
+                      {TAB_LABELS[tab]}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+          <div className="ml-auto hidden sm:flex items-center">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
+                const q = (input?.value || '').trim();
+                if (!q) return;
+                setAmaPrompt(q);
+                setAmaOpen(true);
+                if (input) input.value = '';
+              }}
+              role="search"
+              aria-label="Ask Me Anything"
+              className="hidden md:block"
             >
-              New Site
-            </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="px-3 py-1.5 rounded-md border border-neutral-300 bg-white text-neutral-900 text-sm hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-            >
-              Logout
-            </button>
-          </div>
-          {/* Desktop tabs moved to sidebar */}
-          <div className="ml-auto hidden sm:flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCreateNewSite}
-              className="px-3 py-1.5 rounded-md bg-success-accent text-white text-sm hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-            >
-              New Site
-            </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="px-3 py-1.5 rounded-md border border-neutral-300 bg-white text-neutral-900 text-sm hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-
-      {/* App content area with desktop sidebar */}
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 pb-24 sm:pb-10">
-        <div className="grid grid-cols-12 gap-4">
-          {/* Sidebar (desktop only) */}
-          <aside className="hidden sm:block sm:col-span-3 lg:col-span-2">
-            <div className="sticky top-[64px]">
-              <nav aria-label="Sections" className="rounded-xl border border-neutral-200 bg-white shadow-soft p-2">
-                <ul
-                  className="space-y-1"
-                  role="tablist"
-                  aria-orientation="vertical"
-                  onKeyDown={(e) => {
-                    const items = Array.from(
-                      (e.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>('button[role="tab"]')
-                    );
-                    const idx = items.findIndex((el) => el === document.activeElement);
-                    if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-                      e.preventDefault();
-                      const next = items[(idx + 1 + items.length) % items.length];
-                      next?.focus();
-                    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-                      e.preventDefault();
-                      const prev = items[(idx - 1 + items.length) % items.length];
-                      prev?.focus();
-                    } else if (e.key === "Home") {
-                      e.preventDefault();
-                      items[0]?.focus();
-                    } else if (e.key === "End") {
-                      e.preventDefault();
-                      items[items.length - 1]?.focus();
-                    }
-                  }}
-                >
-                  {TABS.map((tab) => {
-                    const selected = active === tab;
-                    return (
-                      <li key={tab}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (tab === 'More') {
-                              setShowMore((s) => !s);
-                            } else {
-                              setActive(tab);
-                              setShowMore(false);
-                              setMoreView('menu');
-                            }
-                          }}
-                          data-more-trigger={tab === "More" ? "true" : undefined}
-                          className={classNames(
-                            "w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm text-left",
-                            selected
-                              ? "bg-success-accent/15 text-success-ink border border-success"
-                              : "text-neutral-800 hover:bg-neutral-50 border border-transparent"
-                          )}
-                          role="tab"
-                          aria-selected={selected}
-                          aria-expanded={tab === 'More' ? showMore : undefined}
-                          aria-controls={`panel-${tab.toLowerCase()}`}
-                          id={`tab-${tab.toLowerCase()}`}
-                          tabIndex={selected ? 0 : -1}
-                          aria-current={selected ? "page" : undefined}
-                        >
-                          <TabIcon tab={tab} selected={selected} />
-                          <span>{tab}</span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
-              {/* Desktop More expandable panel (expands downward) */}
-              <div
-                className={classNames(
-                  "mt-2 overflow-hidden transition-all duration-300 ease-out",
-                  showMore ? "max-h-60 opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
-                )}
-                aria-label="More menu (desktop)"
-              >
-                <div ref={desktopMoreRef} className="rounded-xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-3">
-                  <ul className="space-y-1" role="menu" aria-orientation="vertical">
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => { e.preventDefault(); openMoreView('account'); }}
-                        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
-                        role="menuitem"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
-                        <span>Account</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#" onClick={(e) => { e.preventDefault(); openMoreView('billing'); }} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
-                        <span>Billing</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#" onClick={(e) => { e.preventDefault(); openMoreView('support'); }} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-800 hover:bg-neutral-50" role="menuitem">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-neutral-500"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg>
-                        <span>Support</span>
-                      </a>
-                    </li>
-                  </ul>
+              <div className="relative">
+                <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white/95 backdrop-blur px-2 py-1.5 shadow-md">
+                  <span className="pl-0.5 text-neutral-500" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12c0 3.866-3.582 7-8 7-1.168 0-2.272-.22-3.254-.615L4 20l1.748-3.059C5.27 16.02 5 14.997 5 14c0-3.866 3.582-7 8-7s8 3.134 8 7z"/></svg>
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Ask me anything…"
+                    className="w-[18rem] min-w-[14rem] rounded-full border-0 bg-transparent px-1.5 py-1.5 text-sm text-primary placeholder:text-neutral-400 focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm font-semibold bg-accent-primary text-white shadow-[0_6px_16px_rgba(217,119,89,0.18)] transition-all hover:brightness-95"
+                  >
+                    Ask
+                  </button>
                 </div>
               </div>
-            </div>
-          </aside>
-          <main className="col-span-12 sm:col-span-9 lg:col-span-10">
+            </form>
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); handleLogout(); }}
+              className="ml-2 inline-flex items-center gap-1.5 text-sm text-neutral-700 hover:text-neutral-900"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 21V3a2 2 0 0 0-2-2h-6"/></svg>
+              <span>Logout</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Row 2 removed: tabs now inline with logo and search */}
+      </header>
+
+      {/* Top Tabs removed: integrated into header nav above */}
+
+      {/* App content area */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 pb-24 sm:pb-10">
+        <div className="grid grid-cols-12 gap-4">
+          {/* Sidebar removed; use full-width main to center content container */}
+          <main className="col-span-12 sm:col-span-12 lg:col-span-12">
             <div
-              className="rounded-xl border border-neutral-200 bg-white shadow-soft min-h-[40vh]"
+              className="min-h-[40vh] mx-auto w-full max-w-6xl md:max-w-7xl px-3 sm:px-6"
               role="tabpanel"
               id={`panel-${active.toLowerCase()}`}
               aria-labelledby={`tab-${active.toLowerCase()}`}
@@ -857,7 +812,7 @@ export default function DashboardPage() {
             >
               {/* Mobile (native-like) Home */}
               {active === "Home" && (
-                <div className="hidden">
+                <div>
                   {/* Greeting / hero */}
                   <div className="bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-4 rounded-t-xl border-b border-neutral-200">
                     <div className="flex items-center justify-between">
@@ -949,7 +904,7 @@ export default function DashboardPage() {
               }
               {active === "Leads" && (
                 <div className="p-4 sm:p-6">
-                  <div className="max-w-5xl space-y-4">
+                  <div className="mx-auto max-w-5xl space-y-4">
                     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-semibold text-neutral-900">Leads</div>
@@ -1017,7 +972,7 @@ export default function DashboardPage() {
               {active === "More" && (
                 <div className="p-4 sm:p-6">
                   {moreView === 'menu' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="mx-auto max-w-6xl grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <a href="#" onClick={(e) => { e.preventDefault(); setMoreView('account'); loadProfile(); }} className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent">
                         <div className="text-sm font-semibold text-neutral-900">Account</div>
                         <div className="mt-1 text-xs text-neutral-600">Update your profile details</div>
@@ -1083,7 +1038,7 @@ export default function DashboardPage() {
               {/* Domains tab content */}
               {active === 'Domains' && (
                 <div className="p-4 sm:p-6">
-                  <div className="max-w-3xl space-y-6">
+                  <div className="mx-auto max-w-3xl space-y-6">
                     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
                       <div className="text-sm font-semibold text-neutral-900">Search and purchase a domain</div>
                       <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
