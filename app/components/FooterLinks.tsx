@@ -15,9 +15,7 @@ export default function FooterLinks() {
       <li>
         <Link href="/#tools" className="hover:text-success-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-accent/60 focus-visible:rounded-sm transition-colors">Tools</Link>
       </li>
-      <li>
-        <Link href="/blog" className="hover:text-success-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-accent/60 focus-visible:rounded-sm transition-colors">News</Link>
-      </li>
+      {/* News removed */}
       <li>
         <Link href="/contact" className="hover:text-success-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-accent/60 focus-visible:rounded-sm transition-colors">Contact</Link>
       </li>

@@ -179,13 +179,7 @@ export default function Header() {
                 </div>
               )}
             </div>
-            {/* News */}
-            <Link
-              href="/blog"
-              className="font-semibold hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-            >
-              News
-            </Link>
+            {/* News removed */}
             {/* Contact */}
             <Link
               href="/contact"
@@ -311,14 +305,7 @@ export default function Header() {
                 </div>
               </details>
               <div className="h-px bg-neutral-100" />
-              {/* News */}
-              <Link
-                href="/blog"
-                className="block px-4 py-4 text-base hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-                onClick={() => setOpen(false)}
-              >
-                News
-              </Link>
+              {/* News removed */}
               <div className="h-px bg-neutral-100" />
               {/* Contact */}
               <Link

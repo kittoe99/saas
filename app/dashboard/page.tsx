@@ -101,6 +101,62 @@ export default function DashboardPage() {
     progress_label?: string;
   }>>([]);
 
+  // Home tab view state (layout + filters)
+  const [layout, setLayout] = useState<'grid' | 'list'>(() => {
+    try { return (localStorage.getItem('dash.home.layout') as 'grid' | 'list') || 'grid'; } catch { return 'grid'; }
+  });
+  const [filterText, setFilterText] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<'all' | 'ready' | 'building' | 'draft'>('all');
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const statusBtnRef = useRef<HTMLButtonElement | null>(null);
+  const statusMenuRef = useRef<HTMLDivElement | null>(null);
+  // Leads (sorting + data)
+  const [leadsSort, setLeadsSort] = useState<'newest' | 'oldest' | 'name' | 'status'>("newest");
+  const [leadsSortMenuOpen, setLeadsSortMenuOpen] = useState(false);
+  const leadsSortBtnRef = useRef<HTMLButtonElement | null>(null);
+  const leadsSortMenuRef = useRef<HTMLDivElement | null>(null);
+  // Profile menu (top bar)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileBtnRef = useRef<HTMLButtonElement | null>(null);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // Persist layout preference
+  useEffect(() => {
+    try { localStorage.setItem('dash.home.layout', layout); } catch {}
+  }, [layout]);
+
+  // Close custom dropdowns on outside click / Escape
+  useEffect(() => {
+    function onDocMouse(e: MouseEvent) {
+      const t = e.target as Node | null;
+      if (statusMenuOpen) {
+        const inside = statusMenuRef.current?.contains(t as Node) || statusBtnRef.current?.contains(t as Node);
+        if (!inside) setStatusMenuOpen(false);
+      }
+      if (leadsSortMenuOpen) {
+        const inside2 = leadsSortMenuRef.current?.contains(t as Node) || leadsSortBtnRef.current?.contains(t as Node);
+        if (!inside2) setLeadsSortMenuOpen(false);
+      }
+      if (profileMenuOpen) {
+        const inside3 = profileMenuRef.current?.contains(t as Node) || profileBtnRef.current?.contains(t as Node);
+        if (!inside3) setProfileMenuOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        if (statusMenuOpen) setStatusMenuOpen(false);
+        if (leadsSortMenuOpen) setLeadsSortMenuOpen(false);
+        if (profileMenuOpen) setProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onDocMouse);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocMouse);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [statusMenuOpen, leadsSortMenuOpen, profileMenuOpen]);
+
   // Create new site modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newSitePlan, setNewSitePlan] = useState<PlanId>("small");
@@ -188,8 +244,6 @@ export default function DashboardPage() {
   const [myDomainsError, setMyDomainsError] = useState<string | null>(null);
   const [myDomains, setMyDomains] = useState<Array<{ id: string; domain: string; status: string | null; price: number | null; period: number | null; currency: string | null; created_at: string }>>([]);
 
-  // Leads (sorting + data)
-  const [leadsSort, setLeadsSort] = useState<'newest' | 'oldest' | 'name' | 'status'>("newest");
   const [leadsLoading, setLeadsLoading] = useState<boolean>(false);
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const [leads, setLeads] = useState<Array<{ id: string; name: string | null; email: string | null; phone: string | null; source: string | null; status: string | null; created_at: string }>>([]);
@@ -740,12 +794,51 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
         {/* Row 1: brand + project selector + right actions */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2 flex items-center gap-2">
+          {/* Top bar: Logo left */}
           <a href="/dashboard" className="flex items-center gap-2 text-neutral-900">
             <div className="h-7 w-7 rounded bg-success-accent/20 text-success-ink inline-flex items-center justify-center font-semibold">H</div>
             <span className="text-sm font-medium">Hinn</span>
           </a>
-          {/* Tabs on same row */}
-          <nav aria-label="Sections" className="flex flex-1 justify-center overflow-x-auto whitespace-nowrap">
+          {/* Top bar: Profile menu right */}
+          <div className="ml-auto flex items-center">
+            <div className="relative" ref={profileMenuRef}>
+              <button
+                ref={profileBtnRef}
+                type="button"
+                onClick={() => setProfileMenuOpen((v) => !v)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
+                aria-label="Open profile menu"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
+              </button>
+              {profileMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-44 rounded-md border border-neutral-200 bg-white shadow-xl">
+                  <ul className="py-1 text-sm text-neutral-800" role="menu">
+                    <li>
+                      <a href="#" onClick={(e) => { e.preventDefault(); openMoreView('account'); setProfileMenuOpen(false); }} className="block px-3 py-2 hover:bg-neutral-50" role="menuitem">Profile settings</a>
+                    </li>
+                    <li>
+                      <a href="#" onClick={(e) => { e.preventDefault(); openMoreView('billing'); setProfileMenuOpen(false); }} className="block px-3 py-2 hover:bg-neutral-50" role="menuitem">Billing</a>
+                    </li>
+                    <li>
+                      <a href="#" onClick={(e) => { e.preventDefault(); openMoreView('support'); setProfileMenuOpen(false); }} className="block px-3 py-2 hover:bg-neutral-50" role="menuitem">Support</a>
+                    </li>
+                    <li><hr className="my-1 border-neutral-200" /></li>
+                    <li>
+                      <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }} className="block px-3 py-2 text-red-600 hover:bg-red-50" role="menuitem">Logout</a>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* Navigation row (tabs + AMA closely aligned) */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-2 flex items-center justify-center">
+          <div className="flex items-center gap-2">
+          <nav aria-label="Sections" className="overflow-x-auto whitespace-nowrap">
             <ul className="flex items-center gap-2" role="tablist">
               {TABS.map((tab) => {
                 const selected = active === tab;
@@ -777,99 +870,86 @@ export default function DashboardPage() {
               })}
             </ul>
           </nav>
-          <div className="ml-auto hidden sm:flex items-center">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
-                const q = (input?.value || '').trim();
-                if (!q) return;
-                handleAmaSubmit(q);
-                if (input) input.value = '';
-              }}
-              role="search"
-              aria-label="Ask Me Anything"
-              className="hidden md:block"
-            >
-              <div className="relative" ref={amaContainerRef}>
-                <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5">
-                  <span className="pl-0.5 text-neutral-500" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Ask me anything…"
-                    className="w-[18rem] min-w-[14rem] border-0 bg-transparent px-2 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    className="inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-sm font-medium bg-accent-primary text-white hover:brightness-95"
-                    aria-label="Submit AMA query"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M5 12h14"/><path d="M13 5l7 7-7 7"/></svg>
-                  </button>
-                </div>
-                {amaOpen && (
-                  <div
-                    className="absolute left-0 top-full mt-2 w-[18rem] z-40 rounded-2xl border border-neutral-200 bg-white shadow-xl ring-1 ring-black/5"
-                    role="dialog"
-                    aria-label="Ask Me Anything"
-                  >
-                    <span className="absolute -top-1 left-6 block h-2 w-2 rotate-45 bg-white border-t border-l border-neutral-200" aria-hidden="true" />
-                    <div className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="text-[13px] font-medium text-neutral-900">Ask Me Anything</div>
-                        <button type="button" onClick={() => setAmaOpen(false)} aria-label="Close" className="p-1 text-neutral-500 hover:text-neutral-800">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M6 6l12 12M18 6l-12 12"/></svg>
-                        </button>
-                      </div>
-                      <div className="mt-2 max-h-48 overflow-auto pr-1 space-y-2">
-                        {amaMessages.map(m => (
-                          <div key={m.id} className={m.role === 'user' ? 'text-neutral-900' : 'text-neutral-800'}>
-                            <div className={m.role === 'user' ? 'text-[11px] text-neutral-500 mb-0.5' : 'text-[11px] text-neutral-500 mb-0.5'}>
-                              {m.role === 'user' ? 'You' : 'Assistant'}
-                            </div>
-                            <div className={m.role === 'user' ? 'rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-sm' : 'rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm'}>
-                              {m.text}
-                            </div>
-                          </div>
-                        ))}
-                        {amaMessages.length === 0 && (
-                          <div className="text-xs text-neutral-600">Type a question to begin…</div>
-                        )}
-                      </div>
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
-                          const q = (input?.value || '').trim();
-                          if (!q) return;
-                          handleAmaSubmit(q);
-                          if (input) input.value = '';
-                        }}
-                        className="mt-3 flex items-center gap-2"
-                        aria-label="Follow up"
-                      >
-                        <input type="text" placeholder="Ask a follow-up…" className="flex-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-soft)]" />
-                        <button type="submit" className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium bg-accent-primary text-white hover:brightness-95">Send</button>
-                      </form>
-                    </div>
-                  </div>
-                )}
+          {/* Ask Me Anything (compact) placed next to tabs */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
+              const q = (input?.value || '').trim();
+              if (!q) return;
+              handleAmaSubmit(q);
+              if (input) input.value = '';
+            }}
+            role="search"
+            aria-label="Ask Me Anything"
+            className="hidden md:block"
+          >
+            <div className="relative" ref={amaContainerRef}>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Ask me anything…"
+                  className="h-10 w-[18rem] min-w-[14rem] rounded-md border border-neutral-300 bg-white px-3 py-0 text-sm text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex h-10 items-center gap-2 rounded-md bg-accent-primary px-3 py-0 text-sm text-white hover:opacity-90"
+                  aria-label="Ask"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M5 12h14"/><path d="M13 5l7 7-7 7"/></svg>
+                  Ask
+                </button>
               </div>
-            </form>
-            <a
-              href="#"
-              onClick={(e) => { e.preventDefault(); handleLogout(); }}
-              className="ml-2 inline-flex items-center gap-1.5 text-sm text-neutral-700 hover:text-neutral-900"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 21V3a2 2 0 0 0-2-2h-6"/></svg>
-              <span>Logout</span>
-            </a>
-          </div>
+              {amaOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 w-[18rem] z-40 rounded-2xl border border-neutral-200 bg-white shadow-xl ring-1 ring-black/5"
+                  role="dialog"
+                  aria-label="Ask Me Anything"
+                >
+                  <span className="absolute -top-1 right-6 block h-2 w-2 rotate-45 bg-white border-t border-l border-neutral-200" aria-hidden="true" />
+                  <div className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[13px] font-medium text-neutral-900">Ask Me Anything</div>
+                      <button type="button" onClick={() => setAmaOpen(false)} aria-label="Close" className="p-1 text-neutral-500 hover:text-neutral-800">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+                      </button>
+                    </div>
+                    <div className="mt-2 max-h-48 overflow-auto pr-1 space-y-2">
+                      {amaMessages.map(m => (
+                        <div key={m.id} className={m.role === 'user' ? 'text-neutral-900' : 'text-neutral-800'}>
+                          <div className={m.role === 'user' ? 'text-[11px] text-neutral-500 mb-0.5' : 'text-[11px] text-neutral-500 mb-0.5'}>
+                            {m.role === 'user' ? 'You' : 'Assistant'}
+                          </div>
+                          <div className={m.role === 'user' ? 'rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-sm' : 'rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm'}>
+                            {m.text}
+                          </div>
+                        </div>
+                      ))}
+                      {amaMessages.length === 0 && (
+                        <div className="text-xs text-neutral-600">Type a question to begin…</div>
+                      )}
+                    </div>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
+                        const q = (input?.value || '').trim();
+                        if (!q) return;
+                        handleAmaSubmit(q);
+                        if (input) input.value = '';
+                      }}
+                      className="mt-3"
+                      aria-label="Follow up"
+                    >
+                      <input type="text" placeholder="Ask a follow-up…" className="h-9 w-full rounded-md border border-neutral-300 bg-white px-3 py-0 text-sm text-neutral-900 focus-visible:ring-2 focus-visible:ring-success-accent" />
+                    </form>
+                  </div>
+                </div>
+              )}
+            </div>
+          </form>
         </div>
-
-        {/* Row 2 removed: tabs now inline with logo and search */}
+      </div>
       </header>
 
       {/* Top Tabs removed: integrated into header nav above */}
@@ -887,7 +967,231 @@ export default function DashboardPage() {
               aria-label={active}
             >
               {/* Mobile (native-like) Home */}
-              {active === "Home" && null}
+              {active === "Home" && (
+                <div className="p-4 sm:p-6">
+                  {/* Global onboarding gate */}
+                  {onboardingChecked && needsOnboarding && (
+                    <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-amber-900">Complete your onboarding</div>
+                          <p className="mt-1 text-sm text-amber-800">We need a few details about your business to build your first site. You’ll be able to manage everything after this step.</p>
+                        </div>
+                        <a
+                          href="/onboarding"
+                          className="shrink-0 inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-2 text-sm text-white hover:opacity-90"
+                        >
+                          Start onboarding
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {/* Toolbar: search, status filter, layout toggle, New Site */}
+                  <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                    <div className="flex flex-1 items-center gap-2">
+                      <div className="flex-1">
+                        <label className="sr-only" htmlFor="site-search">Search</label>
+                        <input
+                          id="site-search"
+                          type="text"
+                          value={filterText}
+                          onChange={(e) => setFilterText(e.target.value)}
+                          placeholder="Search sites..."
+                          className="h-10 w-full rounded-md border border-neutral-300 bg-white px-3 py-0 text-sm text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                        />
+                      </div>
+                      <div className="relative" ref={statusMenuRef}>
+                        <label className="sr-only" htmlFor="site-status">Status</label>
+                        <button
+                          ref={statusBtnRef}
+                          type="button"
+                          onClick={() => setStatusMenuOpen((v) => !v)}
+                          className={classNames(
+                            "inline-flex h-10 items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-0 text-sm text-neutral-900 shadow-sm",
+                            statusMenuOpen && "ring-2 ring-success-accent"
+                          )}
+                          aria-haspopup="listbox"
+                          aria-expanded={statusMenuOpen}
+                        >
+                          {filterStatus === 'all' ? 'All' : filterStatus === 'ready' ? 'Ready' : filterStatus === 'building' ? 'Building' : 'Draft'}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 ml-1"><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+                        {statusMenuOpen && (
+                          <ul
+                            role="listbox"
+                            className="absolute z-20 mt-1 min-w-[10rem] w-max max-h-60 overflow-auto rounded-md border border-neutral-200 bg-white shadow-xl focus:outline-none"
+                          >
+                            {(['all','ready','building','draft'] as const).map((opt) => (
+                              <li
+                                key={opt}
+                                role="option"
+                                aria-selected={filterStatus === opt}
+                                onMouseDown={(e) => { e.preventDefault(); setFilterStatus(opt); setStatusMenuOpen(false); }}
+                                className={classNames(
+                                  "px-3 py-2 text-sm cursor-pointer select-none",
+                                  filterStatus === opt ? "bg-neutral-100 text-neutral-900" : "text-neutral-800 hover:bg-neutral-50"
+                                )}
+                              >
+                                {opt === 'all' ? 'All' : opt === 'ready' ? 'Ready' : opt === 'building' ? 'Building' : 'Draft'}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="inline-flex h-10 items-center rounded-md border border-neutral-300 bg-white p-1">
+                        <button
+                          type="button"
+                          onClick={() => setLayout('grid')}
+                          className={classNames('h-full px-3 py-0 rounded', layout === 'grid' ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-700 hover:bg-neutral-50')}
+                          aria-pressed={layout === 'grid'}
+                          aria-label="Grid layout"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/></svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLayout('list')}
+                          className={classNames('h-full px-3 py-0 rounded', layout === 'list' ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-700 hover:bg-neutral-50')}
+                          aria-pressed={layout === 'list'}
+                          aria-label="List layout"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCreateNewSite}
+                        disabled={onboardingChecked && needsOnboarding}
+                        className={classNames(
+                          "inline-flex h-10 items-center gap-2 rounded-md px-3 py-0 text-sm text-white",
+                          onboardingChecked && needsOnboarding ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                        )}
+                        aria-disabled={onboardingChecked && needsOnboarding}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M12 5v14M5 12h14"/></svg>
+                        New Site
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Results */}
+                  <div className="mt-4">
+                    {(() => {
+                      // If onboarding has not been started, encourage completion first
+                      if (onboardingChecked && needsOnboarding) {
+                        return (
+                          <div className="rounded-lg border border-neutral-200 bg-white p-4 text-sm text-neutral-700">
+                            Please complete onboarding to view and manage your sites.
+                          </div>
+                        );
+                      }
+                      const list = (websites || []).map((w) => {
+                        const isReady = !!w.vercel_prod_domain;
+                        const needsOb = !isReady && w.onboarding_completed === false;
+                        const isBuilding = !isReady && !needsOb && (w.progress_done || 0) > 1;
+                        const statusKey: 'ready' | 'building' | 'draft' | 'onboarding' =
+                          isReady ? 'ready' : (needsOb ? 'onboarding' : (isBuilding ? 'building' : 'draft'));
+                        return { ...w, _statusKey: statusKey } as typeof w & { _statusKey: 'ready'|'building'|'draft'|'onboarding' };
+                      }).filter((w) => {
+                        const txt = filterText.trim().toLowerCase();
+                        const matchesText = !txt || (w.name || '').toLowerCase().includes(txt) || (w.domain || '').toLowerCase().includes(txt);
+                        const matchesStatus = filterStatus === 'all' || w._statusKey === filterStatus;
+                        return matchesText && matchesStatus;
+                      });
+
+                      if (list.length === 0) {
+                        return <div className="text-sm text-neutral-600">No sites match your filters.</div>;
+                      }
+
+                      if (layout === 'grid') {
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {list.map((w) => (
+                              <div key={w.id} className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft hover:shadow-card transition-shadow">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-semibold text-neutral-900 truncate">{w.name || 'Untitled site'}</div>
+                                    <div className="mt-0.5 text-xs text-neutral-600 truncate">{w.domain || w.vercel_prod_domain || '—'}</div>
+                                  </div>
+                                  <span className={classNames('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] border',
+                                    w._statusKey === 'ready' ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : w._statusKey === 'building' ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : w._statusKey === 'onboarding' ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : 'bg-neutral-100 text-neutral-700 border-neutral-200'
+                                  )}>
+                                    {w._statusKey === 'ready' ? 'Ready' : w._statusKey === 'building' ? 'Building' : w._statusKey === 'onboarding' ? 'Onboarding' : 'Draft'}
+                                  </span>
+                                </div>
+                                <div className="mt-3 flex items-center justify-between">
+                                  <div className="text-xs text-neutral-600">{(w as any)._statusKey === 'onboarding' ? 'Complete onboarding to begin build' : (w.progress_label || 'Preparing build')}</div>
+                                  <div className="text-xs text-neutral-600">{(w.progress_done || 0)}/{(w.progress_total || 3)}</div>
+                                </div>
+                                <div className="mt-2 h-1.5 w-full rounded bg-neutral-100 overflow-hidden">
+                                  <div className={classNames('h-1.5', w._statusKey === 'ready' ? 'bg-emerald-500' : 'bg-neutral-400')} style={{ width: `${Math.min(100, Math.floor(((w.progress_done || 0) / (w.progress_total || 3)) * 100))}%` }} />
+                                </div>
+                                <div className="mt-3 flex items-center gap-2">
+                                  {w.vercel_prod_domain ? (
+                                    <a href={`https://${w.vercel_prod_domain}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">Open</a>
+                                  ) : (
+                                    <a href={`/onboarding?website_id=${w.id}`} className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">{(w as any)._statusKey === 'onboarding' ? 'Complete setup' : 'Continue'}</a>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+
+                      // list layout
+                      return (
+                        <div className="overflow-hidden rounded-md border border-neutral-200">
+                          <table className="w-full text-sm">
+                            <thead className="bg-neutral-50 text-neutral-700">
+                              <tr>
+                                <th className="text-left px-3 py-2 font-medium">Name</th>
+                                <th className="text-left px-3 py-2 font-medium">Domain</th>
+                                <th className="text-left px-3 py-2 font-medium">Status</th>
+                                <th className="text-left px-3 py-2 font-medium">Progress</th>
+                                <th className="px-3 py-2"></th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-200">
+                              {list.map((w) => (
+                                <tr key={w.id}>
+                                  <td className="px-3 py-2 text-neutral-900 font-medium">{w.name || 'Untitled site'}</td>
+                                  <td className="px-3 py-2 text-neutral-700">{w.domain || w.vercel_prod_domain || '—'}</td>
+                                  <td className="px-3 py-2">
+                                    <span className={classNames('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] border',
+                                      (w as any)._statusKey === 'ready' ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : (w as any)._statusKey === 'building' ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                      : (w as any)._statusKey === 'onboarding' ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                      : 'bg-neutral-100 text-neutral-700 border-neutral-200'
+                                    )}>
+                                      {(w as any)._statusKey === 'ready' ? 'Ready' : (w as any)._statusKey === 'building' ? 'Building' : (w as any)._statusKey === 'onboarding' ? 'Onboarding' : 'Draft'}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2 text-neutral-700">{(w.progress_done || 0)}/{(w.progress_total || 3)} — {w.progress_label || 'Preparing build'}</td>
+                                  <td className="px-3 py-2 text-right">
+                                    <div className="inline-flex items-center gap-2">
+                                      {w.vercel_prod_domain ? (
+                                        <a href={`https://${w.vercel_prod_domain}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">Open</a>
+                                      ) : (
+                                        <a href={`/onboarding?website_id=${w.id}`} className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">{(w as any)._statusKey === 'onboarding' ? 'Complete setup' : 'Continue'}</a>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
 
               {/* Leads tab content */
               // Simple leads list for the current user with sorting (no filters yet)
@@ -900,13 +1204,41 @@ export default function DashboardPage() {
                         <div className="text-sm font-semibold text-neutral-900">Leads</div>
                         <div className="flex items-center gap-2">
                           <label className="text-sm text-neutral-700">Sort</label>
-                          <select value={leadsSort} onChange={(e) => setLeadsSort(e.target.value as any)} className="rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white">
-                            <option value="newest">Newest</option>
-                            <option value="oldest">Oldest</option>
-                            <option value="name">Name</option>
-                            <option value="status">Status</option>
-                          </select>
-                          <button type="button" onClick={loadLeads} className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">Refresh</button>
+                          <div className="relative" ref={leadsSortMenuRef}>
+                            <button
+                              ref={leadsSortBtnRef}
+                              type="button"
+                              onClick={() => setLeadsSortMenuOpen((v) => !v)}
+                              className={classNames(
+                                "inline-flex h-10 items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-0 text-[12px] text-neutral-900 shadow-sm",
+                                leadsSortMenuOpen && "ring-2 ring-success-accent"
+                              )}
+                              aria-haspopup="listbox"
+                              aria-expanded={leadsSortMenuOpen}
+                            >
+                              {leadsSort === 'newest' ? 'Newest' : leadsSort === 'oldest' ? 'Oldest' : leadsSort === 'name' ? 'Name' : 'Status'}
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 ml-1"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            {leadsSortMenuOpen && (
+                              <ul role="listbox" className="absolute z-20 mt-1 min-w-[10rem] w-max max-h-60 overflow-auto rounded-md border border-neutral-200 bg-white shadow-xl">
+                                {(['newest','oldest','name','status'] as const).map((opt) => (
+                                  <li
+                                    key={opt}
+                                    role="option"
+                                    aria-selected={leadsSort === opt}
+                                    onMouseDown={(e) => { e.preventDefault(); setLeadsSort(opt); setLeadsSortMenuOpen(false); }}
+                                    className={classNames(
+                                      "px-3 py-2 text-sm cursor-pointer select-none",
+                                      leadsSort === opt ? "bg-neutral-100 text-neutral-900" : "text-neutral-800 hover:bg-neutral-50"
+                                    )}
+                                  >
+                                    {opt === 'newest' ? 'Newest' : opt === 'oldest' ? 'Oldest' : opt === 'name' ? 'Name' : 'Status'}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                          <button type="button" onClick={loadLeads} className="inline-flex h-10 items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-0 text-[12px] text-neutral-900 hover:bg-neutral-50">Refresh</button>
                         </div>
                       </div>
                     </div>
@@ -1069,10 +1401,10 @@ export default function DashboardPage() {
                       <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="sm:col-span-2">
                           <label className="block text-sm font-medium text-neutral-800">Keyword / Brand</label>
-                          <input type="text" value={suggestQuery} onChange={(e) => setSuggestQuery(e.target.value)} placeholder="acme, mybrand, etc" className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white" />
+                          <input type="text" value={suggestQuery} onChange={(e) => setSuggestQuery(e.target.value)} placeholder="acme, mybrand, etc" className="mt-1 h-10 w-full rounded-md border border-neutral-300 bg-white px-3 py-0 text-sm text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white" />
                         </div>
                         <div className="flex items-end">
-                          <button type="button" onClick={handleFetchSuggestions} disabled={suggLoading} className={classNames('w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm text-white', suggLoading ? 'bg-neutral-300 cursor-not-allowed' : 'bg-success-accent hover:opacity-90')}>
+                          <button type="button" onClick={handleFetchSuggestions} disabled={suggLoading} className={classNames('w-full inline-flex h-10 items-center justify-center gap-2 rounded-md px-3 py-0 text-sm text-white', suggLoading ? 'bg-neutral-300 cursor-not-allowed' : 'bg-success-accent hover:opacity-90')}>
                             {suggLoading ? 'Searching…' : 'Search'}
                           </button>
                         </div>
@@ -1236,7 +1568,7 @@ export default function DashboardPage() {
                     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-soft">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-semibold text-neutral-900">Your domains</div>
-                        <button type="button" onClick={loadMyDomains} className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">
+                        <button type="button" onClick={loadMyDomains} className="inline-flex h-10 items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-0 text-[12px] text-neutral-900 hover:bg-neutral-50">
                           Refresh
                         </button>
                       </div>
@@ -1289,175 +1621,7 @@ export default function DashboardPage() {
               )}
 
               {/* Desktop Home content */}
-              {active === "Home" && (
-                <div className="block p-4 sm:p-6">
-                  {/* Incomplete builds card removed */}
-
-                  {/* Websites (cards) */}
-                  <div className="mb-6">
-                    {websites.length === 0 ? (
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <button
-                          type="button"
-                          onClick={handleCreateNewSite}
-                          className="group h-40 sm:h-48 rounded-2xl keep-border border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-                        >
-                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
-                          </span>
-                          <span className="text-sm font-medium">Add your first site</span>
-                          <span className="text-[11px] text-neutral-500">Start a new website and onboarding</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <li>
-                          <button
-                            type="button"
-                            onClick={handleCreateNewSite}
-                            className="w-full h-full min-h-[9.5rem] sm:min-h-[11rem] group rounded-2xl keep-border border-2 border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-success hover:bg-success-bg hover:text-success-ink shadow-soft flex flex-col items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-                          >
-                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-success-accent/15 text-success-ink group-hover:bg-success-accent group-hover:text-white transition-colors">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M12 5v14M5 12h14"/></svg>
-                            </span>
-                            <span className="text-[13px] font-medium">Add site</span>
-                          </button>
-                        </li>
-                        {websites.map((w) => {
-                          const dep = deployments.find(d => (d.website_id === w.id) && d.url);
-                          const pagesCount = Array.isArray(w.envisioned_pages) ? w.envisioned_pages.length : 0;
-                          const servicesCount = Array.isArray(w.selected_services) ? w.selected_services.length : 0;
-                          return (
-                            <li key={w.id} className="group rounded-2xl ring-1 ring-neutral-200 bg-white p-3 sm:p-4 shadow-sm hover:shadow-md hover:ring-neutral-300 transition-shadow">
-                              {/* Header */}
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
-                                  <div className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 rounded-lg bg-success-accent/15 text-success-ink inline-flex items-center justify-center font-semibold">
-                                    {(w.name || 'W').slice(0,1).toUpperCase()}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <div className="text-sm font-semibold text-neutral-900 truncate" title={w.name || undefined}>{w.name || 'Untitled Site'}</div>
-                                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-neutral-600">
-                                      <span>Created {new Date(w.created_at).toLocaleDateString()}</span>
-                                      <span aria-hidden>•</span>
-                                      {(w.vercel_prod_domain || w.domain) ? (
-                                        <a href={`https://${w.vercel_prod_domain || w.domain}`} target="_blank" rel="noreferrer" className="text-success-ink hover:underline truncate max-w-[8rem] sm:max-w-[12rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent rounded" title={(w.vercel_prod_domain || w.domain) || undefined}>{w.vercel_prod_domain || w.domain}</a>
-                                      ) : (
-                                        <span className="text-neutral-500">Domain not connected</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                {(() => {
-                                  const ready = !!w.vercel_prod_domain;
-                                  return (
-                                    <span className={classNames(
-                                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ring-1",
-                                      ready ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-neutral-100 text-neutral-700 ring-neutral-200"
-                                    )}>{ready ? 'Active' : 'Not Ready'}</span>
-                                  );
-                                })()}
-                              </div>
-
-                              {w.onboarding_completed === false ? (
-                                <div className="mt-3">
-                                  <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
-                                    Onboarding not completed yet. Finish onboarding to configure your site.
-                                  </div>
-                                  <div className="mt-3">
-                                    <a
-                                      href={`/dashboard/onboarding?website_id=${w.id}`}
-                                      className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-success-accent text-white px-3 py-2 text-[12px] hover:opacity-90 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-                                    >
-                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14"/></svg>
-                                      Complete Onboarding
-                                    </a>
-                                  </div>
-                                </div>
-                              ) : (
-                                <>
-                                  {/* Chips */}
-                                  <div className="mt-3 flex flex-wrap gap-2">
-                                    <span className="inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
-                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14"/></svg>
-                                      {pagesCount} pages
-                                    </span>
-                                    <span className="inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700">
-                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M5 7h14M5 12h14M5 17h9"/></svg>
-                                      {servicesCount} services
-                                    </span>
-                                    {w.primary_goal && (
-                                      <span className="hidden sm:inline-flex items-center gap-1 rounded-md ring-1 ring-success/30 bg-success-accent/10 px-2 py-1 text-[11px] text-success-ink">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M12 3v18M3 12h18"/></svg>
-                                        Goal: {w.primary_goal}
-                                      </span>
-                                    )}
-                                    {(w.contact_method || w.contact_phone) && (
-                                      <span className="hidden sm:inline-flex items-center gap-1 rounded-md ring-1 ring-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-800">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3 7.18 A2 2 0 0 1 5 5h4.09a2 2 0 0 1 2 1.72l.45 2.6a2 2 0 0 1-.54 1.86l-1.27 1.27a16 16 0 0 0 6.88 6.88l1.27-1.27a2 2 0 0 1 1.86-.54l2.6.45A2 2 0 0 1 22 16.92z"/></svg>
-                                        {(w.contact_phone && ((w.contact_method || '').toLowerCase() === 'phone' || !w.contact_method))
-                                          ? w.contact_phone
-                                          : (w.contact_method || '')}
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {/* Build progress (3-step) */}
-                                  <div className="mt-3">
-                                    <div className="flex items-center justify-between text-[11px] text-neutral-600">
-                                      <span>{w.progress_label || 'Preparing build'}</span>
-                                      <span>Step {(w.progress_done ?? 1)} of {(w.progress_total ?? 3)}</span>
-                                    </div>
-                                    <div className="mt-1 h-2 w-full rounded-full bg-neutral-100 overflow-hidden">
-                                      <div
-                                        className="h-full bg-success-accent transition-all"
-                                        style={{ width: `${Math.round(((w.progress_done ?? 1) / (w.progress_total ?? 3)) * 100)}%` }}
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* Actions */}
-                                  <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                                    <a
-                                      href={`/website/${w.id}`}
-                                      className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-success-accent text-white px-3 py-2 text-[12px] hover:opacity-90 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-success-accent"
-                                    >
-                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
-                                      Manage Site
-                                    </a>
-                                    {dep?.url && (
-                                      <a
-                                        href={dep.url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 rounded-md bg-emerald-600 text-white px-3 py-2 text-[12px] hover:bg-emerald-700 shadow-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40"
-                                      >
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M5 12v7a2 2 0 0 0 2 2h7"/></svg>
-                                        View Live
-                                      </a>
-                                    )}
-                                  </div>
-                                </>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                  {/* Your sites (mobile/desktop) removed per request */}
-
-                  {/* Onboarding prompt (desktop) */}
-                  {onboardingChecked && needsOnboarding && (
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-soft">
-                      <h2 className="text-base font-semibold text-neutral-900">Complete your onboarding to get the most out of your dashboard.</h2>
-                      <div className="mt-3">
-                        <a href="/dashboard/onboarding" className="inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-1.5 text-white hover:opacity-90">Start onboarding</a>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+              {active === "Home" && null}
 
               {/* Fallback placeholder for non-Home tabs when onboarding required (exclude More so it's empty) */}
               {onboardingChecked && needsOnboarding && active !== "Home" && active !== "More" && active !== "Domains" && (
@@ -1525,10 +1689,7 @@ export default function DashboardPage() {
 
       {/* Mobile bottom tab bar (hides on scroll down, shows on scroll up) */}
       <nav
-        className={classNames(
-          "fixed bottom-0 left-0 right-0 z-50 sm:hidden transition-transform duration-200",
-          showMobileTabs ? "translate-y-0" : "translate-y-full"
-        )}
+        className="hidden"
         aria-label="Primary"
       >
         <div className="mx-auto max-w-6xl px-3 pb-[max(8px,env(safe-area-inset-bottom))]">
@@ -1599,13 +1760,7 @@ export default function DashboardPage() {
         </div>
       </nav>
       {/* Mobile More expandable panel: upward opening above bottom tabs */}
-      <div
-        className={classNames(
-          "sm:hidden fixed left-0 right-0 bottom-[64px] z-40 px-3 transition-all duration-300 ease-out",
-          showMore ? "translate-y-0 opacity-100 pointer-events-auto" : "translate-y-full opacity-0 pointer-events-none"
-        )}
-        aria-label="More menu (mobile)"
-      >
+      <div className="hidden" aria-label="More menu (mobile)">
         <div ref={mobileMoreRef} className="rounded-2xl border border-neutral-200 ring-1 ring-black/5 bg-white/95 backdrop-blur shadow-lg p-3">
           <ul className="grid grid-cols-3 gap-2" role="menu" aria-orientation="horizontal">
             <li className="flex">
