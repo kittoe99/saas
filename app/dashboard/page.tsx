@@ -79,8 +79,6 @@ export default function DashboardPage() {
   const desktopMoreRef = useRef<HTMLDivElement | null>(null);
   const mobileMoreRef = useRef<HTMLDivElement | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [onboardingChecked, setOnboardingChecked] = useState(false);
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [deployments, setDeployments] = useState<Array<{ id: string; website_id: string | null; url: string | null; status: string | null; created_at: string }>>([]);
   const [websites, setWebsites] = useState<Array<{
@@ -101,14 +99,7 @@ export default function DashboardPage() {
     progress_label?: string;
   }>>([]);
 
-  // Keep the onboarding gate in sync with the websites table status
-  useEffect(() => {
-    if (!onboardingChecked) return;
-    try {
-      const anyCompleted = (websites || []).some(w => w.onboarding_completed === true);
-      if (anyCompleted) setNeedsOnboarding(false); // only relax gate; don't force true from websites alone
-    } catch {}
-  }, [onboardingChecked, websites]);
+  // Removed onboarding gate sync logic
 
   // Home tab view state (layout + filters)
   const [layout, setLayout] = useState<'grid' | 'list'>(() => {
@@ -205,31 +196,7 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [amaOpen]);
 
-  // Compute onboarding gate once on mount
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data: auth } = await supabase.auth.getUser();
-        const uid = auth?.user?.id;
-        if (!uid) { if (!cancelled) { setOnboardingChecked(true); setNeedsOnboarding(true); } return; }
-        const res = await fetch(`/api/onboarding?user_id=${encodeURIComponent(uid)}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error('Failed to check onboarding');
-        const j = await res.json().catch(() => null);
-        const hasRow = !!j?.row;
-        if (!cancelled) {
-          setNeedsOnboarding(!hasRow);
-          setOnboardingChecked(true);
-        }
-      } catch {
-        if (!cancelled) {
-          setNeedsOnboarding(true);
-          setOnboardingChecked(true);
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  // Removed onboarding gate fetch logic
 
   // More tab sub-views
   const [moreView, setMoreView] = useState<'menu' | 'account' | 'billing' | 'support'>('menu');
@@ -1041,23 +1008,30 @@ export default function DashboardPage() {
               {/* Mobile (native-like) Home */}
               {active === "Home" && (
                 <div className="p-4 sm:p-6">
-                  {/* Global onboarding gate */}
-                  {onboardingChecked && needsOnboarding && websites.length === 0 && (
-                    <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="text-sm font-semibold text-amber-900">Complete your onboarding</div>
-                          <p className="mt-1 text-sm text-amber-800">We need a few details about your business to build your first site. You’ll be able to manage everything after this step.</p>
+                  {/* Incomplete onboarding banner (if any site needs onboarding) */}
+                  {(() => {
+                    const incomplete = (websites || []).filter(w => w.onboarding_completed === false);
+                    if (incomplete.length === 0) return null;
+                    const targetId = incomplete[0]?.id;
+                    return (
+                      <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-amber-900">Onboarding not complete</div>
+                            <p className="mt-1 text-sm text-amber-800">You have an unfinished onboarding. Complete it to start building your site.</p>
+                          </div>
+                          {targetId && (
+                            <a
+                              href={`/onboarding?website_id=${targetId}`}
+                              className="shrink-0 inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-2 text-sm text-white hover:opacity-90"
+                            >
+                              Complete onboarding
+                            </a>
+                          )}
                         </div>
-                        <a
-                          href="/onboarding"
-                          className="shrink-0 inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-2 text-sm text-white hover:opacity-90"
-                        >
-                          Start onboarding
-                        </a>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   {/* Toolbar: search, status filter, layout toggle, New Site */}
                   <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
                     <div className="flex flex-1 items-center gap-2">
@@ -1135,12 +1109,9 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={handleCreateNewSite}
-                        disabled={onboardingChecked && needsOnboarding}
                         className={classNames(
-                          "inline-flex h-10 items-center gap-2 rounded-md px-3 py-0 text-sm text-white",
-                          onboardingChecked && needsOnboarding ? "bg-neutral-300 cursor-not-allowed" : "bg-success-accent hover:opacity-90"
+                          "inline-flex h-10 items-center gap-2 rounded-md px-3 py-0 text-sm text-white bg-success-accent hover:opacity-90"
                         )}
-                        aria-disabled={onboardingChecked && needsOnboarding}
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M12 5v14M5 12h14"/></svg>
                         New Site
@@ -1151,32 +1122,22 @@ export default function DashboardPage() {
                   {/* Results */}
                   <div className="mt-4">
                     {(() => {
-                      // If onboarding has not been started, encourage completion first
-                      if (onboardingChecked && needsOnboarding) {
-                        return (
-                          <div className="rounded-lg border border-neutral-200 bg-white p-4 text-sm text-neutral-700">
-                            <div>Please complete onboarding to view and manage your sites.</div>
-                            <div className="mt-3">
-                              <a href="/onboarding" className="inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-1.5 text-white hover:opacity-90">
-                                Continue onboarding
-                              </a>
-                            </div>
-                          </div>
-                        );
-                      }
-                      const list = (websites || []).map((w) => {
-                        const isReady = !!w.vercel_prod_domain;
-                        const needsOb = !isReady && w.onboarding_completed === false;
-                        const isBuilding = !isReady && !needsOb && (w.progress_done || 0) > 1;
-                        const statusKey: 'ready' | 'building' | 'draft' | 'onboarding' =
-                          isReady ? 'ready' : (needsOb ? 'onboarding' : (isBuilding ? 'building' : 'draft'));
-                        return { ...w, _statusKey: statusKey } as typeof w & { _statusKey: 'ready'|'building'|'draft'|'onboarding' };
-                      }).filter((w) => {
-                        const txt = filterText.trim().toLowerCase();
-                        const matchesText = !txt || (w.name || '').toLowerCase().includes(txt) || (w.domain || '').toLowerCase().includes(txt);
-                        const matchesStatus = filterStatus === 'all' || w._statusKey === filterStatus;
-                        return matchesText && matchesStatus;
-                      });
+                      // Show only completed sites as cards
+                      const list = (websites || [])
+                        .filter((w) => w.onboarding_completed === true)
+                        .map((w) => {
+                          const isReady = !!w.vercel_prod_domain;
+                          const isBuilding = !isReady && (w.progress_done || 0) > 1;
+                          const statusKey: 'ready' | 'building' | 'draft' =
+                            isReady ? 'ready' : (isBuilding ? 'building' : 'draft');
+                          return { ...w, _statusKey: statusKey } as typeof w & { _statusKey: 'ready'|'building'|'draft' };
+                        })
+                        .filter((w) => {
+                          const txt = filterText.trim().toLowerCase();
+                          const matchesText = !txt || (w.name || '').toLowerCase().includes(txt) || (w.domain || '').toLowerCase().includes(txt);
+                          const matchesStatus = filterStatus === 'all' || (w as any)._statusKey === filterStatus;
+                          return matchesText && matchesStatus;
+                        });
 
                       if (list.length === 0) {
                         return <div className="text-sm text-neutral-600">No sites match your filters.</div>;
@@ -1195,14 +1156,13 @@ export default function DashboardPage() {
                                   <span className={classNames('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] border',
                                     w._statusKey === 'ready' ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                     : w._statusKey === 'building' ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                    : w._statusKey === 'onboarding' ? 'bg-amber-50 text-amber-700 border-amber-200'
                                     : 'bg-neutral-100 text-neutral-700 border-neutral-200'
                                   )}>
-                                    {w._statusKey === 'ready' ? 'Ready' : w._statusKey === 'building' ? 'Building' : w._statusKey === 'onboarding' ? 'Onboarding' : 'Draft'}
+                                    {w._statusKey === 'ready' ? 'Ready' : w._statusKey === 'building' ? 'Building' : 'Draft'}
                                   </span>
                                 </div>
                                 <div className="mt-3 flex items-center justify-between">
-                                  <div className="text-xs text-neutral-600">{(w as any)._statusKey === 'onboarding' ? 'Complete onboarding to begin build' : (w.progress_label || 'Preparing build')}</div>
+                                  <div className="text-xs text-neutral-600">{w.progress_label || 'Preparing build'}</div>
                                   <div className="text-xs text-neutral-600">{(w.progress_done || 0)}/{(w.progress_total || 3)}</div>
                                 </div>
                                 <div className="mt-2 h-1.5 w-full rounded bg-neutral-100 overflow-hidden">
@@ -1212,7 +1172,7 @@ export default function DashboardPage() {
                                   {w.vercel_prod_domain ? (
                                     <a href={`https://${w.vercel_prod_domain}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">Open</a>
                                   ) : (
-                                    <a href={`/onboarding?website_id=${w.id}`} className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">{(w as any)._statusKey === 'onboarding' ? 'Complete setup' : 'Continue'}</a>
+                                    <a href={`/onboarding?website_id=${w.id}`} className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-[12px] text-neutral-900 hover:bg-neutral-50">Continue</a>
                                   )}
                                 </div>
                               </div>
@@ -1700,20 +1660,7 @@ export default function DashboardPage() {
               {/* Desktop Home content */}
               {active === "Home" && null}
 
-              {/* Fallback placeholder for non-Home tabs when onboarding required (exclude More so it's empty) */}
-              {onboardingChecked && needsOnboarding && active !== "Home" && active !== "More" && active !== "Domains" && (
-                <div className="hidden sm:flex min-h-[40vh] items-center justify-center p-8 text-center">
-                  <div className="max-w-md space-y-4">
-                    <div className="flex justify-center">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-8 w-8 text-amber-600"><path d="M12 9v4m0 4h.01"/><circle cx="12" cy="12" r="9"/></svg>
-                    </div>
-                    <h2 className="text-base font-semibold text-neutral-900">Complete your onboarding to get the most out of your dashboard.</h2>
-                    <div>
-                      <a href="/dashboard/onboarding" className="inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-1.5 text-white hover:opacity-90">Start onboarding</a>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Removed old onboarding placeholder */}
             </div>
           </main>
         </div>

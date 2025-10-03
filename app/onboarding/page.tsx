@@ -437,7 +437,7 @@ export default function OnboardingPage() {
     }
   }, [step, siteType, category]);
 
-  // Gate: require auth and skip to success if onboarding already exists
+  // Gate: require auth and skip to success only if this website's onboarding is completed
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -458,13 +458,15 @@ export default function OnboardingPage() {
         // If a website_id is provided, check onboarding for that website only
         if (websiteId) {
           try {
-            const res = await fetch(`/api/onboarding?website_id=${websiteId}`, { cache: "no-store" });
-            if (res.ok) {
-              const j = await res.json().catch(() => null);
-              if (!cancelled && j?.row) {
-                router.replace(`/dashboard/onboarding/success?website_id=${websiteId}`);
-                return;
-              }
+            // Only redirect if the site's onboarding is already completed
+            const { data: site } = await supabase
+              .from('websites')
+              .select('id, onboarding_completed')
+              .eq('id', websiteId)
+              .maybeSingle();
+            if (!cancelled && site?.onboarding_completed === true) {
+              router.replace(`/dashboard/onboarding/success?website_id=${websiteId}`);
+              return;
             }
           } catch {}
         }
