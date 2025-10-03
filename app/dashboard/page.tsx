@@ -597,7 +597,7 @@ export default function DashboardPage() {
 
   // (Reverted) No artificial delay for loader
 
-  // Check onboarding status for current user
+  // Load user deployments and websites (no onboarding gate)
   useEffect(() => {
     if (!authChecked) return;
     let mounted = true;
@@ -605,89 +605,45 @@ export default function DashboardPage() {
       const { data: auth } = await supabase.auth.getUser();
       const user = auth?.user;
       if (!mounted || !user) return;
-      const { data } = await supabase.from('onboarding').select('user_id').eq('user_id', user.id).maybeSingle();
-      if (!mounted) return;
-      setNeedsOnboarding(!data);
-      setOnboardingChecked(true);
-      // Load latest deployments for this user to show preview cards
-      const { data: deps } = await supabase
-        .from('v0_deployments')
-        .select('v0_deployment_id, website_id, url, status, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(6);
-      if (mounted && deps) {
-        setDeployments(
-          deps.map((d: any) => ({ id: d.v0_deployment_id as string, website_id: d.website_id ?? null, url: d.url as string | null, status: d.status as string | null, created_at: d.created_at as string }))
-        );
-      }
 
-      // Load websites for this user and detect unfinished builder steps
+      try {
+        const { data: deps } = await supabase
+          .from('v0_deployments')
+          .select('v0_deployment_id, website_id, url, status, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(6);
+        if (mounted && deps) {
+          setDeployments(
+            deps.map((d: any) => ({ id: d.v0_deployment_id as string, website_id: d.website_id ?? null, url: d.url as string | null, status: d.status as string | null, created_at: d.created_at as string }))
+          );
+        }
+      } catch {}
+
       const { data: sites } = await supabase
         .from('websites')
-        .select('id, name, domain, vercel_prod_domain, status, created_at, onboarding(completed,data)')
+        .select('id, name, domain, vercel_prod_domain, status, created_at, onboarding_completed')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (mounted && sites) {
-        setWebsites((sites as any[]).map((s: any) => {
-          const ob = Array.isArray(s?.onboarding)
-            ? ((s.onboarding[0]?.data as any) || {})
-            : ((s?.onboarding?.data as any) || {});
-          const obCompleted = Array.isArray(s?.onboarding)
-            ? (s.onboarding[0]?.completed ?? null)
-            : (s?.onboarding?.completed ?? null);
-          return {
-            id: s.id as string,
-            name: (s.name as string) || null,
-            domain: (s.domain as string) || null,
-            vercel_prod_domain: (s.vercel_prod_domain as string) || null,
-            status: (s.status as string) || null,
-            created_at: s.created_at as string,
-            primary_goal: (ob?.primaryGoal as string) || null,
-            contact_method: (ob?.contactMethod as string) || null,
-            contact_phone: (ob?.businessPhone as string) || (ob?.contact?.phone as string) || (ob?.phone as string) || null,
-            envisioned_pages: Array.isArray(ob?.envisionedPages) ? ob.envisionedPages : null,
-            selected_services: Array.isArray(ob?.selectedServices) ? ob.selectedServices : null,
-            onboarding_completed: (typeof obCompleted === 'boolean') ? obCompleted : null,
-            progress_done: 1,
-            progress_total: 3,
-            progress_label: 'Preparing build',
-          };
-        }));
+        setWebsites((sites as any[]).map((s: any) => ({
+          id: s.id as string,
+          name: (s.name as string) || null,
+          domain: (s.domain as string) || null,
+          vercel_prod_domain: (s.vercel_prod_domain as string) || null,
+          status: (s.status as string) || null,
+          created_at: s.created_at as string,
+          primary_goal: null,
+          contact_method: null,
+          contact_phone: null,
+          envisioned_pages: null,
+          selected_services: null,
+          onboarding_completed: Boolean((s as any).onboarding_completed),
+          progress_done: 1,
+          progress_total: 3,
+          progress_label: 'Preparing build',
+        })));
       }
-      // Fetch build progress for each site and enrich state
-      if (mounted && sites && (sites as any[]).length) {
-        const enriched = await Promise.all((sites as any[]).map(async (s: any) => {
-          let statusRow: { status: string | null } | null = null;
-          try {
-            const { data: prog } = await supabase
-              .from('site_build_progress')
-              .select('status')
-              .eq('website_id', s.id)
-              .eq('user_id', user.id)
-              .maybeSingle();
-            statusRow = (prog as any) || null;
-          } catch {}
-          let done3 = 1;
-          let label = 'Preparing build';
-          const hasReady = !!s.vercel_prod_domain;
-          if (hasReady) {
-            done3 = 3; label = 'Ready';
-          } else if (statusRow?.status === 'finalizing') {
-            done3 = 2; label = 'Applying final touches';
-          } else {
-            done3 = 1; label = 'Preparing build';
-          }
-          return { id: s.id as string, done3, total3: 3, label };
-        }));
-        if (mounted) {
-          setWebsites((prev) => prev.map((w) => {
-            const e = enriched.find((x) => x.id === w.id);
-            return e ? { ...w, progress_done: e.done3, progress_total: e.total3, progress_label: e.label } : w;
-          }));
-        }
-      }
-      // Incomplete builds card removed
     })();
     return () => { mounted = false; };
   }, [authChecked]);
