@@ -722,13 +722,17 @@ export default function OnboardingPage() {
   const [searchedPreview, setSearchedPreview] = useState<Array<{ index: number; title: string; url: string; snippet?: string }>>([]);
   const [showSources, setShowSources] = useState(false);
 
-  // Back to home handlers (native confirm to keep UX simple and robust)
+  // Back to home handlers (custom in-app confirm)
   function requestBack() {
-    const ok = typeof window !== "undefined" ? window.confirm("Leave onboarding? Your progress won't be saved unless you finish. Go back home?") : true;
-    if (ok) router.push("/dashboard");
+    setShowBackConfirm(true);
   }
-  function confirmBack() { router.push("/dashboard"); }
-  function cancelBack() { /* no-op for native confirm */ }
+  function confirmBack() {
+    setShowBackConfirm(false);
+    router.push("/dashboard");
+  }
+  function cancelBack() {
+    setShowBackConfirm(false);
+  }
 
   // Basic text sanitizer for LLM output: normalize bullets, quotes, spaces, and strip markdown markers
   function sanitizeText(input: string): string {
@@ -1182,6 +1186,27 @@ export default function OnboardingPage() {
           ← Back to home
         </button>
       </div>
+
+      {showBackConfirm && (
+        <div role="dialog" aria-modal className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" onClick={cancelBack} />
+          <div className="relative w-full max-w-md mx-3 rounded-2xl border border-neutral-200 bg-white shadow-2xl p-4">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-amber-100 text-amber-700">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M12 9v4m0 4h.01"/><circle cx="12" cy="12" r="9"/></svg>
+              </span>
+              <div className="flex-1">
+                <div className="text-base font-semibold text-neutral-900">Leave onboarding?</div>
+                <p className="mt-1 text-sm text-neutral-700">Your progress won't be saved unless you finish. Go back home?</p>
+                <div className="mt-4 flex items-center justify-end gap-2">
+                  <button type="button" onClick={cancelBack} className="px-4 py-2 rounded-md border border-neutral-300 bg-white text-sm">Stay here</button>
+                  <button type="button" onClick={confirmBack} className="px-4 py-2 rounded-md bg-success-accent text-white text-sm">Go back home</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 grid grid-cols-12 gap-8">
         {/* Sidebar */}

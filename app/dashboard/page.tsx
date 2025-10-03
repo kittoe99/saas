@@ -801,6 +801,34 @@ export default function DashboardPage() {
           </a>
           {/* Top bar: Profile menu right */}
           <div className="ml-auto flex items-center">
+            {/* AMA mobile field (top bar) */}
+            <div className="relative md:hidden mr-2" ref={amaContainerRef}>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
+                  const q = (input?.value || '').trim();
+                  if (!q) return;
+                  handleAmaSubmit(q);
+                  if (input) input.value = '';
+                }}
+                role="search"
+                aria-label="Ask Me Anything"
+                className="flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  placeholder="Ask me anything…"
+                  className="h-9 w-[55vw] max-w-[16rem] rounded-md border border-neutral-300 bg-white px-3 py-0 text-sm text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex h-9 items-center gap-2 rounded-md bg-accent-primary px-3 py-0 text-sm text-white hover:opacity-90"
+                >
+                  Ask
+                </button>
+              </form>
+            </div>
             <div className="relative" ref={profileMenuRef}>
               <button
                 ref={profileBtnRef}
@@ -836,14 +864,14 @@ export default function DashboardPage() {
           </div>
         </div>
         {/* Navigation row (tabs + AMA closely aligned) */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-2 flex items-center justify-center">
-          <div className="flex items-center gap-2">
-          <nav aria-label="Sections" className="overflow-x-auto whitespace-nowrap">
-            <ul className="flex items-center gap-2" role="tablist">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-2 flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full justify-center">
+          <nav aria-label="Sections" className="overflow-x-auto whitespace-nowrap md:overflow-visible md:flex-none">
+            <ul className="flex items-center gap-2 md:justify-center" role="tablist">
               {TABS.map((tab) => {
                 const selected = active === tab;
                 return (
-                  <li key={tab}>
+                  <li key={tab} className="shrink-0">
                     <a
                       href="#"
                       onClick={(e) => {
@@ -882,7 +910,7 @@ export default function DashboardPage() {
             }}
             role="search"
             aria-label="Ask Me Anything"
-            className="hidden md:block"
+            className="hidden md:block md:flex-shrink-0 md:ml-2"
           >
             <div className="relative" ref={amaContainerRef}>
               <div className="flex items-center gap-2">
@@ -960,7 +988,7 @@ export default function DashboardPage() {
           {/* Sidebar removed; use full-width main to center content container */}
           <main className="col-span-12 sm:col-span-12 lg:col-span-12">
             <div
-              className="min-h-[40vh] mx-auto w-full max-w-5xl rounded-2xl border border-neutral-200 bg-white px-4 sm:px-6 py-4 sm:py-6 shadow-sm"
+              className="min-h-[40vh] w-full"
               role="tabpanel"
               id={`panel-${active.toLowerCase()}`}
               aria-labelledby={`tab-${active.toLowerCase()}`}
