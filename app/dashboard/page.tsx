@@ -101,6 +101,15 @@ export default function DashboardPage() {
     progress_label?: string;
   }>>([]);
 
+  // Keep the onboarding gate in sync with the websites table status
+  useEffect(() => {
+    if (!onboardingChecked) return;
+    try {
+      const anyCompleted = (websites || []).some(w => w.onboarding_completed === true);
+      if (anyCompleted) setNeedsOnboarding(false); // only relax gate; don't force true from websites alone
+    } catch {}
+  }, [onboardingChecked, websites]);
+
   // Home tab view state (layout + filters)
   const [layout, setLayout] = useState<'grid' | 'list'>(() => {
     try { return (localStorage.getItem('dash.home.layout') as 'grid' | 'list') || 'grid'; } catch { return 'grid'; }
@@ -195,6 +204,32 @@ export default function DashboardPage() {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [amaOpen]);
+
+  // Compute onboarding gate once on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const uid = auth?.user?.id;
+        if (!uid) { if (!cancelled) { setOnboardingChecked(true); setNeedsOnboarding(true); } return; }
+        const res = await fetch(`/api/onboarding?user_id=${encodeURIComponent(uid)}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to check onboarding');
+        const j = await res.json().catch(() => null);
+        const hasRow = !!j?.row;
+        if (!cancelled) {
+          setNeedsOnboarding(!hasRow);
+          setOnboardingChecked(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setNeedsOnboarding(true);
+          setOnboardingChecked(true);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // More tab sub-views
   const [moreView, setMoreView] = useState<'menu' | 'account' | 'billing' | 'support'>('menu');
@@ -1007,7 +1042,7 @@ export default function DashboardPage() {
               {active === "Home" && (
                 <div className="p-4 sm:p-6">
                   {/* Global onboarding gate */}
-                  {onboardingChecked && needsOnboarding && (
+                  {onboardingChecked && needsOnboarding && websites.length === 0 && (
                     <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
@@ -1120,7 +1155,12 @@ export default function DashboardPage() {
                       if (onboardingChecked && needsOnboarding) {
                         return (
                           <div className="rounded-lg border border-neutral-200 bg-white p-4 text-sm text-neutral-700">
-                            Please complete onboarding to view and manage your sites.
+                            <div>Please complete onboarding to view and manage your sites.</div>
+                            <div className="mt-3">
+                              <a href="/onboarding" className="inline-flex items-center gap-2 rounded-md bg-success-accent px-3 py-1.5 text-white hover:opacity-90">
+                                Continue onboarding
+                              </a>
+                            </div>
                           </div>
                         );
                       }

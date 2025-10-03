@@ -41,35 +41,38 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: true, row: mergedRow }, { status: 200 });
     }
 
-    // Fallback: find most recent website for user and return its onboarding
-    const { data: site, error: siteErr } = await supabase
+    // Fallback: find any onboarding row for any website owned by this user (avoid joins for RLS compatibility)
+    const { data: sites, error: sitesErr } = await supabase
       .from('websites')
-      .select('id')
+      .select('id, created_at')
       .eq('user_id', user_id!)
+      .order('created_at', { ascending: false });
+    if (sitesErr) return NextResponse.json({ error: sitesErr.message }, { status: 500 });
+    const siteIds = (sites || []).map((s: any) => s.id);
+    if (siteIds.length === 0) return NextResponse.json({ ok: true, row: null }, { status: 200 });
+
+    const { data: obAny, error: obAnyErr } = await supabase
+      .from('onboarding')
+      .select('*')
+      .in('website_id', siteIds)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (siteErr) return NextResponse.json({ error: siteErr.message }, { status: 500 });
-    if (!site?.id) return NextResponse.json({ ok: true, row: null }, { status: 200 });
-    const { data: obRow, error: obErr } = await supabase
-      .from('onboarding')
-      .select('*')
-      .eq('website_id', site.id)
-      .maybeSingle();
-    if (obErr) return NextResponse.json({ error: obErr.message }, { status: 500 });
+    if (obAnyErr) return NextResponse.json({ error: obAnyErr.message }, { status: 500 });
+    if (!obAny?.website_id) return NextResponse.json({ ok: true, row: null }, { status: 200 });
 
     const { data: subRow } = await supabase
       .from('onboarding_submissions')
       .select('answers')
-      .eq('website_id', site.id)
+      .eq('website_id', obAny.website_id)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    const base = (obRow?.data as any) || {};
+    const base = (obAny?.data as any) || {};
     const extra = (subRow?.answers as any) || {};
     const merged: any = { ...extra, ...base };
-    const mergedRow = obRow ? { ...obRow, data: merged } : (Object.keys(merged).length ? { website_id: site.id, data: merged } : null);
+    const mergedRow = { ...obAny, data: merged };
 
     return NextResponse.json({ ok: true, row: mergedRow }, { status: 200 });
   } catch (e: any) {
@@ -115,21 +118,52 @@ export async function POST(req: Request) {
         await supabase.from('websites').update({ name: newName }).eq('id', website_id);
       }
     } else {
-      // Always create a fresh website for this onboarding session
-      const newSite = {
-        user_id,
-        name: typeof data?.name === 'string' && data.name.trim().length ? data.name.trim() : null,
-        status: 'draft' as const,
-      };
-      const { data: created, error: siteCreateErr } = await supabase
-        .from('websites')
-        .insert(newSite)
-        .select('id')
-        .single();
-      if (siteCreateErr) {
-        return NextResponse.json({ error: `Failed to create website: ${siteCreateErr.message}` }, { status: 500 });
+      // Reuse existing site when possible to avoid duplicate website records.
+      // 1) Prefer website that already has onboarding for this user (latest).
+      const { data: existingOb, error: obFindErr } = await supabase
+        .from('onboarding')
+        .select('website_id, websites!inner(user_id, created_at)')
+        .eq('websites.user_id', user_id)
+        .order('websites.created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (obFindErr) {
+        return NextResponse.json({ error: `Failed to look up onboarding: ${obFindErr.message}` }, { status: 500 });
       }
-      website_id = created?.id as string | undefined;
+      if (existingOb?.website_id) {
+        website_id = existingOb.website_id as string;
+      } else {
+        // 2) Otherwise reuse the user's most recent website if any
+        const { data: site, error: siteErr } = await supabase
+          .from('websites')
+          .select('id')
+          .eq('user_id', user_id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (siteErr) {
+          return NextResponse.json({ error: `Failed to look up website: ${siteErr.message}` }, { status: 500 });
+        }
+        if (site?.id) {
+          website_id = site.id as string;
+        } else {
+          // 3) Finally, create a new draft website
+          const newSite = {
+            user_id,
+            name: typeof data?.name === 'string' && data.name.trim().length ? data.name.trim() : null,
+            status: 'draft' as const,
+          };
+          const { data: created, error: siteCreateErr } = await supabase
+            .from('websites')
+            .insert(newSite)
+            .select('id')
+            .single();
+          if (siteCreateErr) {
+            return NextResponse.json({ error: `Failed to create website: ${siteCreateErr.message}` }, { status: 500 });
+          }
+          website_id = created?.id as string | undefined;
+        }
+      }
     }
 
     const payload = { user_id, data, website_id } as { user_id: string; data: any; website_id: string | undefined };
@@ -156,6 +190,17 @@ export async function POST(req: Request) {
     let keys: string[] = [];
     try {
       keys = row && row.data ? Object.keys(row.data) : [];
+    } catch {}
+
+    // Sync a convenience flag on websites so Dashboard logic can rely on the websites table alone
+    try {
+      const completed = keys.length > 0;
+      if (website_id) {
+        await supabase
+          .from('websites')
+          .update({ onboarding_completed: completed })
+          .eq('id', website_id);
+      }
     } catch {}
 
     return NextResponse.json({ ok: true, user_id, website_id: row?.website_id ?? website_id, keys, row }, { status: 200 });
