@@ -801,33 +801,42 @@ export default function DashboardPage() {
           </a>
           {/* Top bar: Profile menu right */}
           <div className="ml-auto flex items-center">
-            {/* AMA mobile field (top bar) */}
+            {/* AMA mobile trigger (top bar) */}
             <div className="relative md:hidden mr-2" ref={amaContainerRef}>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
-                  const q = (input?.value || '').trim();
-                  if (!q) return;
-                  handleAmaSubmit(q);
-                  if (input) input.value = '';
-                }}
-                role="search"
-                aria-label="Ask Me Anything"
-                className="flex items-center gap-2"
+              <button
+                type="button"
+                onClick={() => setAmaOpen((v) => !v)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                aria-label="Ask me anything"
+                aria-expanded={amaOpen}
+                aria-haspopup="dialog"
               >
-                <input
-                  type="text"
-                  placeholder="Ask me anything…"
-                  className="h-9 w-[55vw] max-w-[16rem] rounded-md border border-neutral-300 bg-white px-3 py-0 text-sm text-neutral-900 shadow-sm focus-visible:ring-2 focus-visible:ring-success-accent"
-                />
-                <button
-                  type="submit"
-                  className="inline-flex h-9 items-center gap-2 rounded-md bg-accent-primary px-3 py-0 text-sm text-white hover:opacity-90"
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+              </button>
+              {amaOpen && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
+                    const q = (input?.value || '').trim();
+                    if (!q) return;
+                    handleAmaSubmit(q);
+                    if (input) input.value = '';
+                  }}
+                  className="absolute right-0 top-full mt-2 w-[min(90vw,18rem)] z-40 rounded-2xl border border-neutral-200 bg-white shadow-xl ring-1 ring-black/5 p-2"
+                  role="dialog"
+                  aria-label="Ask Me Anything"
                 >
-                  Ask
-                </button>
-              </form>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ask me anything…"
+                      className="h-9 flex-1 rounded-md border border-neutral-300 bg-white px-3 py-0 text-sm text-neutral-900 focus-visible:ring-2 focus-visible:ring-success-accent"
+                    />
+                    <button type="submit" className="inline-flex h-9 items-center gap-2 rounded-md bg-accent-primary px-3 py-0 text-sm text-white hover:opacity-90">Ask</button>
+                  </div>
+                </form>
+              )}
             </div>
             <div className="relative" ref={profileMenuRef}>
               <button
@@ -881,10 +890,10 @@ export default function DashboardPage() {
                         setMoreView('menu');
                       }}
                       className={classNames(
-                        "relative inline-flex items-center rounded-md px-2.5 py-1.5 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300",
+                        "relative inline-flex items-center rounded-md px-2.5 py-1.5 text-[15px] md:text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300",
                         selected
-                          ? "text-neutral-900 font-medium bg-neutral-100 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.06)]"
-                          : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
+                          ? "text-neutral-900 font-semibold md:font-medium bg-neutral-100 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.06)]"
+                          : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 font-medium md:font-normal"
                       )}
                       role="tab"
                       aria-selected={selected}
